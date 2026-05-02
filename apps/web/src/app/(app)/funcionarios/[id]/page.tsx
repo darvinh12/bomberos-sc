@@ -2,7 +2,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { api, ApiError } from "@/lib/api";
 import { requireAuth } from "@/lib/session";
+import { hasAnyRole } from "@/lib/roles";
 import { formatCedula, formatDate } from "@/lib/utils";
+import PanelAcciones from "./acciones/panel";
 
 interface FuncionarioDetail {
   id: number;
@@ -62,6 +64,7 @@ export default async function FuncionarioDetailPage({
     .get<{ roles: string[] }>("/auth/me", token)
     .catch(() => ({ roles: [] as string[] }));
   const puedeEditar = me.roles.includes("ADMIN") || me.roles.includes("RRHH");
+  const puedeAcciones = hasAnyRole(me.roles, ["ADMIN", "RRHH"]);
 
   return (
     <div className="space-y-6">
@@ -139,6 +142,8 @@ export default async function FuncionarioDetailPage({
           <p className="text-sm whitespace-pre-wrap">{f.observaciones}</p>
         </section>
       )}
+
+      {puedeAcciones && <PanelAcciones funcionarioId={f.id} estatus={f.estatus} />}
     </div>
   );
 }

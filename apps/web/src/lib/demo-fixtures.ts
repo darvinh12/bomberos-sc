@@ -156,6 +156,10 @@ function paginate<T>(items: T[], page: number, page_size: number) {
 function parseQuery(path: string) {
   const [base, qs] = path.split("?");
   const params = new URLSearchParams(qs ?? "");
+  const numeric = (k: string) => {
+    const v = params.get(k);
+    return v != null && v !== "" ? Number(v) : undefined;
+  };
   return {
     base,
     page: Number(params.get("page") ?? 1),
@@ -164,6 +168,9 @@ function parseQuery(path: string) {
     activo: params.get("activo"),
     autorizado: params.get("autorizado"),
     q: params.get("q") ?? undefined,
+    zona_id: numeric("zona_id"),
+    estacion_id: numeric("estacion_id"),
+    jerarquia_id: numeric("jerarquia_id"),
   };
 }
 
@@ -456,7 +463,8 @@ export function demoMe(rol: string = "ADMIN") {
 export const DEMO_ME = demoMe("ADMIN");
 
 export function demoResolve(path: string, rolActivo: string = "ADMIN"): unknown {
-  const { base, page, page_size, estatus, q } = parseQuery(path);
+  const { base, page, page_size, estatus, q, zona_id, estacion_id, jerarquia_id } =
+    parseQuery(path);
 
   switch (true) {
     case base === "/auth/me":
@@ -465,6 +473,11 @@ export function demoResolve(path: string, rolActivo: string = "ADMIN"): unknown 
     case base === "/funcionarios": {
       let items = FUNCIONARIOS;
       if (estatus) items = items.filter((f) => f.estatus === estatus);
+      if (zona_id !== undefined) items = items.filter((f) => f.zona_id === zona_id);
+      if (estacion_id !== undefined)
+        items = items.filter((f) => f.estacion_id === estacion_id);
+      if (jerarquia_id !== undefined)
+        items = items.filter((f) => f.jerarquia_id === jerarquia_id);
       if (q) {
         const needle = q.toLowerCase();
         items = items.filter(

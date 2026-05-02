@@ -46,23 +46,43 @@ const ESTATUS_COLORS: Record<string, string> = {
 };
 
 interface SearchProps {
-  searchParams: { q?: string; estatus?: string; page?: string };
+  searchParams: {
+    q?: string;
+    estatus?: string;
+    zona_id?: string;
+    estacion_id?: string;
+    jerarquia_id?: string;
+    page?: string;
+  };
 }
 
 export default async function FuncionariosPage({ searchParams }: SearchProps) {
   const token = await requireAuth();
   const q = searchParams.q ?? "";
   const estatus = searchParams.estatus ?? "ACTIVO";
+  const zonaId = searchParams.zona_id ?? "";
+  const estacionId = searchParams.estacion_id ?? "";
+  const jerarquiaId = searchParams.jerarquia_id ?? "";
   const page = Number(searchParams.page ?? 1);
+
   const params = new URLSearchParams({ page: String(page), page_size: "25", estatus });
   if (q) params.set("q", q);
+  if (zonaId) params.set("zona_id", zonaId);
+  if (estacionId) params.set("estacion_id", estacionId);
+  if (jerarquiaId) params.set("jerarquia_id", jerarquiaId);
 
   let data: Page<FuncionarioListItem> | null = null;
   let jer: Catalogo[] = [];
+  let zonas: Catalogo[] = [];
+  let estaciones: Catalogo[] = [];
   let err: string | null = null;
   try {
-    data = await api.get<Page<FuncionarioListItem>>(`/funcionarios?${params}`, token);
-    jer = await api.get<Catalogo[]>("/catalogos/jerarquias", token);
+    [data, jer, zonas, estaciones] = await Promise.all([
+      api.get<Page<FuncionarioListItem>>(`/funcionarios?${params}`, token),
+      api.get<Catalogo[]>("/catalogos/jerarquias", token).catch(() => []),
+      api.get<Catalogo[]>("/catalogos/zonas", token).catch(() => []),
+      api.get<Catalogo[]>("/catalogos/estaciones", token).catch(() => []),
+    ]);
   } catch (e: unknown) {
     err = e instanceof Error ? e.message : "Error";
   }
@@ -71,6 +91,8 @@ export default async function FuncionariosPage({ searchParams }: SearchProps) {
     .get<{ roles: string[] }>("/auth/me", token)
     .catch(() => ({ roles: [] as string[] }));
   const puedeEditar = hasAnyRole(me.roles, ["ADMIN", "RRHH"]);
+
+  const tieneFiltros = q || zonaId || estacionId || jerarquiaId || estatus !== "ACTIVO";
 
   return (
     <div className="space-y-6">
@@ -89,8 +111,8 @@ export default async function FuncionariosPage({ searchParams }: SearchProps) {
         </Link>
       </div>
 
-      <form className="flex gap-3 items-end">
-        <div className="flex-1 max-w-md">
+      <form className="rounded-xl border bg-card p-4 grid grid-cols-1 md:grid-cols-6 gap-3 items-end">
+        <div className="md:col-span-2">
           <label className="block text-xs font-medium mb-1">Búsqueda</label>
           <input
             name="q"
@@ -104,7 +126,7 @@ export default async function FuncionariosPage({ searchParams }: SearchProps) {
           <select
             name="estatus"
             defaultValue={estatus}
-            className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
           >
             {[
               "ACTIVO",
@@ -122,9 +144,67 @@ export default async function FuncionariosPage({ searchParams }: SearchProps) {
             ))}
           </select>
         </div>
-        <button className="rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-accent">
-          Filtrar
-        </button>
+        <div>
+          <label className="block text-xs font-medium mb-1">Jerarquía</label>
+          <select
+            name="jerarquia_id"
+            defaultValue={jerarquiaId}
+            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+          >
+            <option value="">Todas</option>
+            {jer.map((j) => (
+              <option key={j.id} value={j.id}>
+                {j.nombre}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="block text-xs font-medium mb-1">Zona</label>
+          <select
+            name="zona_id"
+            defaultValue={zonaId}
+            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+          >
+            <option value="">Todas</option>
+            {zonas.map((z) => (
+              <option key={z.id} value={z.id}>
+                {z.nombre}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="block text-xs font-medium mb-1">Estación</label>
+          <select
+            name="estacion_id"
+            defaultValue={estacionId}
+            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+          >
+            <option value="">Todas</option>
+            {estaciones.map((e) => (
+              <option key={e.id} value={e.id}>
+                {e.nombre}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="md:col-span-6 flex gap-2">
+          <button
+            type="submit"
+            className="rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-medium hover:opacity-90"
+          >
+            Filtrar
+          </button>
+          {tieneFiltros && (
+            <Link
+              href="/funcionarios"
+              className="rounded-md border border-input px-4 py-2 text-sm font-medium hover:bg-accent"
+            >
+              Limpiar filtros
+            </Link>
+          )}
+        </div>
       </form>
 
       {err && (

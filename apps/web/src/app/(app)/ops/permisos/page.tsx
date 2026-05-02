@@ -47,11 +47,18 @@ export default async function PermisosPage({ searchParams }: SearchProps) {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Permisos</h1>
-        <p className="text-sm text-muted-foreground">
-          {data ? `${data.total.toLocaleString("es-VE")} permisos` : "Cargando…"}
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold">Permisos</h1>
+          <p className="text-sm text-muted-foreground">
+            {data ? `${data.total.toLocaleString("es-VE")} permisos` : "Cargando…"}
+          </p>
+        </div>
+        {puedeEditar && (
+          <Link href="/ops/permisos/nuevo" className="rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-medium hover:opacity-90">
+            + Nuevo permiso
+          </Link>
+        )}
       </div>
 
       <form className="flex gap-3 items-end">

@@ -4,6 +4,7 @@ import { api } from "@/lib/api";
 import { puedeVer } from "@/lib/roles";
 import LogoutButton from "@/components/layout/LogoutButton";
 import RoleSwitcher from "@/components/layout/RoleSwitcher";
+import GlobalSearch from "@/components/layout/GlobalSearch";
 
 interface Me {
   id: number;
@@ -104,6 +105,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
               Bomberos<br />Caracas
             </span>
           </Link>
+        </div>
+
+        <div className="px-3 pt-3">
+          <GlobalSearch />
         </div>
 
         <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
