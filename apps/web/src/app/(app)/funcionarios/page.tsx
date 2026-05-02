@@ -103,12 +103,21 @@ export default async function FuncionariosPage({ searchParams }: SearchProps) {
             {data ? `${data.total.toLocaleString("es-VE")} funcionarios` : "Cargando…"}
           </p>
         </div>
-        <Link
-          href="/funcionarios/nuevo"
-          className="rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-medium hover:opacity-90"
-        >
-          + Nuevo funcionario
-        </Link>
+        <div className="flex gap-2">
+          <a
+            href={`/api/export/funcionarios?${params.toString()}`}
+            className="rounded-md border border-input px-4 py-2 text-sm font-medium hover:bg-accent"
+            title="Exportar resultado actual a CSV"
+          >
+            ⬇ Exportar CSV
+          </a>
+          <Link
+            href="/funcionarios/nuevo"
+            className="rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-medium hover:opacity-90"
+          >
+            + Nuevo funcionario
+          </Link>
+        </div>
       </div>
 
       <form className="rounded-xl border bg-card p-4 grid grid-cols-1 md:grid-cols-6 gap-3 items-end">

@@ -151,6 +151,9 @@ export async function jubilar(
 ): Promise<AccionState> {
   const fecha_jubilacion = str(formData, "fecha_jubilacion");
   if (!fecha_jubilacion) return { error: "Fecha de jubilación obligatoria" };
+  if (str(formData, "confirm_text") !== "JUBILAR") {
+    return { error: 'Escribe "JUBILAR" para confirmar la acción.' };
+  }
   return callApi(
     "/egresos/jubilados",
     {
@@ -174,6 +177,9 @@ export async function registrarFallecimiento(
   const fecha_fallecimiento = str(formData, "fecha_fallecimiento");
   if (!fecha_fallecimiento) {
     return { error: "Fecha de fallecimiento obligatoria" };
+  }
+  if (str(formData, "confirm_text") !== "CONFIRMO") {
+    return { error: 'Escribe "CONFIRMO" para registrar el fallecimiento.' };
   }
   return callApi(
     "/egresos/fallecimientos",

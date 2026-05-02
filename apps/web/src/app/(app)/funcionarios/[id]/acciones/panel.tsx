@@ -336,6 +336,12 @@ function JubilarForm({ funcionarioId, onClose }: { funcionarioId: number; onClos
           <label className="block text-xs font-medium mb-1">Resolución</label>
           <input name="resolucion" className="input" />
         </div>
+        <div>
+          <label className="block text-xs font-medium mb-1">
+            Para confirmar, escribe <span className="font-mono font-bold">JUBILAR</span> *
+          </label>
+          <input name="confirm_text" required className="input" placeholder="JUBILAR" />
+        </div>
       </FormWrapper>
     </form>
   );
@@ -388,6 +394,12 @@ function FallecimientoForm({
             <label className="block text-xs font-medium mb-1">Acta de defunción</label>
             <input name="acta_defuncion" className="input" />
           </div>
+        </div>
+        <div>
+          <label className="block text-xs font-medium mb-1">
+            Para confirmar, escribe <span className="font-mono font-bold">CONFIRMO</span> *
+          </label>
+          <input name="confirm_text" required className="input" placeholder="CONFIRMO" />
         </div>
       </FormWrapper>
     </form>

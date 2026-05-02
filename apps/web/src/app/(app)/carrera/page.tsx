@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { api } from "@/lib/api";
 import { requireAuth } from "@/lib/session";
-import { requireRoleOrRedirect } from "@/lib/roles";
+import { requireRoleOrRedirect, hasAnyRole } from "@/lib/roles";
 import { formatDate } from "@/lib/utils";
 
 type Tab = "cursos" | "ascensos" | "reconocimientos" | "meritos";
@@ -71,6 +71,8 @@ export default async function CarreraPage({ searchParams }: SearchProps) {
   const token = await requireAuth();
   const me = await api.get<{ roles: string[] }>("/auth/me", token).catch(() => ({ roles: [] as string[] }));
   requireRoleOrRedirect(me.roles, ["ADMIN", "RRHH", "SUPERVISOR"]);
+  const puedeCrearCurso = hasAnyRole(me.roles, ["ADMIN", "RRHH", "SUPERVISOR"]);
+  const puedeCrearAscenso = hasAnyRole(me.roles, ["ADMIN", "RRHH"]);
 
   const tab: Tab =
     (TABS.find((t) => t.key === searchParams.tab)?.key as Tab) ?? "cursos";
@@ -91,11 +93,31 @@ export default async function CarreraPage({ searchParams }: SearchProps) {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Carrera</h1>
-        <p className="text-sm text-muted-foreground">
-          Cursos, ascensos, reconocimientos y méritos
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold">Carrera</h1>
+          <p className="text-sm text-muted-foreground">
+            Cursos, ascensos, reconocimientos y méritos
+          </p>
+        </div>
+        <div className="flex gap-2">
+          {tab === "cursos" && puedeCrearCurso && (
+            <Link
+              href="/carrera/cursos/nuevo"
+              className="rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-medium hover:opacity-90"
+            >
+              + Nuevo curso
+            </Link>
+          )}
+          {tab === "ascensos" && puedeCrearAscenso && (
+            <Link
+              href="/carrera/ascensos/nuevo"
+              className="rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-medium hover:opacity-90"
+            >
+              + Nuevo ascenso
+            </Link>
+          )}
+        </div>
       </div>
 
       <div className="flex gap-1 border-b">

@@ -3,6 +3,7 @@ import { api } from "@/lib/api";
 import { requireAuth } from "@/lib/session";
 import { hasAnyRole } from "@/lib/roles";
 import { formatDate } from "@/lib/utils";
+import Pagination from "@/components/layout/Pagination";
 
 interface Comision {
   id: number;
@@ -47,11 +48,21 @@ export default async function ComisionesPage({ searchParams }: SearchProps) {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Comisiones de servicio</h1>
-        <p className="text-sm text-muted-foreground">
-          {data ? `${data.total.toLocaleString("es-VE")} comisiones` : "Cargando…"}
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold">Comisiones de servicio</h1>
+          <p className="text-sm text-muted-foreground">
+            {data ? `${data.total.toLocaleString("es-VE")} comisiones` : "Cargando…"}
+          </p>
+        </div>
+        {puedeEditar && (
+          <Link
+            href="/ops/comisiones/nuevo"
+            className="rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-medium hover:opacity-90"
+          >
+            + Nueva comisión
+          </Link>
+        )}
       </div>
 
       <form className="flex gap-3 items-end">
@@ -146,6 +157,12 @@ export default async function ComisionesPage({ searchParams }: SearchProps) {
               </tbody>
             </table>
           </div>
+          <Pagination
+            page={data.page}
+            pages={data.pages}
+            basePath="/ops/comisiones"
+            searchParams={{ activo: searchParams.activo }}
+          />
         </div>
       )}
     </div>

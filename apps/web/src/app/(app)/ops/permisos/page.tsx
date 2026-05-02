@@ -3,6 +3,7 @@ import { api } from "@/lib/api";
 import { requireAuth } from "@/lib/session";
 import { hasAnyRole } from "@/lib/roles";
 import { formatDate } from "@/lib/utils";
+import Pagination from "@/components/layout/Pagination";
 
 interface Permiso {
   id: number;
@@ -147,6 +148,12 @@ export default async function PermisosPage({ searchParams }: SearchProps) {
               </tbody>
             </table>
           </div>
+          <Pagination
+            page={data.page}
+            pages={data.pages}
+            basePath="/ops/permisos"
+            searchParams={{ autorizado: searchParams.autorizado }}
+          />
         </div>
       )}
     </div>

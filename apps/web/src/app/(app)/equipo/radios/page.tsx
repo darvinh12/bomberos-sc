@@ -1,7 +1,9 @@
+import Link from "next/link";
 import { api } from "@/lib/api";
 import { requireAuth } from "@/lib/session";
-import { requireRoleOrRedirect } from "@/lib/roles";
+import { requireRoleOrRedirect, hasAnyRole } from "@/lib/roles";
 import { formatDate } from "@/lib/utils";
+import Pagination from "@/components/layout/Pagination";
 
 interface Radio {
   id: number;
@@ -39,6 +41,7 @@ export default async function RadiosPage({ searchParams }: SearchProps) {
   const token = await requireAuth();
   const me = await api.get<{ roles: string[] }>("/auth/me", token).catch(() => ({ roles: [] as string[] }));
   requireRoleOrRedirect(me.roles, ["ADMIN", "LOGISTICA"]);
+  const puedeCrear = hasAnyRole(me.roles, ["ADMIN", "LOGISTICA"]);
 
   const page = Number(searchParams.page ?? 1);
   const params = new URLSearchParams({ page: String(page), page_size: "50" });
@@ -54,11 +57,21 @@ export default async function RadiosPage({ searchParams }: SearchProps) {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Radios</h1>
-        <p className="text-sm text-muted-foreground">
-          {data ? `${data.total.toLocaleString("es-VE")} radios` : "Cargando…"}
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold">Radios</h1>
+          <p className="text-sm text-muted-foreground">
+            {data ? `${data.total.toLocaleString("es-VE")} radios` : "Cargando…"}
+          </p>
+        </div>
+        {puedeCrear && (
+          <Link
+            href="/equipo/radios/nuevo"
+            className="rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-medium hover:opacity-90"
+          >
+            + Nuevo radio
+          </Link>
+        )}
       </div>
 
       <form className="flex gap-3 items-end">
@@ -134,6 +147,12 @@ export default async function RadiosPage({ searchParams }: SearchProps) {
               </tbody>
             </table>
           </div>
+          <Pagination
+            page={data.page}
+            pages={data.pages}
+            basePath="/equipo/radios"
+            searchParams={{ estatus: searchParams.estatus }}
+          />
         </div>
       )}
     </div>
