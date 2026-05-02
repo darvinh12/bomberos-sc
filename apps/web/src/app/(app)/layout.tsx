@@ -18,6 +18,14 @@ const NAV = [
   { href: "/salud/reposos", label: "Reposos", icon: "🏥" },
   { href: "/ops/guardias", label: "Guardias", icon: "🚒" },
   { href: "/ops/vacaciones", label: "Vacaciones", icon: "🌴" },
+  { href: "/ops/permisos", label: "Permisos", icon: "📝" },
+  { href: "/ops/comisiones", label: "Comisiones", icon: "📋" },
+  { href: "/ops/faltas", label: "Faltas", icon: "⚠️" },
+  { href: "/carrera", label: "Carrera", icon: "🎖️" },
+  { href: "/equipo/proteccion", label: "Protección", icon: "🦺" },
+  { href: "/equipo/radios", label: "Radios", icon: "📡" },
+  { href: "/beneficios", label: "Beneficios", icon: "💰" },
+  { href: "/egresos", label: "Egresos", icon: "🏁" },
   { href: "/catalogos", label: "Catálogos", icon: "📚" },
 ];
 
