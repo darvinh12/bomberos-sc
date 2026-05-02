@@ -63,27 +63,66 @@ uvicorn bomberos_api.main:app --reload --port 8000
 
 Abrir http://localhost:8000/docs para la UI de Swagger.
 
-## Endpoints v1
+## Endpoints v0.2
 
-| Método | Path                              | Auth          | Descripción                       |
-|--------|-----------------------------------|---------------|-----------------------------------|
-| GET    | `/health`                         | No            | Liveness                          |
-| GET    | `/health/db`                      | No            | Conexión a BD                     |
-| POST   | `/auth/login`                     | No            | OAuth2 form: usuario+password     |
-| POST   | `/auth/refresh`                   | No (refresh)  | Rota el refresh token             |
-| GET    | `/auth/me`                        | Sí            | Perfil + roles                    |
-| POST   | `/auth/change-password`           | Sí            | Cambiar contraseña                |
-| POST   | `/auth/logout`                    | Sí            | Registra logout en log_accesos    |
-| GET    | `/funcionarios`                   | Sí            | Listado con filtros + paginación  |
-| GET    | `/funcionarios/{id}`              | Sí            | Detalle                           |
-| POST   | `/funcionarios`                   | RRHH/ADMIN    | Crear funcionario + período #1    |
-| PATCH  | `/funcionarios/{id}`              | RRHH/ADMIN    | Actualizar campos parciales       |
-| GET    | `/catalogos/jerarquias`           | Sí            | Lista jerarquías                  |
-| GET    | `/catalogos/cargos`               | Sí            | ...                               |
-| GET    | `/catalogos/zonas`                | Sí            | ...                               |
-| GET    | `/catalogos/estaciones?zona_id=N` | Sí            | ...                               |
+### Autenticación + perfil
+- `POST /auth/login` (OAuth2 form), `/auth/refresh`, `/auth/logout`, `/auth/change-password`
+- `GET  /auth/me` — perfil + roles
 
-(El resto de catálogos en `/catalogos/*` — ver `routers/catalogos.py`.)
+### Personal
+- `GET /funcionarios` — listado con `q`, `estatus`, `zona_id`, `estacion_id`, `jerarquia_id`, paginación
+- `GET /funcionarios/{id}` · `POST /funcionarios` (RRHH/ADMIN — crea período #1) · `PATCH /funcionarios/{id}`
+
+### Catálogos (read-only)
+- `/catalogos/jerarquias`, `/cargos`, `/condiciones`, `/niveles-educativos`, `/especialidades`,
+  `/estados-civiles`, `/grupos-sanguineos`, `/bancos`, `/zonas`, `/estaciones`, `/divisiones`,
+  `/areas`, `/dependencias`
+
+### Salud (`MEDICO`/`RRHH`/`ADMIN` para escribir)
+- `GET/POST /salud/reposos` · `GET /salud/reposos/{id}` · `PATCH /salud/reposos/{id}`
+- `GET/POST /salud/lesiones`
+- `GET/POST /salud/evaluacion-fisica`
+
+### Operaciones
+- `GET/POST /ops/guardias` · `POST /ops/guardias/{id}/funcionarios` · `POST /ops/guardias/{id}/cerrar`
+- `GET/POST /ops/permisos` · `POST /ops/permisos/{id}/autorizar`
+- `GET/POST /ops/vacaciones`
+- `GET/POST /ops/comisiones`
+- `GET/POST /ops/faltas` (INSPECTOR/ADMIN)
+
+### Carrera
+- `GET/POST /carrera/cursos-realizados`
+- `GET/POST /carrera/evaluaciones` (SUPERVISOR/ADMIN)
+- `GET/POST /carrera/ascensos` (RRHH/ADMIN — actualiza la jerarquía actual)
+- `GET/POST /carrera/reconocimientos`
+- `GET /carrera/meritos` · `POST /carrera/meritos/recalcular/{periodo_id}`
+
+### Equipamiento (LOGISTICA/ADMIN)
+- `GET/POST /equipo/proteccion/inventario`
+- `POST /equipo/proteccion/asignaciones` · `POST /equipo/proteccion/asignaciones/{id}/devolver`
+- `GET/POST /equipo/radios` · `POST /equipo/radios/asignaciones`
+
+### Beneficios
+- `GET/POST /beneficios/ayudas` · `PATCH /beneficios/ayudas/{id}` (SUPERVISOR/ADMIN aprueba)
+- `GET/POST /beneficios/entregas`
+
+### Egresos (RRHH/ADMIN)
+- `GET/POST /egresos/jubilados` (cierra período activo automáticamente)
+- `GET/POST /egresos/solicitudes-jubilacion`
+- `POST /egresos/fallecimientos`
+
+### Dashboard / vistas
+- `GET /dashboard` — resumen institucional (vista `sys.v_dashboard`)
+- `GET /dashboard/distribucion-zona`
+- `GET /dashboard/inventario-disponible`
+- `GET /dashboard/reposos-activos`
+- `GET /dashboard/vacaciones-actuales`
+
+### Administración (ADMIN)
+- `GET /admin/usuarios` · `POST /admin/usuarios`
+- `PATCH /admin/usuarios/{id}` (activar/bloquear)
+- `POST /admin/usuarios/{id}/reset-password` (force-change al próximo login)
+- `POST/DELETE /admin/usuarios/{id}/roles/{codigo}`
 
 ## Tests
 

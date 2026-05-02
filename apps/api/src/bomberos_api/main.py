@@ -12,7 +12,20 @@ from bomberos_api.core.middleware import (
 )
 from bomberos_api.database import dispose_engine, get_engine
 from bomberos_api.logging import configure_logging, get_logger
-from bomberos_api.routers import auth, catalogos, funcionarios, health
+from bomberos_api.routers import (
+    admin,
+    auth,
+    beneficios,
+    carrera,
+    catalogos,
+    dashboard,
+    egresos,
+    equipo,
+    funcionarios,
+    health,
+    ops,
+    salud,
+)
 
 
 @asynccontextmanager
@@ -56,6 +69,14 @@ def create_app() -> FastAPI:
     app.include_router(auth.router)
     app.include_router(funcionarios.router)
     app.include_router(catalogos.router)
+    app.include_router(salud.router)
+    app.include_router(ops.router)
+    app.include_router(carrera.router)
+    app.include_router(equipo.router)
+    app.include_router(beneficios.router)
+    app.include_router(egresos.router)
+    app.include_router(dashboard.router)
+    app.include_router(admin.router)
 
     return app
 
