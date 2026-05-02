@@ -112,6 +112,7 @@ export default async function RadiosPage({ searchParams }: SearchProps) {
                   <th className="text-left p-3">Frecuencia / Canal</th>
                   <th className="text-left p-3">Adquisición</th>
                   <th className="text-left p-3">Estatus</th>
+                  <th className="text-right p-3"></th>
                 </tr>
               </thead>
               <tbody>
@@ -135,11 +136,21 @@ export default async function RadiosPage({ searchParams }: SearchProps) {
                         {r.estatus}
                       </span>
                     </td>
+                    <td className="p-3 text-right">
+                      {puedeCrear && r.estatus === "DISPONIBLE" && (
+                        <Link
+                          href={`/equipo/radios/${r.id}/asignar`}
+                          className="text-primary hover:underline text-xs font-medium"
+                        >
+                          Asignar →
+                        </Link>
+                      )}
+                    </td>
                   </tr>
                 ))}
                 {data.items.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="p-8 text-center text-muted-foreground">
+                    <td colSpan={6} className="p-8 text-center text-muted-foreground">
                       Sin radios registrados.
                     </td>
                   </tr>

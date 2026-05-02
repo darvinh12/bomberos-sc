@@ -113,6 +113,7 @@ export default async function ProteccionPage({ searchParams }: SearchProps) {
                   <th className="text-left p-3">Adquisición</th>
                   <th className="text-left p-3">Vence</th>
                   <th className="text-left p-3">Estatus</th>
+                  <th className="text-right p-3"></th>
                 </tr>
               </thead>
               <tbody>
@@ -138,11 +139,21 @@ export default async function ProteccionPage({ searchParams }: SearchProps) {
                         {i.estatus}
                       </span>
                     </td>
+                    <td className="p-3 text-right">
+                      {puedeCrear && i.estatus === "DISPONIBLE" && (
+                        <Link
+                          href={`/equipo/proteccion/${i.id}/asignar`}
+                          className="text-primary hover:underline text-xs font-medium"
+                        >
+                          Asignar →
+                        </Link>
+                      )}
+                    </td>
                   </tr>
                 ))}
                 {data.items.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="p-8 text-center text-muted-foreground">
+                    <td colSpan={6} className="p-8 text-center text-muted-foreground">
                       Sin inventario.
                     </td>
                   </tr>
