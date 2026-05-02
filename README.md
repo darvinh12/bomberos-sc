@@ -1,22 +1,33 @@
-# Sistema Bomberos Caracas — Base de Datos
+# Sistema Bomberos Caracas
 
-Rediseño completo de la base de datos del Cuerpo de Bomberos del Distrito Capital,
-migrando desde un sistema legacy en Visual Basic + SQL Server (`PERSONALINTEGRADA`,
-~230 tablas) hacia **PostgreSQL 16+** modernizado.
+Rediseño integral del sistema del Cuerpo de Bomberos del Distrito Capital,
+migrando desde el sistema legacy en Visual Basic + SQL Server
+(`PERSONALINTEGRADA`, ~230 tablas) hacia un stack moderno:
 
-## Estructura
+- **BD:** PostgreSQL 16+ (~85 tablas, 15 schemas)
+- **API:** FastAPI 0.115 + SQLAlchemy 2 + asyncpg
+- **Frontend:** Next.js 14 + TypeScript (próximamente)
+- **Infra:** Docker Compose, reverse proxy con TLS, SIEM/audit centralizado
+
+## Estructura (monorepo)
 
 ```
-sql/
+sql/                       Esquema PostgreSQL — fuente de verdad de la BD
   01_base.sql              Extensiones, schemas, ENUMs, catálogos, geo, org, seguridad
-  02_dominio.sql           Personal, identidad país, salud, ops, carrera, equipo,
-                           beneficios, vivienda, egresos, documentos, auditoría
+  02_dominio.sql           Personal, identidad, salud, ops, carrera, equipo, beneficios...
   03_funciones_vistas.sql  Funciones, triggers, vistas, SPs, sincronización
-  04_seed.sql              Datos iniciales (catálogos, usuario admin, parámetros)
+  04_seed.sql              Datos iniciales
   99_run_all.sql           Orquestador
+
+apps/
+  api/                     Backend FastAPI (ver apps/api/README.md)
+  web/                     Frontend (próximamente)
+
 docs/
-  ER.md                    Diagrama entidad-relación (Mermaid; se renderiza en GitHub)
-  schema.dbml              DBML para dbdiagram.io (vista interactiva, zoom, exportar)
+  ER.md                    Diagrama entidad-relación (Mermaid)
+  schema.dbml              DBML para dbdiagram.io
+
+docker-compose.yml         Stack local (Postgres + API)
 ```
 
 ## Diagrama Entidad-Relación
@@ -64,18 +75,33 @@ docs/
 - **Triggers de sincronización** mantienen los snapshots en `funcionarios` (estatus,
   numero_equipo, condicion_id) consistentes con sus tablas históricas.
 
-## Instalación
+## Instalación rápida (Docker)
 
 ```powershell
-createdb -h localhost -U postgres bomberos_caracas
+$env:JWT_SECRET_KEY = (python -c "import secrets; print(secrets.token_urlsafe(64))")
+docker compose up -d postgres
 psql -h localhost -U postgres -d bomberos_caracas -f sql/99_run_all.sql
+docker compose up -d api
 ```
 
-Login inicial: `admin` / `Admin#2026*` (forzado a cambiar al primer ingreso).
+- API: http://localhost:8000/docs
+- Login inicial: `admin` / `Admin#2026*` (forzado a cambiar al primer login)
+
+## Seguridad (resumen)
+
+- Credenciales con bcrypt 12 rounds, JWT access (30 min) + refresh (7 días) con rotación
+- Bloqueo automático tras 5 intentos fallidos
+- Auditoría completa: `aud.log_accesos` (autenticación) + `aud.log_cambios` (datos, JSONB diff)
+- Cabeceras OWASP, CORS whitelist, rate-limit, sin docs en producción
+- Roles + scopes (zona/estación) preparados para Row-Level Security
+- Detalle completo en [`apps/api/README.md`](./apps/api/README.md)
 
 ## Estado
 
-Versión `2.0.0` — DDL inicial completo. Próximos pasos:
-- Script de migración desde el legacy `PERSONALINTEGRADA`
-- API / backend
-- Frontend (web app sustituye el sistema VB)
+| Componente | Estado | Commit |
+|---|---|---|
+| Esquema BD v2.0.0 | ✅ completo | `9b15d97` |
+| Diagramas ER + DBML | ✅ completo | `454b8fc` |
+| API FastAPI v0.1.0 | ✅ scaffolding (auth + funcionarios + catálogos) | actual |
+| Migración legacy → nueva | ⏳ pendiente (BD legacy disponible Lunes) | — |
+| Frontend Next.js | ⏳ siguiente fase | — |

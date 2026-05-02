@@ -1,0 +1,187 @@
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from sqlalchemy import func, or_, select, text
+from sqlalchemy.exc import IntegrityError
+
+from bomberos_api.core.deps import CurrentUser, DbSession, require_role
+from bomberos_api.models.funcionario import Funcionario, PeriodoServicio
+from bomberos_api.schemas.common import Page
+from bomberos_api.schemas.funcionario import (
+    FuncionarioCreate,
+    FuncionarioDetail,
+    FuncionarioListItem,
+    FuncionarioUpdate,
+)
+
+router = APIRouter(prefix="/funcionarios", tags=["funcionarios"])
+
+
+def _client_ip(request: Request) -> str | None:
+    fwd = request.headers.get("x-forwarded-for")
+    if fwd:
+        return fwd.split(",")[0].strip()
+    return request.client.host if request.client else None
+
+
+async def _set_audit_ctx(db, usuario_id: int, ip: str | None) -> None:
+    await db.execute(text("SET LOCAL app.usuario_id = :v").bindparams(v=str(usuario_id)))
+    if ip:
+        await db.execute(text("SET LOCAL app.usuario_ip = :v").bindparams(v=ip))
+
+
+@router.get("", response_model=Page[FuncionarioListItem])
+async def listar(
+    db: DbSession,
+    user: CurrentUser,
+    q: str | None = Query(default=None, description="Búsqueda fuzzy por nombre o cédula"),
+    estatus: str | None = Query(default="ACTIVO"),
+    zona_id: int | None = None,
+    estacion_id: int | None = None,
+    jerarquia_id: int | None = None,
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=25, ge=1, le=200),
+) -> Page[FuncionarioListItem]:
+    stmt = select(Funcionario)
+    count_stmt = select(func.count()).select_from(Funcionario)
+
+    filters = []
+    if estatus:
+        filters.append(Funcionario.estatus == estatus)
+    if zona_id is not None:
+        filters.append(Funcionario.zona_id == zona_id)
+    if estacion_id is not None:
+        filters.append(Funcionario.estacion_id == estacion_id)
+    if jerarquia_id is not None:
+        filters.append(Funcionario.jerarquia_id == jerarquia_id)
+    if q:
+        like = f"%{q}%"
+        cond = or_(
+            Funcionario.nombre_completo.ilike(like),
+            Funcionario.numero_empleado.ilike(like),
+        )
+        if q.isdigit():
+            cond = or_(cond, Funcionario.cedula == int(q))
+        filters.append(cond)
+
+    if filters:
+        stmt = stmt.where(*filters)
+        count_stmt = count_stmt.where(*filters)
+
+    total = await db.scalar(count_stmt) or 0
+
+    stmt = (
+        stmt.order_by(Funcionario.apellidos, Funcionario.nombres)
+        .offset((page - 1) * page_size)
+        .limit(page_size)
+    )
+    result = await db.execute(stmt)
+    items = result.scalars().all()
+
+    pages = (total + page_size - 1) // page_size
+    return Page[FuncionarioListItem](
+        items=[FuncionarioListItem.model_validate(i) for i in items],
+        total=total,
+        page=page,
+        page_size=page_size,
+        pages=pages,
+    )
+
+
+@router.get("/{funcionario_id}", response_model=FuncionarioDetail)
+async def obtener(funcionario_id: int, db: DbSession, user: CurrentUser) -> FuncionarioDetail:
+    funcionario = await db.scalar(
+        select(Funcionario).where(Funcionario.id == funcionario_id)
+    )
+    if funcionario is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Funcionario no encontrado"
+        )
+    return FuncionarioDetail.model_validate(funcionario)
+
+
+@router.post(
+    "",
+    response_model=FuncionarioDetail,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_role("RRHH", "ADMIN"))],
+)
+async def crear(
+    request: Request,
+    payload: FuncionarioCreate,
+    db: DbSession,
+    user: CurrentUser,
+) -> FuncionarioDetail:
+    await _set_audit_ctx(db, user.id, _client_ip(request))
+
+    funcionario = Funcionario(
+        nacionalidad=payload.nacionalidad,
+        cedula=payload.cedula,
+        apellidos=payload.apellidos,
+        nombres=payload.nombres,
+        fecha_nacimiento=payload.fecha_nacimiento,
+        sexo=payload.sexo,
+        fecha_primer_ingreso=payload.fecha_primer_ingreso,
+        jerarquia_id=payload.jerarquia_id,
+        cargo_id=payload.cargo_id,
+        zona_id=payload.zona_id,
+        estacion_id=payload.estacion_id,
+        correo=payload.correo,
+        telefono_movil=payload.telefono_movil,
+    )
+    db.add(funcionario)
+    try:
+        await db.flush()
+    except IntegrityError as e:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Conflicto al crear funcionario: {e.orig}",
+        ) from e
+
+    # Crear el primer período de servicio
+    db.add(
+        PeriodoServicio(
+            funcionario_id=funcionario.id,
+            numero_periodo=1,
+            fecha_ingreso=payload.fecha_primer_ingreso,
+            tipo_ingreso="INGRESO",
+        )
+    )
+    await db.flush()
+    await db.refresh(funcionario)
+    return FuncionarioDetail.model_validate(funcionario)
+
+
+@router.patch(
+    "/{funcionario_id}",
+    response_model=FuncionarioDetail,
+    dependencies=[Depends(require_role("RRHH", "ADMIN"))],
+)
+async def actualizar(
+    request: Request,
+    funcionario_id: int,
+    payload: FuncionarioUpdate,
+    db: DbSession,
+    user: CurrentUser,
+) -> FuncionarioDetail:
+    await _set_audit_ctx(db, user.id, _client_ip(request))
+    funcionario = await db.scalar(
+        select(Funcionario).where(Funcionario.id == funcionario_id)
+    )
+    if funcionario is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Funcionario no encontrado"
+        )
+
+    data = payload.model_dump(exclude_unset=True)
+    for field, value in data.items():
+        setattr(funcionario, field, value)
+    funcionario.updated_by = user.id
+
+    try:
+        await db.flush()
+    except IntegrityError as e:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Conflicto al actualizar: {e.orig}",
+        ) from e
+
+    return FuncionarioDetail.model_validate(funcionario)
