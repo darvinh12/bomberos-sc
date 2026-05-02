@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Bomberos Caracas — Sistema</title>
+  <style>
+    :root { --red: #b71c1c; --red-d: #7f0000; --bg: #fafafa; --fg: #111; --muted: #666; --card: #fff; --bd: #e5e5e5; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg); color: var(--fg); line-height: 1.6;
+    }
+    .hero {
+      background: linear-gradient(135deg, var(--red) 0%, var(--red-d) 100%);
+      color: #fff; padding: 4rem 2rem; text-align: center;
+    }
+    .hero h1 { margin: 0 0 0.5rem; font-size: 2.5rem; }
+    .hero p { margin: 0; opacity: 0.9; font-size: 1.1rem; }
+    .container { max-width: 1100px; margin: 0 auto; padding: 3rem 1.5rem; }
+    .grid { display: grid; gap: 1.5rem; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); margin-top: 1rem; }
+    .card {
+      background: var(--card); border: 1px solid var(--bd); border-radius: 12px;
+      padding: 1.5rem; transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
+    .card h3 { margin: 0 0 0.5rem; color: var(--red); }
+    .card p { margin: 0 0 1rem; color: var(--muted); font-size: 0.95rem; }
+    .card a {
+      display: inline-block; color: var(--red); font-weight: 600; text-decoration: none;
+      border: 1px solid var(--red); border-radius: 6px; padding: 0.5rem 1rem;
+      transition: all 0.15s;
+    }
+    .card a:hover { background: var(--red); color: #fff; }
+    h2 { color: var(--red); border-bottom: 2px solid var(--bd); padding-bottom: 0.5rem; }
+    .stack { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; }
+    .pill {
+      background: #fff; border: 1px solid var(--bd); border-radius: 20px;
+      padding: 0.25rem 0.75rem; font-size: 0.85rem; color: var(--muted);
+    }
+    footer { text-align: center; color: var(--muted); padding: 2rem; font-size: 0.9rem; }
+    .icon { font-size: 2rem; }
+  </style>
+</head>
+<body>
+  <div class="hero">
+    <h1>🚒 Sistema Bomberos Caracas</h1>
+    <p>Plataforma integral del Cuerpo de Bomberos del Distrito Capital</p>
+  </div>
+
+  <div class="container">
+    <h2>Documentación interactiva</h2>
+    <div class="grid">
+      <div class="card">
+        <div class="icon">📡</div>
+        <h3>API REST</h3>
+        <p>Swagger UI con todos los endpoints. Auth, personal, salud, operaciones, carrera, equipamiento, beneficios, egresos.</p>
+        <a href="./api/index.html">Abrir Swagger →</a>
+      </div>
+      <div class="card">
+        <div class="icon">📖</div>
+        <h3>API REST · ReDoc</h3>
+        <p>Misma API, vista alternativa más limpia para lectura técnica.</p>
+        <a href="./api/redoc.html">Abrir ReDoc →</a>
+      </div>
+      <div class="card">
+        <div class="icon">🗄️</div>
+        <h3>Modelo de datos</h3>
+        <p>Diagrama entidad-relación renderizado en Mermaid: 8 vistas por dominio.</p>
+        <a href="https://github.com/ganesh4494/bomberos-caracas-bd/blob/main/docs/ER.md">Ver ER →</a>
+      </div>
+      <div class="card">
+        <div class="icon">🎨</div>
+        <h3>DBML (dbdiagram.io)</h3>
+        <p>Schema completo importable en dbdiagram.io para zoom interactivo.</p>
+        <a href="https://github.com/ganesh4494/bomberos-caracas-bd/blob/main/docs/schema.dbml">Ver DBML →</a>
+      </div>
+      <div class="card">
+        <div class="icon">💻</div>
+        <h3>Código fuente</h3>
+        <p>Repositorio privado en GitHub. SQL + API FastAPI + frontend Next.js.</p>
+        <a href="https://github.com/ganesh4494/bomberos-caracas-bd">Abrir repo →</a>
+      </div>
+      <div class="card">
+        <div class="icon">🚀</div>
+        <h3>Codespaces</h3>
+        <p>Ejecuta el sistema completo en el navegador sin instalar nada.</p>
+        <a href="https://github.com/ganesh4494/bomberos-caracas-bd/codespaces">Lanzar Codespace →</a>
+      </div>
+    </div>
+
+    <h2 style="margin-top:3rem">Stack tecnológico</h2>
+    <div class="stack">
+      <span class="pill">PostgreSQL 16</span>
+      <span class="pill">FastAPI 0.115</span>
+      <span class="pill">SQLAlchemy 2 (async)</span>
+      <span class="pill">asyncpg</span>
+      <span class="pill">Alembic</span>
+      <span class="pill">Pydantic v2</span>
+      <span class="pill">JWT + bcrypt 12</span>
+      <span class="pill">structlog</span>
+      <span class="pill">Next.js 14</span>
+      <span class="pill">TypeScript</span>
+      <span class="pill">shadcn/ui</span>
+      <span class="pill">TanStack Query</span>
+      <span class="pill">Docker Compose</span>
+      <span class="pill">GitHub Actions</span>
+    </div>
+
+    <h2 style="margin-top:3rem">Características clave</h2>
+    <ul>
+      <li><strong>Personal con ciclos múltiples:</strong> un funcionario puede ingresar/egresar/reingresar varias veces — modelado en <code>personal.periodos_servicio</code>.</li>
+      <li><strong>Históricos efectivo-datados:</strong> jerarquía, ubicación administrativa, condición, número de equipo. Constraints temporales con <code>EXCLUDE</code> impiden solapes.</li>
+      <li><strong>Identidad país:</strong> carnet de la patria, hogares de la patria, GDC, registro electoral preservados para reportes gubernamentales.</li>
+      <li><strong>Auditoría JSONB unificada:</strong> trigger genérico <code>aud.fn_audit</code> registra cada cambio con diff JSONB y autor.</li>
+      <li><strong>Seguridad institucional:</strong> bcrypt 12, JWT con rotación, bloqueo automático, OWASP headers, CORS whitelist, RBAC granular.</li>
+      <li><strong>Búsqueda fuzzy:</strong> <code>pg_trgm</code> + GIN para nombres y diagnósticos.</li>
+    </ul>
+  </div>
+
+  <footer>
+    Cuerpo de Bomberos del Distrito Capital · Sistema v2.0 · Software libre institucional
+  </footer>
+</body>
+</html>

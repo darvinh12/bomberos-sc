@@ -1,0 +1,70 @@
+name: GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/api/**"
+      - "docs/**"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install API
+        working-directory: apps/api
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+
+      - name: Generar openapi.json
+        working-directory: apps/api
+        env:
+          DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/dummy
+          JWT_SECRET_KEY: build-only-secret-not-real
+        run: |
+          python -c "import json; from bomberos_api.main import app; open('openapi.json','w').write(json.dumps(app.openapi(), indent=2, ensure_ascii=False))"
+
+      - name: Preparar sitio estático
+        run: |
+          mkdir -p _site
+          cp -r docs/* _site/ 2>/dev/null || true
+          mkdir -p _site/api
+          cp apps/api/openapi.json _site/api/openapi.json
+          cp docs/swagger/index.html _site/api/index.html
+          cp docs/swagger/redoc.html _site/api/redoc.html
+          cp README.md _site/README.md
+          cp docs/landing.html _site/index.html
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
