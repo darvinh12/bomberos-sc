@@ -47,11 +47,8 @@ jobs:
         run: |
           mkdir -p _site
           cp -r docs/* _site/ 2>/dev/null || true
-          mkdir -p _site/api
+          # Sobrescribir openapi.json con el recién generado
           cp apps/api/openapi.json _site/api/openapi.json
-          cp docs/swagger/index.html _site/api/index.html
-          cp docs/swagger/redoc.html _site/api/redoc.html
-          cp README.md _site/README.md
           cp docs/landing.html _site/index.html
 
       - uses: actions/configure-pages@v5

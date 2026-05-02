@@ -98,10 +98,46 @@ docker compose up -d api
 
 ## Estado
 
-| Componente | Estado | Commit |
-|---|---|---|
-| Esquema BD v2.0.0 | ✅ completo | `9b15d97` |
-| Diagramas ER + DBML | ✅ completo | `454b8fc` |
-| API FastAPI v0.1.0 | ✅ scaffolding (auth + funcionarios + catálogos) | actual |
-| Migración legacy → nueva | ⏳ pendiente (BD legacy disponible Lunes) | — |
-| Frontend Next.js | ⏳ siguiente fase | — |
+| Componente | Estado |
+|---|---|
+| Esquema BD v2.0.0 (PostgreSQL, 15 schemas, ~85 tablas) | ✅ completo |
+| Diagramas ER (Mermaid) + DBML (dbdiagram.io) | ✅ completo |
+| API FastAPI v0.2 (~60 endpoints, 11 routers) | ✅ completo |
+| Frontend Next.js v0.1 (login + dashboard + 4 módulos) | ✅ scaffolding |
+| Datos demo (carga + limpieza) | ✅ scripts SQL listos |
+| CI / GitHub Actions (lint + tests) | ✅ |
+| Devcontainer (Codespaces ready) | ✅ |
+| Documentación pública (Swagger UI estático) | ✅ archivos en `docs/api/` |
+| Migración legacy → nueva (BD legacy disponible Lunes) | ⏳ scaffolding en `apps/migration/` |
+| Frontend de módulos restantes (carrera, equipo, etc.) | ⏳ |
+| MFA TOTP / Redis revocation | ⏳ |
+
+## Vista rápida de la API documentada
+
+Como GitHub Pages no soporta repos privados en plan free, la documentación
+estática se sirve abriendo localmente o desde otro hosting:
+
+```bash
+# Local — abre el archivo directamente
+start docs/api/index.html        # Windows
+xdg-open docs/api/index.html     # Linux
+
+# O desde un servidor estático
+cd docs && python -m http.server 8080
+# → http://localhost:8080/api/   (Swagger UI)
+# → http://localhost:8080/api/redoc.html  (ReDoc)
+```
+
+Para hosting público (sin pagar GitHub Pro): conectar el repo a **Vercel**
+o **Cloudflare Pages** — soportan repos privados gratis. Ver
+[`docs/PENDING.md`](./docs/PENDING.md).
+
+## Datos demo
+
+```bash
+# Carga 50 funcionarios + reposos + vacaciones + guardias ficticios
+psql -d bomberos_caracas -f sql/demo_data.sql
+
+# Limpia todo lo identificable como demo (apellido = '%DEMO')
+psql -d bomberos_caracas -f sql/demo_data_clean.sql
+```
