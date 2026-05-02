@@ -1,7 +1,12 @@
 /**
  * Cliente HTTP para la API. En el server lee cookie HttpOnly.
  * En el cliente delega los cookies via fetch credentials: include.
+ *
+ * Modo DEMO: si NEXT_PUBLIC_DEMO_MODE=1 devuelve fixtures locales
+ * en vez de hacer la petición. Eliminar antes de producción.
  */
+import { DEMO_LOGIN_RESPONSE, DEMO_MODE, demoResolve } from "./demo-fixtures";
+
 const BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 export class ApiError extends Error {
@@ -15,6 +20,12 @@ async function request<T>(
   init: RequestInit = {},
   token?: string,
 ): Promise<T> {
+  if (DEMO_MODE && (init.method ?? "GET") === "GET") {
+    return demoResolve(path) as T;
+  }
+  if (DEMO_MODE) {
+    return undefined as T;
+  }
   const headers = new Headers(init.headers);
   headers.set("Accept", "application/json");
   if (init.body && !(init.body instanceof FormData)) {
@@ -52,6 +63,12 @@ export const api = {
     request<T>(p, { method: "PATCH", body: body ? JSON.stringify(body) : undefined }, token),
   del: <T>(p: string, token?: string) => request<T>(p, { method: "DELETE" }, token),
   loginForm: async (usuario: string, password: string) => {
+    if (DEMO_MODE) {
+      if (!usuario || !password) {
+        throw new ApiError(400, "Usuario y contraseña requeridos");
+      }
+      return DEMO_LOGIN_RESPONSE;
+    }
     const fd = new URLSearchParams();
     fd.set("username", usuario);
     fd.set("password", password);
