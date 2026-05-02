@@ -86,3 +86,26 @@ jobs:
         env:
           API_URL: http://localhost:8000
         run: npm run build
+
+  api-docker:
+    name: API — Docker build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Build image (no push)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/api/Dockerfile
+          push: false
+          load: true
+          tags: bomberos-api:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Smoke test bootstrap import
+        run: |
+          docker run --rm --entrypoint python bomberos-api:ci -c "from bomberos_api.main import app; from bomberos_api.scripts.bootstrap import main; print('imports OK')"
+      - name: Verify sql/ copied
+        run: |
+          docker run --rm --entrypoint sh bomberos-api:ci -c "ls /app/sql/01_base.sql && ls /app/sql/05_campos_custom.sql"
