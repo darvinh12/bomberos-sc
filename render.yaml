@@ -1,0 +1,39 @@
+# Render Blueprint — alternativa a Railway.
+# Render entrega Postgres con DSN postgresql:// (sin +asyncpg).
+# El bootstrap convierte automáticamente, pero la app espera +asyncpg, así
+# que ajusta DATABASE_URL en el dashboard antes de desplegar:
+#   postgresql+asyncpg://user:pass@host:port/db
+
+services:
+  - type: web
+    name: bomberos-api
+    runtime: docker
+    region: oregon
+    plan: starter
+    dockerfilePath: ./apps/api/Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: WEB_CONCURRENCY
+        value: 2
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: CORS_ORIGINS
+        value: https://bomberos-caracas.vercel.app
+      - key: DATABASE_URL
+        sync: false
+      - key: BOOTSTRAP_ADMIN_USER
+        value: admin
+      - key: BOOTSTRAP_ADMIN_PASSWORD
+        sync: false
+      - key: BOOTSTRAP_ADMIN_EMAIL
+        value: admin@bomberos.gob.ve
+
+databases:
+  - name: bomberos-pg
+    plan: starter
+    region: oregon
+    postgresMajorVersion: 16

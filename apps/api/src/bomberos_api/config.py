@@ -17,6 +17,16 @@ class Settings(BaseSettings):
         default="postgresql+asyncpg://postgres:postgres@localhost:5432/bomberos_caracas"
     )
 
+    @field_validator("database_url", mode="before")
+    @classmethod
+    def normalize_db_url(cls, v: str) -> str:
+        # Railway/Render entregan postgresql:// — necesitamos +asyncpg para SQLAlchemy async
+        if isinstance(v, str) and v.startswith("postgres://"):
+            v = "postgresql://" + v[len("postgres://") :]
+        if isinstance(v, str) and v.startswith("postgresql://") and "+asyncpg" not in v:
+            v = "postgresql+asyncpg://" + v[len("postgresql://") :]
+        return v
+
     jwt_secret_key: str = Field(default="dev-secret-change-me", min_length=16)
     jwt_algorithm: str = "HS256"
     jwt_access_token_expire_minutes: int = 30

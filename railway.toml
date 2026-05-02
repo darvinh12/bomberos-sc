@@ -1,0 +1,27 @@
+# Railway puede leer este archivo desde la raíz del repo.
+# Crea un servicio "api" usando el Dockerfile en apps/api/.
+# Crea aparte un Postgres (plugin Railway) y conéctalo via DATABASE_URL.
+
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "apps/api/Dockerfile"
+
+[deploy]
+startCommand = "sh -c \"python -m bomberos_api.scripts.bootstrap && exec uvicorn bomberos_api.main:app --host 0.0.0.0 --port ${PORT} --workers ${WEB_CONCURRENCY:-2}\""
+healthcheckPath = "/health"
+healthcheckTimeout = 30
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 5
+
+# Variables que debes configurar manualmente en Railway:
+#   DATABASE_URL                 (auto-inyectada al adjuntar el plugin Postgres,
+#                                 pero ojo: Railway entrega "postgresql://" — convertir
+#                                 a "postgresql+asyncpg://" o usar la variable
+#                                 PGHOST/PGUSER/etc. y construirla).
+#   JWT_SECRET_KEY               openssl rand -hex 32
+#   APP_ENV                      production
+#   CORS_ORIGINS                 https://bomberos-caracas.vercel.app
+#   BOOTSTRAP_ADMIN_USER         admin
+#   BOOTSTRAP_ADMIN_PASSWORD     <segura, mínimo 10 chars con mayús/minús/dígito/especial>
+#   BOOTSTRAP_ADMIN_EMAIL        admin@bomberos.gob.ve
+#   WEB_CONCURRENCY              2
