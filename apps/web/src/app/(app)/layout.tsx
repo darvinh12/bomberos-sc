@@ -18,6 +18,11 @@ const NAV = [
   { href: "/salud/reposos", label: "Reposos", icon: "🏥" },
   { href: "/ops/guardias", label: "Guardias", icon: "🚒" },
   { href: "/ops/vacaciones", label: "Vacaciones", icon: "🌴" },
+  { href: "/catalogos", label: "Catálogos", icon: "📚" },
+];
+
+const NAV_ADMIN = [
+  { href: "/admin/usuarios", label: "Usuarios", icon: "🔑" },
 ];
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -41,7 +46,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           </Link>
         </div>
 
-        <nav className="flex-1 p-3 space-y-1">
+        <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
           {NAV.map((item) => (
             <Link
               key={item.href}
@@ -52,6 +57,23 @@ export default async function AppLayout({ children }: { children: React.ReactNod
               <span>{item.label}</span>
             </Link>
           ))}
+          {me?.roles?.includes("ADMIN") && (
+            <>
+              <div className="pt-3 pb-1 px-3 text-[10px] uppercase tracking-wider text-muted-foreground">
+                Administración
+              </div>
+              {NAV_ADMIN.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="flex items-center gap-3 px-3 py-2 rounded-md text-sm hover:bg-accent transition"
+                >
+                  <span>{item.icon}</span>
+                  <span>{item.label}</span>
+                </Link>
+              ))}
+            </>
+          )}
         </nav>
 
         {me && (
