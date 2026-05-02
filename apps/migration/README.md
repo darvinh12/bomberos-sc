@@ -1,6 +1,36 @@
 # Migración legacy `PERSONALINTEGRADA` → `bomberos_caracas`
 
-**Estado:** scaffolding. Pendiente la BD legacy (disponible Lunes).
+**Estado:** CLI funcional con tests, lista para usar el lunes contra `PERSONALINTEGRADA`.
+
+## Uso rápido
+
+```powershell
+cd apps\migration
+py -3.11 -m venv .venv
+.venv\Scripts\python -m pip install -e .
+copy .env.example .env
+# Editar .env con cadenas reales
+
+# Inspeccionar tablas legacy
+.venv\Scripts\bomberos-migrate analyze
+
+# Dry-run: lee todo, no escribe
+.venv\Scripts\bomberos-migrate migrate
+
+# Aplicar de verdad
+.venv\Scripts\bomberos-migrate migrate --apply
+
+# Solo un dominio
+.venv\Scripts\bomberos-migrate migrate --apply --only funcionarios
+```
+
+## Tests
+
+```powershell
+.venv\Scripts\pip install -e ".[dev]"
+.venv\Scripts\python -m pytest
+```
+
 
 ## Estrategia
 
