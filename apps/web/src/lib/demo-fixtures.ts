@@ -4,19 +4,18 @@
  */
 
 /**
- * Función en lugar de constante: garantiza que se evalúe en runtime
- * (Next.js sólo inlina constantes top-level en client bundles).
+ * Modo demo. Hardcodeado a true mientras el backend FastAPI no esté
+ * disponible públicamente. Para desactivar (cuando haya API real),
+ * cambiar a false o leer process.env.NEXT_PUBLIC_DEMO_MODE.
  */
 export function isDemoMode(): boolean {
-  if (process.env.NEXT_PUBLIC_DEMO_MODE === "1") return true;
-  if (process.env.DEMO_MODE === "1") return true;
-  // Fallback: si NO hay API URL configurada, asumimos modo demo.
-  if (!process.env.NEXT_PUBLIC_API_URL && !process.env.API_INTERNAL_URL) return true;
-  return false;
+  if (process.env.NEXT_PUBLIC_DEMO_MODE === "0") return false;
+  if (process.env.DEMO_MODE === "0") return false;
+  // Default: ON — eliminar antes de producción real.
+  return true;
 }
 
-/** @deprecated usar isDemoMode() para evaluación runtime correcta */
-export const DEMO_MODE = isDemoMode();
+export const DEMO_MODE = true;
 
 const NOMBRES = [
   "José",
