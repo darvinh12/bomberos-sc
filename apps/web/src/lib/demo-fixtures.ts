@@ -335,6 +335,56 @@ const PROTECCION = Array.from({ length: 18 }, (_, i) => ({
   estacion_id: 1 + (i % 12),
 }));
 
+const PROTECCION_ASIGNACIONES = PROTECCION
+  .filter((p) => p.estatus === "ASIGNADO")
+  .map((p, i) => ({
+    id: i + 1,
+    inventario_id: p.id,
+    funcionario_id: 1 + (i % 50),
+    fecha_entrega: "2026-03-15",
+    estado_entrega: "Buen estado",
+    documento_url: null,
+    observaciones: null,
+    fecha_devolucion: null as string | null,
+    estado_devolucion: null as string | null,
+    devuelto: false,
+  }));
+
+const AUDITORIA = Array.from({ length: 35 }, (_, i) => {
+  const tablas = [
+    ["personal", "funcionarios"],
+    ["salud", "reposos"],
+    ["ops", "guardias"],
+    ["ops", "permisos"],
+    ["beneficios", "ayudas"],
+    ["seguridad", "usuarios"],
+    ["equipo", "proteccion_asignaciones"],
+  ];
+  const ops = ["INSERT", "UPDATE", "DELETE"];
+  const usuarios = [
+    [1, "admin"],
+    [2, "rrhh"],
+    [3, "supervisor"],
+    [4, "operador"],
+  ];
+  const t = tablas[i % tablas.length];
+  const u = usuarios[i % usuarios.length];
+  const dias = i;
+  const fecha = new Date(Date.now() - dias * 3600000 * 4).toISOString();
+  return {
+    id: 1000 - i,
+    schema_name: t[0],
+    table_name: t[1],
+    registro_id: String(1 + (i % 50)),
+    operacion: ops[i % ops.length],
+    usuario_id: u[0] as number,
+    usuario_nombre: u[1] as string,
+    ip: "192.168.1." + (10 + (i % 50)),
+    fecha,
+    campos_cambiados: ops[i % ops.length] === "UPDATE" ? { estatus: ["ACTIVO", "REPOSO"] } : null,
+  };
+});
+
 const RADIOS = Array.from({ length: 12 }, (_, i) => ({
   id: i + 1,
   modelo_id: 1,
@@ -610,6 +660,10 @@ export function demoResolve(path: string, rolActivo: string = "ADMIN"): unknown 
 
     case base === "/equipo/proteccion/inventario":
       return paginate(PROTECCION, page, page_size);
+    case base === "/equipo/proteccion/asignaciones":
+      return paginate(PROTECCION_ASIGNACIONES, page, page_size);
+    case base === "/admin/auditoria":
+      return paginate(AUDITORIA, page, page_size);
     case base === "/equipo/radios":
       return paginate(RADIOS, page, page_size);
 

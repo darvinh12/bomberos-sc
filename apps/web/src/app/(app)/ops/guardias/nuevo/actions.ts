@@ -55,6 +55,32 @@ export async function asignarFuncionarioAGuardia(
   }
 }
 
+export async function marcarAsistencia(
+  guardiaId: number,
+  gfId: number,
+  asistio: boolean,
+  motivoInasistencia: string | null,
+): Promise<{ ok: boolean; error?: string }> {
+  if (isDemoMode()) {
+    revalidatePath(`/ops/guardias/${guardiaId}`);
+    return { ok: true };
+  }
+  const token = await requireAuth();
+  const params = new URLSearchParams({ asistio: String(asistio) });
+  if (motivoInasistencia) params.set("motivo_inasistencia", motivoInasistencia);
+  try {
+    await api.patch(
+      `/ops/guardias/${guardiaId}/funcionarios/${gfId}/asistencia?${params}`,
+      undefined,
+      token,
+    );
+    revalidatePath(`/ops/guardias/${guardiaId}`);
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Error" };
+  }
+}
+
 export async function cerrarGuardia(
   guardiaId: number,
 ): Promise<{ ok: boolean; error?: string }> {

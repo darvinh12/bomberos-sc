@@ -65,14 +65,22 @@ export default async function ProteccionPage({ searchParams }: SearchProps) {
             {data ? `${data.total.toLocaleString("es-VE")} ítems` : "Cargando…"}
           </p>
         </div>
-        {puedeCrear && (
+        <div className="flex gap-2">
           <Link
-            href="/equipo/proteccion/nuevo"
-            className="rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-medium hover:opacity-90"
+            href="/equipo/proteccion/asignaciones"
+            className="rounded-md border border-input px-4 py-2 text-sm font-medium hover:bg-accent"
           >
-            + Nuevo ítem
+            📋 Asignaciones activas
           </Link>
-        )}
+          {puedeCrear && (
+            <Link
+              href="/equipo/proteccion/nuevo"
+              className="rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-medium hover:opacity-90"
+            >
+              + Nuevo ítem
+            </Link>
+          )}
+        </div>
       </div>
 
       <form className="flex gap-3 items-end">

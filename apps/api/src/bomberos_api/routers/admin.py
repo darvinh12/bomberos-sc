@@ -201,6 +201,68 @@ async def asignar_rol(
         raise integrity_409(e) from e
 
 
+class AuditoriaOut(BaseModel):
+    id: int
+    schema_name: str
+    table_name: str
+    registro_id: str | None
+    operacion: str
+    usuario_id: int | None
+    usuario_nombre: str | None
+    ip: str | None
+    fecha: datetime
+    campos_cambiados: dict | list | None = None
+
+
+@router.get("/auditoria", response_model=Page[AuditoriaOut])
+async def listar_auditoria(
+    db: DbSession,
+    _: CurrentUser,
+    table_name: str | None = None,
+    schema_name: str | None = None,
+    usuario_id: int | None = None,
+    operacion: str | None = None,
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=50, ge=1, le=200),
+) -> Page[AuditoriaOut]:
+    from sqlalchemy import text
+
+    where_clauses = []
+    params: dict[str, object] = {}
+    if table_name:
+        where_clauses.append("table_name = :table_name")
+        params["table_name"] = table_name
+    if schema_name:
+        where_clauses.append("schema_name = :schema_name")
+        params["schema_name"] = schema_name
+    if usuario_id:
+        where_clauses.append("usuario_id = :usuario_id")
+        params["usuario_id"] = usuario_id
+    if operacion:
+        where_clauses.append("operacion::text = :operacion")
+        params["operacion"] = operacion
+    where_sql = ("WHERE " + " AND ".join(where_clauses)) if where_clauses else ""
+
+    total = (
+        await db.scalar(text(f"SELECT count(*) FROM aud.log_cambios {where_sql}").bindparams(**params))
+    ) or 0
+    res = await db.execute(
+        text(
+            f"""SELECT id, schema_name, table_name, registro_id,
+                       operacion::text AS operacion, usuario_id, usuario_nombre,
+                       ip::text AS ip, fecha, campos_cambiados
+                FROM aud.log_cambios {where_sql}
+                ORDER BY fecha DESC
+                OFFSET :offset LIMIT :limit"""
+        ).bindparams(**params, offset=(page - 1) * page_size, limit=page_size)
+    )
+    items = [AuditoriaOut.model_validate(dict(r._mapping)) for r in res]
+    return Page[AuditoriaOut](
+        items=items, total=total, page=page, page_size=page_size,
+        pages=(total + page_size - 1) // page_size,
+    )
+
+
 @router.delete(
     "/usuarios/{usuario_id}/roles/{rol_codigo}", status_code=status.HTTP_204_NO_CONTENT
 )

@@ -50,6 +50,7 @@ const NAV_REFERENCIA: NavItem[] = [
 const NAV_ADMIN: NavItem[] = [
   { href: "/admin/usuarios", label: "Usuarios", icon: "🔑" },
   { href: "/admin/campos-custom", label: "Campos personalizados", icon: "🧩" },
+  { href: "/admin/auditoria", label: "Auditoría", icon: "🕵️" },
 ];
 
 function filtrar(items: NavItem[], roles: string[]) {

@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import {
   asignarFuncionarioAGuardia,
   cerrarGuardia,
+  marcarAsistencia,
 } from "../nuevo/actions";
 
 interface Asignado {
@@ -79,6 +80,24 @@ export default function GuardiaPanel({
     });
   };
 
+  const toggleAsistencia = (gfId: number, asistio: boolean) => {
+    setError(null);
+    let motivo: string | null = null;
+    if (!asistio) {
+      motivo = prompt("Motivo de inasistencia (opcional):") ?? null;
+    }
+    start(async () => {
+      const r = await marcarAsistencia(guardiaId, gfId, asistio, motivo);
+      if (r.ok) {
+        setAsignados((prev) =>
+          prev.map((a) => (a.id === gfId ? { ...a, asistio } : a)),
+        );
+      } else {
+        setError(r.error ?? "Error");
+      }
+    });
+  };
+
   return (
     <>
       <section className="rounded-xl border bg-card overflow-hidden">
@@ -115,7 +134,34 @@ export default function GuardiaPanel({
                     {a.rol_guardia ?? "—"}
                   </td>
                   <td className="p-3 text-center">
-                    {a.asistio === true ? (
+                    {puedeEditar && !cerradaState ? (
+                      <div className="inline-flex gap-1">
+                        <button
+                          onClick={() => toggleAsistencia(a.id, true)}
+                          disabled={pending}
+                          className={`px-2 py-0.5 text-xs rounded border ${
+                            a.asistio === true
+                              ? "bg-green-100 border-green-300 text-green-800"
+                              : "hover:bg-green-50"
+                          }`}
+                          title="Marcar como asistió"
+                        >
+                          ✓
+                        </button>
+                        <button
+                          onClick={() => toggleAsistencia(a.id, false)}
+                          disabled={pending}
+                          className={`px-2 py-0.5 text-xs rounded border ${
+                            a.asistio === false
+                              ? "bg-red-100 border-red-300 text-red-800"
+                              : "hover:bg-red-50"
+                          }`}
+                          title="Marcar como NO asistió"
+                        >
+                          ✗
+                        </button>
+                      </div>
+                    ) : a.asistio === true ? (
                       <span className="text-green-700">✓ Asistió</span>
                     ) : a.asistio === false ? (
                       <span className="text-red-700">✗ No asistió</span>

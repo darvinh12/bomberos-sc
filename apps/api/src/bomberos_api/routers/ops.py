@@ -104,6 +104,34 @@ async def asignar_funcionario(
     return {"id": gf.id}
 
 
+@router.patch(
+    "/guardias/{guardia_id}/funcionarios/{gf_id}/asistencia",
+    dependencies=[Depends(require_role("OPERADOR", "ADMIN"))],
+)
+async def marcar_asistencia(
+    request: Request,
+    guardia_id: int,
+    gf_id: int,
+    asistio: bool,
+    motivo_inasistencia: str | None = None,
+    db: DbSession = ...,
+    user: CurrentUser = ...,
+):
+    await set_audit_ctx(db, user.id, client_ip(request))
+    gf = await db.scalar(
+        select(GuardiaFuncionario).where(
+            GuardiaFuncionario.id == gf_id,
+            GuardiaFuncionario.guardia_id == guardia_id,
+        )
+    )
+    if gf is None:
+        raise not_found("Asignación")
+    gf.asistio = asistio
+    gf.motivo_inasistencia = motivo_inasistencia
+    await db.flush()
+    return {"id": gf.id, "asistio": gf.asistio}
+
+
 @router.post(
     "/guardias/{guardia_id}/cerrar",
     response_model=GuardiaOut,
