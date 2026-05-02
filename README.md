@@ -14,7 +14,16 @@ sql/
   03_funciones_vistas.sql  Funciones, triggers, vistas, SPs, sincronización
   04_seed.sql              Datos iniciales (catálogos, usuario admin, parámetros)
   99_run_all.sql           Orquestador
+docs/
+  ER.md                    Diagrama entidad-relación (Mermaid; se renderiza en GitHub)
+  schema.dbml              DBML para dbdiagram.io (vista interactiva, zoom, exportar)
 ```
+
+## Diagrama Entidad-Relación
+
+- **GitHub nativo:** abre [`docs/ER.md`](./docs/ER.md) — se renderiza automáticamente.
+- **Interactivo:** copia [`docs/schema.dbml`](./docs/schema.dbml) y pégalo en
+  https://dbdiagram.io/d (File → Import → DBML). Permite zoom, pan y exportar a PNG/PDF.
 
 ## Schemas (15)
 

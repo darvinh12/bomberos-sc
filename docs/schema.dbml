@@ -1,0 +1,1671 @@
+// =============================================================================
+// CUERPO DE BOMBEROS DE CARACAS — Modelo de datos en DBML
+// Para visualizar:  https://dbdiagram.io/d  →  File → Import → DBML
+// Fuente de verdad: ../sql/01_base.sql + ../sql/02_dominio.sql
+// =============================================================================
+
+Project bomberos_caracas {
+  database_type: 'PostgreSQL'
+  Note: 'Sistema integrado del Cuerpo de Bomberos del Distrito Capital. v2.0.0'
+}
+
+// =============================================================================
+// ENUMS
+// =============================================================================
+Enum estatus_funcionario {
+  ACTIVO
+  REPOSO
+  COMISION
+  PRE_JUBILADO
+  JUBILADO
+  EGRESADO
+  FALLECIDO
+  SUSPENDIDO
+  BAJA_DESHONROSA
+  PERMISO_LARGO
+}
+
+Enum tipo_personal {
+  BOMBERO
+  BOMBERO_VOLUNTARIO
+  OBRERO
+  EMPLEADO
+  CONTRATADO
+  PASANTE
+}
+
+Enum estatus_solicitud {
+  PENDIENTE
+  EN_PROCESO
+  APROBADO
+  RECHAZADO
+  ARCHIVADO
+  PAGADO
+  ENTREGADO
+  ANULADO
+}
+
+Enum tipo_actividad {
+  CULTURAL
+  DEPORTIVA
+  MUSICAL
+  CIENTIFICA
+  LABORAL
+  ACADEMICA
+}
+
+Enum tipo_movimiento_inventario {
+  INGRESO
+  EGRESO
+  AJUSTE
+  TRANSFERENCIA
+  BAJA
+  DEVOLUCION
+}
+
+Enum tipo_evento_acceso {
+  LOGIN
+  LOGOUT
+  LOGIN_FALLIDO
+  BLOQUEO
+  CAMBIO_PASSWORD
+  PASSWORD_RESET
+}
+
+Enum operacion_audit {
+  I
+  U
+  D
+}
+
+// =============================================================================
+// CORE — catálogos compartidos
+// =============================================================================
+Table core.estados_civiles {
+  id smallint [pk, increment]
+  codigo text [unique, not null]
+  nombre text [not null]
+  activo boolean [default: true]
+}
+
+Table core.grupos_sanguineos {
+  id smallint [pk, increment]
+  codigo text [unique, not null]
+  nombre text [not null]
+}
+
+Table core.niveles_educativos {
+  id smallint [pk, increment]
+  codigo text [unique, not null]
+  nombre text [not null]
+  orden smallint [default: 0]
+}
+
+Table core.tipos_nivel_educativo {
+  id smallint [pk, increment]
+  codigo text [unique, not null]
+  nombre text [not null]
+}
+
+Table core.especialidades {
+  id smallint [pk, increment]
+  codigo text [unique, not null]
+  nombre text [not null]
+  descripcion text
+  activo boolean [default: true]
+}
+
+Table core.jerarquias {
+  id smallint [pk, increment]
+  codigo text [unique, not null]
+  nombre text [not null]
+  nombre_corto text
+  orden smallint [default: 0]
+  es_oficial boolean
+  es_tropa boolean
+  es_estado_mayor boolean
+  activo boolean [default: true]
+}
+
+Table core.cargos {
+  id smallint [pk, increment]
+  codigo text [unique, not null]
+  nombre text [not null]
+  es_jefatura boolean
+  activo boolean [default: true]
+}
+
+Table core.condiciones {
+  id smallint [pk, increment]
+  codigo text [unique, not null]
+  nombre text [not null]
+  activo boolean [default: true]
+}
+
+Table core.tipos_reposo {
+  id smallint [pk, increment]
+  codigo text [unique, not null]
+  nombre text [not null]
+  dias_max smallint
+  requiere_diagnostico boolean
+}
+
+Table core.tipos_solicitud {
+  id smallint [pk, increment]
+  codigo text [unique, not null]
+  nombre text [not null]
+  monto_max numeric(15,2)
+}
+
+Table core.tipos_documento {
+  id smallint [pk, increment]
+  codigo text [unique, not null]
+  nombre text [not null]
+}
+
+Table core.tipos_carnet {
+  id smallint [pk, increment]
+  codigo text [unique, not null]
+  nombre text [not null]
+}
+
+Table core.tipos_licencia {
+  id smallint [pk, increment]
+  codigo text [unique, not null]
+  nombre text [not null]
+}
+
+Table core.tipos_accidente {
+  id smallint [pk, increment]
+  codigo text [unique, not null]
+  nombre text [not null]
+}
+
+Table core.tallas {
+  id smallint [pk, increment]
+  codigo text [unique, not null]
+  nombre text [not null]
+  grupo text [not null]
+  orden smallint
+}
+
+Table core.bancos {
+  id smallint [pk, increment]
+  codigo text [unique, not null]
+  nombre text [not null]
+  swift text
+  activo boolean [default: true]
+}
+
+Table core.proveedores {
+  id bigint [pk, increment]
+  rif text [unique]
+  razon_social text [not null]
+  nombre_comercial text
+  rubro text
+  activo boolean [default: true]
+}
+
+Table core.instituciones {
+  id bigint [pk, increment]
+  codigo text [unique]
+  nombre text [not null]
+  siglas text
+  activo boolean [default: true]
+}
+
+// =============================================================================
+// GEO
+// =============================================================================
+Table geo.estados {
+  id smallint [pk, increment]
+  codigo text [unique, not null]
+  nombre text [not null]
+  capital text
+}
+
+Table geo.municipios {
+  id int [pk, increment]
+  estado_id smallint [not null, ref: > geo.estados.id]
+  codigo text [not null]
+  nombre text [not null]
+
+  indexes { (estado_id, codigo) [unique] }
+}
+
+Table geo.parroquias {
+  id int [pk, increment]
+  municipio_id int [not null, ref: > geo.municipios.id]
+  codigo text [not null]
+  nombre text [not null]
+
+  indexes { (municipio_id, codigo) [unique] }
+}
+
+// =============================================================================
+// ORG — estructura organizacional
+// =============================================================================
+Table org.zonas {
+  id smallint [pk, increment]
+  codigo text [unique, not null]
+  nombre text [not null]
+  activo boolean [default: true]
+}
+
+Table org.estaciones {
+  id smallint [pk, increment]
+  zona_id smallint [not null, ref: > org.zonas.id]
+  parroquia_id int [ref: > geo.parroquias.id]
+  codigo text [unique, not null]
+  nombre text [not null]
+  nombre_corto text
+  direccion text
+  latitud numeric(10,7)
+  longitud numeric(10,7)
+  activa boolean [default: true]
+}
+
+Table org.divisiones {
+  id smallint [pk, increment]
+  codigo text [unique, not null]
+  nombre text [not null]
+  activo boolean [default: true]
+}
+
+Table org.areas {
+  id smallint [pk, increment]
+  division_id smallint [ref: > org.divisiones.id]
+  codigo text [unique, not null]
+  nombre text [not null]
+  activo boolean [default: true]
+}
+
+Table org.dependencias {
+  id smallint [pk, increment]
+  area_id smallint [ref: > org.areas.id]
+  codigo text [unique, not null]
+  nombre text [not null]
+  activo boolean [default: true]
+}
+
+Table org.areas_operativas {
+  area_id smallint [ref: > org.areas.id]
+  dependencia_id smallint [ref: > org.dependencias.id]
+
+  indexes { (area_id, dependencia_id) [pk] }
+}
+
+Table org.jefes_area_zona {
+  id bigint [pk, increment]
+  zona_id smallint [ref: > org.zonas.id]
+  area_id smallint [ref: > org.areas.id]
+  funcionario_id bigint [not null]
+  cargo_id smallint [ref: > core.cargos.id]
+  fecha_inicio date [not null]
+  fecha_fin date
+  activo boolean [default: true]
+}
+
+// =============================================================================
+// SYS
+// =============================================================================
+Table sys.parametros {
+  id int [pk, increment]
+  codigo text [unique, not null]
+  nombre text [not null]
+  valor text [not null]
+  tipo_dato text
+  descripcion text
+  editable boolean
+  sensible boolean
+  grupo text
+}
+
+Table sys.versiones {
+  id bigint [pk, increment]
+  version text [not null]
+  aplicada_at timestamptz
+  descripcion text
+}
+
+Table sys.feriados {
+  id int [pk, increment]
+  fecha date [not null]
+  nombre text [not null]
+  es_nacional boolean
+}
+
+// =============================================================================
+// SEGURIDAD
+// =============================================================================
+Table seguridad.roles {
+  id smallint [pk, increment]
+  codigo text [unique, not null]
+  nombre text [not null]
+  descripcion text
+  es_sistema boolean
+  activo boolean [default: true]
+}
+
+Table seguridad.modulos {
+  id smallint [pk, increment]
+  codigo text [unique, not null]
+  nombre text [not null]
+  orden smallint
+  activo boolean [default: true]
+}
+
+Table seguridad.rol_permisos {
+  rol_id smallint [ref: > seguridad.roles.id]
+  modulo_id smallint [ref: > seguridad.modulos.id]
+  puede_ver boolean
+  puede_crear boolean
+  puede_editar boolean
+  puede_eliminar boolean
+  puede_exportar boolean
+  puede_aprobar boolean
+
+  indexes { (rol_id, modulo_id) [pk] }
+}
+
+Table seguridad.usuarios {
+  id bigint [pk, increment]
+  funcionario_id bigint
+  usuario citext [unique, not null]
+  password_hash text [not null]
+  nombre_completo text [not null]
+  correo citext [unique]
+  activo boolean [default: true]
+  bloqueado boolean
+  motivo_bloqueo text
+  intentos_fallidos smallint
+  debe_cambiar_password boolean
+  mfa_activo boolean
+  mfa_secret text
+  ultimo_acceso timestamptz
+  ultimo_ip inet
+  created_at timestamptz
+  updated_at timestamptz
+  created_by bigint [ref: > seguridad.usuarios.id]
+  updated_by bigint [ref: > seguridad.usuarios.id]
+}
+
+Table seguridad.usuario_roles {
+  usuario_id bigint [ref: > seguridad.usuarios.id]
+  rol_id smallint [ref: > seguridad.roles.id]
+  asignado_at timestamptz
+  asignado_por bigint [ref: > seguridad.usuarios.id]
+
+  indexes { (usuario_id, rol_id) [pk] }
+}
+
+Table seguridad.usuario_permisos {
+  usuario_id bigint [ref: > seguridad.usuarios.id]
+  modulo_id smallint [ref: > seguridad.modulos.id]
+  puede_ver boolean
+  puede_crear boolean
+  puede_editar boolean
+  puede_eliminar boolean
+  puede_exportar boolean
+  puede_aprobar boolean
+
+  indexes { (usuario_id, modulo_id) [pk] }
+}
+
+Table seguridad.usuario_scopes {
+  id bigint [pk, increment]
+  usuario_id bigint [not null, ref: > seguridad.usuarios.id]
+  zona_id smallint [ref: > org.zonas.id]
+  estacion_id smallint [ref: > org.estaciones.id]
+  division_id smallint [ref: > org.divisiones.id]
+  area_id smallint [ref: > org.areas.id]
+}
+
+Table seguridad.sesiones {
+  id uuid [pk]
+  usuario_id bigint [not null, ref: > seguridad.usuarios.id]
+  token_hash text [unique, not null]
+  ip inet
+  user_agent text
+  creada_at timestamptz
+  expira_at timestamptz
+  cerrada_at timestamptz
+}
+
+// =============================================================================
+// PERSONAL
+// =============================================================================
+Table personal.funcionarios {
+  id bigint [pk, increment]
+  nacionalidad varchar(1) [not null, note: 'V o E']
+  cedula int [not null]
+  rif text
+  apellidos text [not null]
+  nombres text [not null]
+  nombre_completo text [note: 'GENERATED']
+  fecha_nacimiento date
+  sexo varchar(1)
+  estado_civil_id smallint [ref: > core.estados_civiles.id]
+  grupo_sanguineo_id smallint [ref: > core.grupos_sanguineos.id]
+  lugar_nacimiento text
+  pais_nacimiento text
+  tipo_personal tipo_personal
+  numero_empleado text [unique]
+  numero_equipo text [note: 'snapshot — historial en historico_numeros_equipo']
+  fecha_primer_ingreso date [note: 'inmutable; ciclos en periodos_servicio']
+  promocion text
+  estatus estatus_funcionario
+  condicion_id smallint [ref: > core.condiciones.id, note: 'snapshot — historial en historico_condiciones']
+  jerarquia_id smallint [ref: > core.jerarquias.id]
+  cargo_id smallint [ref: > core.cargos.id]
+  zona_id smallint [ref: > org.zonas.id]
+  estacion_id smallint [ref: > org.estaciones.id]
+  area_id smallint [ref: > org.areas.id]
+  dependencia_id smallint [ref: > org.dependencias.id]
+  division_id smallint [ref: > org.divisiones.id]
+  seccion varchar(1)
+  horario text
+  telefono_habitacion text
+  telefono_movil text
+  telefono_otros text
+  correo citext [unique]
+  persona_contacto text
+  telefono_contacto text
+  parentesco_contacto text
+  nivel_educativo_id smallint [ref: > core.niveles_educativos.id]
+  profesion text
+  especialidad_id smallint [ref: > core.especialidades.id]
+  iutb boolean
+  egresado_unes boolean
+  foto_url text
+  huella_url text
+  firma_url text
+  merito numeric(5,2)
+  pre_jubilado boolean
+  es_voluntario boolean
+  observaciones text
+  created_at timestamptz
+  updated_at timestamptz
+  created_by bigint [ref: > seguridad.usuarios.id]
+  updated_by bigint [ref: > seguridad.usuarios.id]
+
+  indexes {
+    (nacionalidad, cedula) [unique, name: 'funcionarios_cedula_uq']
+    apellidos
+    estatus
+    nombre_completo [name: 'gin_trgm']
+  }
+}
+
+Ref: seguridad.usuarios.funcionario_id > personal.funcionarios.id
+Ref: org.jefes_area_zona.funcionario_id > personal.funcionarios.id
+
+Table personal.periodos_servicio {
+  id bigint [pk, increment]
+  funcionario_id bigint [not null, ref: > personal.funcionarios.id]
+  numero_periodo smallint [not null]
+  fecha_ingreso date [not null]
+  fecha_egreso date [note: 'NULL = activo']
+  tipo_ingreso text [note: 'INGRESO / REINGRESO / REINCORPORACION']
+  tipo_egreso text [note: 'RENUNCIA / DESPIDO / JUBILACION / etc.']
+  motivo text
+  base_legal text
+  numero_resolucion text
+  nro_memo text
+  fecha_notificacion date
+  fecha_efectiva_nomina date
+  pagaron_prestaciones boolean
+  monto_prestaciones numeric(15,2)
+  documento_url text
+  observaciones text
+  created_at timestamptz
+  updated_at timestamptz
+
+  indexes {
+    (funcionario_id, numero_periodo) [unique]
+    funcionario_id
+  }
+}
+
+Table personal.historico_condiciones {
+  id bigint [pk, increment]
+  funcionario_id bigint [not null, ref: > personal.funcionarios.id]
+  condicion_id smallint [not null, ref: > core.condiciones.id]
+  fecha_inicio date [not null]
+  fecha_fin date
+  motivo text
+  resolucion text
+  documento_url text
+}
+
+Table personal.historico_numeros_equipo {
+  id bigint [pk, increment]
+  funcionario_id bigint [not null, ref: > personal.funcionarios.id]
+  numero_equipo text [not null]
+  fecha_inicio date [not null]
+  fecha_fin date
+  motivo text
+}
+
+Table personal.cuentas_bancarias {
+  id bigint [pk, increment]
+  funcionario_id bigint [not null, ref: > personal.funcionarios.id]
+  banco_id smallint [not null, ref: > core.bancos.id]
+  numero_cuenta text [not null]
+  tipo_cuenta varchar(1)
+  titular text
+  es_actual boolean [default: true]
+  fecha_alta date
+  fecha_baja date
+}
+
+Table personal.licencias_conducir {
+  id bigint [pk, increment]
+  funcionario_id bigint [not null, ref: > personal.funcionarios.id]
+  tipo_licencia_id smallint [not null, ref: > core.tipos_licencia.id]
+  numero text
+  fecha_emision date [not null]
+  fecha_vence date
+  organismo text
+  es_actual boolean [default: true]
+  documento_url text
+}
+
+Table personal.direcciones {
+  id bigint [pk, increment]
+  funcionario_id bigint [not null, ref: > personal.funcionarios.id]
+  es_actual boolean
+  estado_id smallint [ref: > geo.estados.id]
+  municipio_id int [ref: > geo.municipios.id]
+  parroquia_id int [ref: > geo.parroquias.id]
+  sector text
+  urbanizacion text
+  calle text
+  edificio_casa text
+  piso text
+  apartamento text
+  referencia text
+  direccion_completa text
+  codigo_postal text
+  latitud numeric(10,7)
+  longitud numeric(10,7)
+  es_propia boolean
+  es_alquilada boolean
+  fecha_registro date
+}
+
+Table personal.carga_familiar {
+  id bigint [pk, increment]
+  funcionario_id bigint [not null, ref: > personal.funcionarios.id]
+  parentesco text [not null]
+  nacionalidad varchar(1)
+  cedula int
+  apellidos text [not null]
+  nombres text [not null]
+  fecha_nacimiento date
+  sexo varchar(1)
+  estado_civil_id smallint [ref: > core.estados_civiles.id]
+  nivel_educativo_id smallint [ref: > core.niveles_educativos.id]
+  estudia boolean
+  trabaja boolean
+  discapacidad boolean
+  es_beneficiario_hcm boolean
+  activo boolean [default: true]
+  fecha_inclusion date
+  fecha_baja date
+}
+
+Table personal.educacion {
+  id bigint [pk, increment]
+  funcionario_id bigint [not null, ref: > personal.funcionarios.id]
+  nivel_id smallint [not null, ref: > core.niveles_educativos.id]
+  tipo_id smallint [ref: > core.tipos_nivel_educativo.id]
+  titulo text
+  institucion text
+  pais text
+  fecha_inicio date
+  fecha_fin date
+  fecha_titulo date
+  documento_url text
+}
+
+Table personal.habilidades {
+  id bigint [pk, increment]
+  funcionario_id bigint [not null, ref: > personal.funcionarios.id]
+  grupo text [not null]
+  nombre text [not null]
+  nivel text
+  certificado boolean
+}
+
+Table personal.actividades {
+  id bigint [pk, increment]
+  funcionario_id bigint [not null, ref: > personal.funcionarios.id]
+  tipo tipo_actividad
+  nombre text [not null]
+  descripcion text
+  institucion text
+  fecha_inicio date
+  fecha_fin date
+}
+
+Table personal.tiempo_admpublica {
+  id bigint [pk, increment]
+  funcionario_id bigint [not null, ref: > personal.funcionarios.id]
+  institucion text [not null]
+  cargo text
+  fecha_inicio date [not null]
+  fecha_fin date
+  documento_url text
+}
+
+Table personal.carnets {
+  id bigint [pk, increment]
+  funcionario_id bigint [not null, ref: > personal.funcionarios.id]
+  tipo_carnet_id smallint [not null, ref: > core.tipos_carnet.id]
+  numero text
+  serial text
+  codigo_qr text
+  fecha_emision date
+  fecha_vence date
+  organismo_emisor text
+  documento_url text
+  activo boolean [default: true]
+}
+
+Table personal.historico_carnets {
+  id bigint [pk, increment]
+  carnet_id bigint [not null, ref: > personal.carnets.id]
+  numero_anterior text
+  numero_nuevo text
+  motivo text
+  fecha date
+  usuario_id bigint [ref: > seguridad.usuarios.id]
+}
+
+Table personal.carnets_vehiculo {
+  id bigint [pk, increment]
+  funcionario_id bigint [not null, ref: > personal.funcionarios.id]
+  placa text [not null]
+  marca text
+  modelo text
+  anio smallint
+  color text
+  serial_carroceria text
+  serial_motor text
+  tipo_vehiculo text
+  fecha_emision date
+  fecha_vence date
+  documento_url text
+  activo boolean [default: true]
+}
+
+Table personal.registro_votacion {
+  id bigint [pk, increment]
+  funcionario_id bigint [unique, not null, ref: > personal.funcionarios.id]
+  centro_electoral text
+  parroquia_id int [ref: > geo.parroquias.id]
+  municipio_id int [ref: > geo.municipios.id]
+  estado_id smallint [ref: > geo.estados.id]
+  mesa text
+}
+
+Table personal.hogares_patria {
+  id bigint [pk, increment]
+  funcionario_id bigint [not null, ref: > personal.funcionarios.id]
+  serial_carnet_patria text
+  codigo_hogar text
+  cantidad_personas smallint
+  cantidad_menores smallint
+  cantidad_adultos_mayores smallint
+  es_jefe_hogar boolean
+  recibe_clap boolean
+  recibe_bono boolean
+  direccion text
+  parroquia_id int [ref: > geo.parroquias.id]
+  fecha_registro date
+}
+
+Table personal.gdc_habitacional {
+  id bigint [pk, increment]
+  funcionario_id bigint [not null, ref: > personal.funcionarios.id]
+  codigo_postulacion text
+  programa text
+  estado text
+  proyecto text
+  parroquia_id int [ref: > geo.parroquias.id]
+  fecha_postulacion date
+  fecha_adjudicacion date
+  fecha_entrega date
+}
+
+Table personal.historico_jerarquias {
+  id bigint [pk, increment]
+  funcionario_id bigint [not null, ref: > personal.funcionarios.id]
+  jerarquia_id smallint [not null, ref: > core.jerarquias.id]
+  fecha_inicio date [not null]
+  fecha_fin date
+  motivo text
+  resolucion text
+  documento_url text
+}
+
+Table personal.historico_ubicaciones {
+  id bigint [pk, increment]
+  funcionario_id bigint [not null, ref: > personal.funcionarios.id]
+  zona_id smallint [ref: > org.zonas.id]
+  estacion_id smallint [ref: > org.estaciones.id]
+  area_id smallint [ref: > org.areas.id]
+  dependencia_id smallint [ref: > org.dependencias.id]
+  division_id smallint [ref: > org.divisiones.id]
+  cargo_id smallint [ref: > core.cargos.id]
+  fecha_inicio date [not null]
+  fecha_fin date
+  motivo text
+  resolucion text
+}
+
+Table personal.postulados {
+  id bigint [pk, increment]
+  nacionalidad varchar(1) [not null]
+  cedula int [not null]
+  apellidos text [not null]
+  nombres text [not null]
+  fecha_nacimiento date
+  sexo varchar(1)
+  telefono text
+  correo citext
+  direccion text
+  nivel_educativo_id smallint [ref: > core.niveles_educativos.id]
+  fecha_postulacion date
+  estatus estatus_solicitud
+  promocion_destino text
+  nota_examen_fisico numeric(5,2)
+  nota_examen_medico numeric(5,2)
+  nota_examen_psico numeric(5,2)
+  nota_examen_acad numeric(5,2)
+  aprobado boolean
+  funcionario_id bigint [ref: > personal.funcionarios.id]
+
+  indexes { (nacionalidad, cedula) [unique] }
+}
+
+// =============================================================================
+// SALUD
+// =============================================================================
+Table salud.grupos_diagnosticos {
+  id smallint [pk, increment]
+  codigo text [unique, not null]
+  nombre text [not null]
+}
+
+Table salud.diagnosticos {
+  id int [pk, increment]
+  codigo_cie text [unique]
+  grupo_id smallint [ref: > salud.grupos_diagnosticos.id]
+  nombre text [not null]
+  descripcion text
+  activo boolean [default: true]
+}
+
+Table salud.medicos {
+  id bigint [pk, increment]
+  nacionalidad varchar(1)
+  cedula int
+  apellidos text [not null]
+  nombres text [not null]
+  nombre_completo text
+  mpps text [unique]
+  cm text
+  especialidad text
+  telefono text
+  correo citext
+  activo boolean [default: true]
+
+  indexes { (nacionalidad, cedula) [unique] }
+}
+
+Table salud.centros_medicos {
+  id bigint [pk, increment]
+  rif text [unique]
+  nombre text [not null]
+  tipo text
+  direccion text
+  telefono text
+  parroquia_id int [ref: > geo.parroquias.id]
+  es_publico boolean
+  convenio_hcm boolean
+  activo boolean [default: true]
+}
+
+Table salud.reposos {
+  id bigint [pk, increment]
+  funcionario_id bigint [not null, ref: > personal.funcionarios.id]
+  tipo_reposo_id smallint [not null, ref: > core.tipos_reposo.id]
+  diagnostico_id int [ref: > salud.diagnosticos.id]
+  diagnostico_libre text
+  medico_id bigint [ref: > salud.medicos.id]
+  centro_medico_id bigint [ref: > salud.centros_medicos.id]
+  fecha_inicio date [not null]
+  fecha_fin date [not null]
+  dias smallint [note: 'GENERATED']
+  folio text
+  documento_url text
+  es_continuacion boolean
+  reposo_padre_id bigint [ref: > salud.reposos.id]
+  anulado boolean
+  motivo_anulacion text
+  observaciones text
+}
+
+Table salud.recurrencias {
+  id bigint [pk, increment]
+  funcionario_id bigint [not null, ref: > personal.funcionarios.id]
+  diagnostico_id int [ref: > salud.diagnosticos.id]
+  cantidad_episodios smallint
+  total_dias int
+  primer_episodio date
+  ultimo_episodio date
+}
+
+Table salud.lesiones {
+  id bigint [pk, increment]
+  funcionario_id bigint [not null, ref: > personal.funcionarios.id]
+  tipo_accidente_id smallint [ref: > core.tipos_accidente.id]
+  fecha_evento date [not null]
+  lugar_evento text
+  descripcion text [not null]
+  en_servicio boolean
+  parte_afectada text
+  centro_medico_id bigint [ref: > salud.centros_medicos.id]
+  medico_id bigint [ref: > salud.medicos.id]
+  diagnostico_id int [ref: > salud.diagnosticos.id]
+  dias_incapacidad smallint
+  secuelas text
+  documento_url text
+}
+
+Table salud.hospitalizaciones {
+  id bigint [pk, increment]
+  funcionario_id bigint [not null, ref: > personal.funcionarios.id]
+  es_funcionario boolean
+  carga_familiar_id bigint [ref: > personal.carga_familiar.id]
+  centro_medico_id bigint [ref: > salud.centros_medicos.id]
+  medico_id bigint [ref: > salud.medicos.id]
+  diagnostico_id int [ref: > salud.diagnosticos.id]
+  fecha_ingreso date [not null]
+  fecha_egreso date
+  motivo text
+  procedimiento text
+  monto_estimado numeric(15,2)
+  cubierto_hcm boolean
+}
+
+Table salud.consultas {
+  id bigint [pk, increment]
+  funcionario_id bigint [not null, ref: > personal.funcionarios.id]
+  medico_id bigint [ref: > salud.medicos.id]
+  fecha timestamptz
+  motivo text
+  sintomas text
+  diagnostico_id int [ref: > salud.diagnosticos.id]
+  tratamiento text
+  observaciones text
+  documento_url text
+}
+
+Table salud.hcm {
+  id bigint [pk, increment]
+  funcionario_id bigint [not null, ref: > personal.funcionarios.id]
+  poliza text
+  aseguradora text
+  fecha_inicio date
+  fecha_fin date
+  monto_cobertura numeric(15,2)
+  incluye_familiares boolean
+  activo boolean [default: true]
+}
+
+Table salud.evaluacion_fisica {
+  id bigint [pk, increment]
+  funcionario_id bigint [not null, ref: > personal.funcionarios.id]
+  fecha date [not null]
+  peso_kg numeric(5,2)
+  estatura_cm numeric(5,2)
+  imc numeric(5,2) [note: 'GENERATED']
+  presion_sistolica smallint
+  presion_diastolica smallint
+  pulso smallint
+  flexiones smallint
+  abdominales smallint
+  tiempo_carrera_seg int
+  apto boolean
+  medico_id bigint [ref: > salud.medicos.id]
+}
+
+// =============================================================================
+// OPS — operaciones
+// =============================================================================
+Table ops.guardias {
+  id bigint [pk, increment]
+  fecha date [not null]
+  estacion_id smallint [not null, ref: > org.estaciones.id]
+  seccion varchar(1)
+  turno text [not null]
+  hora_inicio time [not null]
+  hora_fin time [not null]
+  jefe_guardia_id bigint [ref: > personal.funcionarios.id]
+  cerrada boolean
+  cerrada_at timestamptz
+
+  indexes { (fecha, estacion_id, seccion, turno) [unique] }
+}
+
+Table ops.guardia_funcionarios {
+  id bigint [pk, increment]
+  guardia_id bigint [not null, ref: > ops.guardias.id]
+  funcionario_id bigint [not null, ref: > personal.funcionarios.id]
+  rol_guardia text
+  asistio boolean
+  motivo_inasistencia text
+  hora_llegada time
+  hora_salida time
+
+  indexes { (guardia_id, funcionario_id) [unique] }
+}
+
+Table ops.apertura_cierre_diaria {
+  id bigint [pk, increment]
+  fecha date [not null]
+  estacion_id smallint [not null, ref: > org.estaciones.id]
+  abierta_at timestamptz
+  cerrada_at timestamptz
+  abierta_por bigint [ref: > personal.funcionarios.id]
+  cerrada_por bigint [ref: > personal.funcionarios.id]
+  novedades text
+
+  indexes { (fecha, estacion_id) [unique] }
+}
+
+Table ops.permisos {
+  id bigint [pk, increment]
+  funcionario_id bigint [not null, ref: > personal.funcionarios.id]
+  tipo text [not null]
+  fecha_inicio date [not null]
+  fecha_fin date [not null]
+  horas numeric(5,2)
+  motivo text [not null]
+  autorizado boolean
+  autorizado_por bigint [ref: > personal.funcionarios.id]
+  autorizado_at timestamptz
+  documento_url text
+}
+
+Table ops.solicitudes_permiso {
+  id bigint [pk, increment]
+  funcionario_id bigint [not null, ref: > personal.funcionarios.id]
+  fecha_inicio date [not null]
+  fecha_fin date [not null]
+  motivo text [not null]
+  estatus estatus_solicitud
+  permiso_id bigint [ref: > ops.permisos.id]
+}
+
+Table ops.vacaciones {
+  id bigint [pk, increment]
+  funcionario_id bigint [not null, ref: > personal.funcionarios.id]
+  periodo_anio smallint [not null]
+  fecha_inicio date [not null]
+  fecha_fin date [not null]
+  dias_habiles smallint
+  dias_calendario smallint [note: 'GENERATED']
+  bono_pagado boolean
+  monto_bono numeric(15,2)
+  fecha_pago_bono date
+  fraccionada boolean
+  autorizado boolean
+  autorizado_por bigint [ref: > personal.funcionarios.id]
+}
+
+Table ops.firmantes_vacaciones {
+  id smallint [pk, increment]
+  funcionario_id bigint [not null, ref: > personal.funcionarios.id]
+  cargo_firma text [not null]
+  orden smallint
+  activo boolean [default: true]
+}
+
+Table ops.comisiones_servicio {
+  id bigint [pk, increment]
+  funcionario_id bigint [not null, ref: > personal.funcionarios.id]
+  institucion_id bigint [ref: > core.instituciones.id]
+  institucion_libre text
+  cargo_comision text
+  fecha_inicio date [not null]
+  fecha_fin date
+  resolucion text
+  activo boolean [default: true]
+}
+
+Table ops.faltas {
+  id bigint [pk, increment]
+  funcionario_id bigint [not null, ref: > personal.funcionarios.id]
+  tipo_falta text [not null]
+  fecha date [not null]
+  descripcion text [not null]
+  sancion text
+  dias_suspension smallint
+  fecha_inicio_susp date
+  fecha_fin_susp date
+  resolucion text
+  apelada boolean
+}
+
+Table ops.procesos_administrativos {
+  id bigint [pk, increment]
+  funcionario_id bigint [not null, ref: > personal.funcionarios.id]
+  expediente text [unique, not null]
+  fecha_apertura date [not null]
+  fecha_cierre date
+  motivo text [not null]
+  resultado text
+  estatus text
+}
+
+Table ops.ordenes_generales {
+  id bigint [pk, increment]
+  numero text [not null]
+  fecha date [not null]
+  asunto text [not null]
+  cuerpo text
+  firmada_por_id bigint [ref: > personal.funcionarios.id]
+  es_voluntarios boolean
+  publicada boolean
+
+  indexes { (numero, fecha) [unique] }
+}
+
+Table ops.actividades_operativas {
+  id bigint [pk, increment]
+  estacion_id smallint [ref: > org.estaciones.id]
+  fecha timestamptz [not null]
+  fecha_fin timestamptz
+  tipo text [not null]
+  direccion text
+  parroquia_id int [ref: > geo.parroquias.id]
+  descripcion text
+  funcionarios_count smallint
+  unidades_count smallint
+}
+
+// =============================================================================
+// CARRERA
+// =============================================================================
+Table carrera.cursos {
+  id smallint [pk, increment]
+  codigo text [unique, not null]
+  nombre text [not null]
+  horas smallint
+  institucion text
+  es_ascenso boolean
+  nivel_jerarquia_destino_id smallint [ref: > core.jerarquias.id]
+  activo boolean [default: true]
+}
+
+Table carrera.cursos_realizados {
+  id bigint [pk, increment]
+  funcionario_id bigint [not null, ref: > personal.funcionarios.id]
+  curso_id smallint [ref: > carrera.cursos.id]
+  nombre_libre text
+  institucion text
+  fecha_inicio date
+  fecha_fin date
+  horas smallint
+  nota numeric(5,2)
+  aprobado boolean
+  certificado_url text
+}
+
+Table carrera.periodos_evaluacion {
+  id smallint [pk, increment]
+  codigo text [unique, not null]
+  nombre text [not null]
+  fecha_inicio date [not null]
+  fecha_fin date [not null]
+  activo boolean [default: true]
+}
+
+Table carrera.categorias_evaluar {
+  id smallint [pk, increment]
+  codigo text [unique, not null]
+  nombre text [not null]
+  peso numeric(5,2)
+  orden smallint
+  activo boolean [default: true]
+}
+
+Table carrera.factores_porcentajes {
+  id smallint [pk, increment]
+  categoria_id smallint [not null, ref: > carrera.categorias_evaluar.id]
+  codigo text [not null]
+  nombre text [not null]
+  porcentaje numeric(5,2) [not null]
+}
+
+Table carrera.evaluaciones {
+  id bigint [pk, increment]
+  funcionario_id bigint [not null, ref: > personal.funcionarios.id]
+  periodo_id smallint [not null, ref: > carrera.periodos_evaluacion.id]
+  tipo text [not null]
+  evaluador_id bigint [ref: > personal.funcionarios.id]
+  nota_total numeric(5,2)
+  estatus text
+}
+
+Table carrera.evaluaciones_detalle {
+  id bigint [pk, increment]
+  evaluacion_id bigint [not null, ref: > carrera.evaluaciones.id]
+  categoria_id smallint [ref: > carrera.categorias_evaluar.id]
+  factor_id smallint [ref: > carrera.factores_porcentajes.id]
+  puntaje numeric(5,2)
+}
+
+Table carrera.procesos_ascenso {
+  id bigint [pk, increment]
+  nombre text [not null]
+  fecha_inicio date [not null]
+  fecha_fin date
+  jerarquia_origen_id smallint [ref: > core.jerarquias.id]
+  jerarquia_destino_id smallint [ref: > core.jerarquias.id]
+  estatus text
+}
+
+Table carrera.ascensos {
+  id bigint [pk, increment]
+  funcionario_id bigint [not null, ref: > personal.funcionarios.id]
+  proceso_id bigint [ref: > carrera.procesos_ascenso.id]
+  jerarquia_anterior_id smallint [ref: > core.jerarquias.id]
+  jerarquia_nueva_id smallint [not null, ref: > core.jerarquias.id]
+  fecha_efectiva date [not null]
+  resolucion text
+  nota_evaluacion numeric(5,2)
+  posicion_lista int
+}
+
+Table carrera.condecoraciones {
+  id smallint [pk, increment]
+  codigo text [unique, not null]
+  nombre text [not null]
+  nivel text
+  activo boolean [default: true]
+}
+
+Table carrera.reconocimientos {
+  id bigint [pk, increment]
+  funcionario_id bigint [not null, ref: > personal.funcionarios.id]
+  condecoracion_id smallint [ref: > carrera.condecoraciones.id]
+  institucion_id bigint [ref: > core.instituciones.id]
+  nombre_libre text
+  fecha_otorgamiento date [not null]
+  motivo text
+  resolucion text
+}
+
+Table carrera.meritos {
+  id bigint [pk, increment]
+  funcionario_id bigint [not null, ref: > personal.funcionarios.id]
+  periodo_id smallint [ref: > carrera.periodos_evaluacion.id]
+  puntaje_evaluacion numeric(7,2)
+  puntaje_cursos numeric(7,2)
+  puntaje_actividades numeric(7,2)
+  puntaje_condecoraciones numeric(7,2)
+  puntaje_faltas numeric(7,2)
+  puntaje_total numeric(7,2)
+  posicion int
+
+  indexes { (funcionario_id, periodo_id) [unique] }
+}
+
+// =============================================================================
+// EQUIPO
+// =============================================================================
+Table equipo.tipos_proteccion {
+  id smallint [pk, increment]
+  codigo text [unique, not null]
+  nombre text [not null]
+  requiere_talla boolean
+  grupo_talla text
+  vida_util_meses smallint
+  activo boolean [default: true]
+}
+
+Table equipo.proteccion_inventario {
+  id bigint [pk, increment]
+  tipo_id smallint [not null, ref: > equipo.tipos_proteccion.id]
+  proveedor_id bigint [ref: > core.proveedores.id]
+  talla_id smallint [ref: > core.tallas.id]
+  marca text
+  modelo text
+  color text
+  numero_serie text [unique]
+  lote text
+  fecha_adquisicion date
+  fecha_vence date
+  costo numeric(15,2)
+  estatus text
+  estacion_id smallint [ref: > org.estaciones.id]
+}
+
+Table equipo.proteccion_asignaciones {
+  id bigint [pk, increment]
+  inventario_id bigint [not null, ref: > equipo.proteccion_inventario.id]
+  funcionario_id bigint [not null, ref: > personal.funcionarios.id]
+  fecha_entrega date [not null]
+  fecha_devolucion date
+  estado_entrega text
+  estado_devolucion text
+  devuelto boolean
+}
+
+Table equipo.proteccion_despachos {
+  id bigint [pk, increment]
+  numero text [unique, not null]
+  fecha date [not null]
+  estacion_id smallint [ref: > org.estaciones.id]
+  tipo_movimiento tipo_movimiento_inventario
+  motivo text
+}
+
+Table equipo.proteccion_despacho_detalle {
+  id bigint [pk, increment]
+  despacho_id bigint [not null, ref: > equipo.proteccion_despachos.id]
+  inventario_id bigint [ref: > equipo.proteccion_inventario.id]
+  tipo_id smallint [ref: > equipo.tipos_proteccion.id]
+  talla_id smallint [ref: > core.tallas.id]
+  cantidad int
+  funcionario_id bigint [ref: > personal.funcionarios.id]
+}
+
+Table equipo.tipos_uniforme {
+  id smallint [pk, increment]
+  codigo text [unique, not null]
+  nombre text [not null]
+  grupo_talla text
+  activo boolean [default: true]
+}
+
+Table equipo.uniformes_inventario {
+  id bigint [pk, increment]
+  tipo_id smallint [not null, ref: > equipo.tipos_uniforme.id]
+  proveedor_id bigint [ref: > core.proveedores.id]
+  talla_id smallint [ref: > core.tallas.id]
+  color text
+  cantidad_disponible int
+  cantidad_total int
+  fecha_adquisicion date
+  costo_unitario numeric(15,2)
+  estacion_id smallint [ref: > org.estaciones.id]
+  activo boolean [default: true]
+
+  indexes { (tipo_id, talla_id, color, estacion_id) [unique] }
+}
+
+Table equipo.uniformes_asignaciones {
+  id bigint [pk, increment]
+  funcionario_id bigint [not null, ref: > personal.funcionarios.id]
+  tipo_id smallint [not null, ref: > equipo.tipos_uniforme.id]
+  talla_id smallint [ref: > core.tallas.id]
+  cantidad int
+  fecha_entrega date [not null]
+}
+
+Table equipo.uniformes_despachos {
+  id bigint [pk, increment]
+  numero text [unique, not null]
+  fecha date [not null]
+  estacion_id smallint [ref: > org.estaciones.id]
+  tipo_movimiento tipo_movimiento_inventario
+  motivo text
+}
+
+Table equipo.uniformes_despacho_detalle {
+  id bigint [pk, increment]
+  despacho_id bigint [not null, ref: > equipo.uniformes_despachos.id]
+  tipo_id smallint [ref: > equipo.tipos_uniforme.id]
+  talla_id smallint [ref: > core.tallas.id]
+  cantidad int
+  funcionario_id bigint [ref: > personal.funcionarios.id]
+}
+
+Table equipo.radio_marcas {
+  id smallint [pk, increment]
+  codigo text [unique, not null]
+  nombre text [not null]
+}
+
+Table equipo.radio_modelos {
+  id smallint [pk, increment]
+  marca_id smallint [not null, ref: > equipo.radio_marcas.id]
+  codigo text [not null]
+  nombre text [not null]
+
+  indexes { (marca_id, codigo) [unique] }
+}
+
+Table equipo.radios {
+  id bigint [pk, increment]
+  modelo_id smallint [not null, ref: > equipo.radio_modelos.id]
+  serial text [unique, not null]
+  placa_inv text
+  frecuencia text
+  canal text
+  fecha_adquisicion date
+  costo numeric(15,2)
+  estacion_id smallint [ref: > org.estaciones.id]
+  estatus text
+}
+
+Table equipo.radio_asignaciones {
+  id bigint [pk, increment]
+  radio_id bigint [not null, ref: > equipo.radios.id]
+  funcionario_id bigint [ref: > personal.funcionarios.id]
+  estacion_id smallint [ref: > org.estaciones.id]
+  fecha_asignacion date [not null]
+  fecha_devolucion date
+}
+
+Table equipo.radio_mantenimientos {
+  id bigint [pk, increment]
+  radio_id bigint [not null, ref: > equipo.radios.id]
+  fecha_ingreso date [not null]
+  fecha_salida date
+  motivo text
+  diagnostico text
+  repuestos text
+  costo numeric(15,2)
+  tecnico text
+  estatus text
+}
+
+Table equipo.higiene_seguridad {
+  id bigint [pk, increment]
+  estacion_id smallint [ref: > org.estaciones.id]
+  fecha date [not null]
+  tipo text [not null]
+  descripcion text [not null]
+  responsable_id bigint [ref: > personal.funcionarios.id]
+  cerrada boolean
+  fecha_cierre date
+}
+
+// =============================================================================
+// BENEFICIOS
+// =============================================================================
+Table beneficios.ayudas {
+  id bigint [pk, increment]
+  funcionario_id bigint [not null, ref: > personal.funcionarios.id]
+  tipo_solicitud_id smallint [not null, ref: > core.tipos_solicitud.id]
+  monto_solicitado numeric(15,2)
+  monto_aprobado numeric(15,2)
+  monto_pagado numeric(15,2)
+  fecha_solicitud date [not null]
+  fecha_aprobacion date
+  fecha_pago date
+  motivo text [not null]
+  beneficiario_id bigint [ref: > personal.carga_familiar.id]
+  estatus estatus_solicitud
+  banco_id smallint [ref: > core.bancos.id]
+  cuenta text
+  created_by bigint [ref: > seguridad.usuarios.id]
+  aprobado_por bigint [ref: > seguridad.usuarios.id]
+}
+
+Table beneficios.ayuda_detalle {
+  id bigint [pk, increment]
+  ayuda_id bigint [not null, ref: > beneficios.ayudas.id]
+  concepto text [not null]
+  cantidad numeric(10,2)
+  monto_unitario numeric(15,2) [not null]
+  monto_total numeric(15,2) [note: 'GENERATED']
+}
+
+Table beneficios.tipos_beneficio {
+  id smallint [pk, increment]
+  codigo text [unique, not null]
+  nombre text [not null]
+  monto_default numeric(15,2)
+  periodicidad text
+  activo boolean [default: true]
+}
+
+Table beneficios.entregas {
+  id bigint [pk, increment]
+  funcionario_id bigint [not null, ref: > personal.funcionarios.id]
+  tipo_beneficio_id smallint [not null, ref: > beneficios.tipos_beneficio.id]
+  periodo text
+  monto numeric(15,2)
+  cantidad int
+  fecha_entrega date [not null]
+  referencia text
+  estatus estatus_solicitud
+
+  indexes { (funcionario_id, tipo_beneficio_id, periodo) [unique] }
+}
+
+Table beneficios.entrega_pagos {
+  id bigint [pk, increment]
+  entrega_id bigint [not null, ref: > beneficios.entregas.id]
+  monto numeric(15,2) [not null]
+  fecha date [not null]
+  referencia text
+  banco_id smallint [ref: > core.bancos.id]
+}
+
+// =============================================================================
+// VIVIENDA
+// =============================================================================
+Table vivienda.programas {
+  id smallint [pk, increment]
+  codigo text [unique, not null]
+  nombre text [not null]
+  descripcion text
+  cupos_total int
+  cupos_adjudicados int
+  fecha_inicio date
+  fecha_fin date
+  activo boolean [default: true]
+}
+
+Table vivienda.postulaciones {
+  id bigint [pk, increment]
+  programa_id smallint [not null, ref: > vivienda.programas.id]
+  funcionario_id bigint [not null, ref: > personal.funcionarios.id]
+  fecha_postulacion date
+  puntaje_socio_economico numeric(5,2)
+  estatus estatus_solicitud
+
+  indexes { (programa_id, funcionario_id) [unique] }
+}
+
+Table vivienda.adjudicaciones {
+  id bigint [pk, increment]
+  postulacion_id bigint [unique, not null, ref: > vivienda.postulaciones.id]
+  fecha_adjudicacion date [not null]
+  fecha_entrega date
+  direccion text
+  parroquia_id int [ref: > geo.parroquias.id]
+}
+
+Table vivienda.casos_sociales {
+  id bigint [pk, increment]
+  funcionario_id bigint [not null, ref: > personal.funcionarios.id]
+  tipo_caso text [not null]
+  descripcion text
+  fecha_apertura date
+  fecha_cierre date
+  estatus text
+  direccion_actual text
+  parroquia_id int [ref: > geo.parroquias.id]
+  cantidad_familiares smallint
+}
+
+Table vivienda.visitas_sociales {
+  id bigint [pk, increment]
+  caso_id bigint [not null, ref: > vivienda.casos_sociales.id]
+  fecha date [not null]
+  visitador_id bigint [ref: > personal.funcionarios.id]
+  hallazgos text
+  recomendaciones text
+}
+
+// =============================================================================
+// EGRESOS
+// =============================================================================
+Table egresos.solicitudes_jubilacion {
+  id bigint [pk, increment]
+  funcionario_id bigint [not null, ref: > personal.funcionarios.id]
+  fecha_solicitud date
+  fecha_efectiva_propuesta date
+  anios_servicio numeric(5,2)
+  motivo text
+  estatus estatus_solicitud
+  resolucion text
+}
+
+Table egresos.pre_jubilados {
+  id bigint [pk, increment]
+  funcionario_id bigint [unique, not null, ref: > personal.funcionarios.id]
+  fecha_inicio date [not null]
+  fecha_estimada_jubilacion date
+  anios_servicio numeric(5,2)
+  pension_estimada numeric(15,2)
+}
+
+Table egresos.jubilados {
+  id bigint [pk, increment]
+  funcionario_id bigint [unique, not null, ref: > personal.funcionarios.id]
+  fecha_jubilacion date [not null]
+  anios_servicio numeric(5,2)
+  tipo_jubilacion text
+  pension_mensual numeric(15,2)
+  moneda varchar(3)
+  resolucion text
+  activo boolean [default: true]
+}
+
+Table egresos.fallecimientos {
+  id bigint [pk, increment]
+  funcionario_id bigint [unique, not null, ref: > personal.funcionarios.id]
+  fecha_fallecimiento date [not null]
+  en_servicio boolean
+  causa text
+  lugar text
+  acta_defuncion text
+  beneficio_funerario_pagado boolean
+}
+
+// =============================================================================
+// DOCUMENTOS
+// =============================================================================
+Table documentos.acervo {
+  id bigint [pk, increment]
+  funcionario_id bigint [not null, ref: > personal.funcionarios.id]
+  tipo_documento_id smallint [not null, ref: > core.tipos_documento.id]
+  titulo text [not null]
+  numero text
+  referencia text
+  fecha_documento date
+  documento_url text
+  tamano_bytes bigint
+  hash_sha256 text
+  created_by bigint [ref: > seguridad.usuarios.id]
+}
+
+Table documentos.oficios {
+  id bigint [pk, increment]
+  numero text [unique, not null]
+  fecha date [not null]
+  tipo text [not null]
+  asunto text [not null]
+  cuerpo text
+  remitente_id bigint [ref: > personal.funcionarios.id]
+  archivado boolean
+}
+
+Table documentos.oficios_destinatarios {
+  id bigint [pk, increment]
+  oficio_id bigint [not null, ref: > documentos.oficios.id]
+  funcionario_id bigint [ref: > personal.funcionarios.id]
+  institucion_id bigint [ref: > core.instituciones.id]
+  nombre_libre text
+  es_copia boolean
+}
+
+Table documentos.actas {
+  id bigint [pk, increment]
+  numero text [not null]
+  fecha date [not null]
+  tipo text
+  lugar text
+  motivo text
+  resumen text
+  acuerdos text
+
+  indexes { (numero, fecha, tipo) [unique] }
+}
+
+Table documentos.actas_asistentes {
+  id bigint [pk, increment]
+  acta_id bigint [not null, ref: > documentos.actas.id]
+  funcionario_id bigint [ref: > personal.funcionarios.id]
+  nombre_libre text
+  rol text
+  firmo boolean
+}
+
+Table documentos.firmas_autorizadas {
+  id bigint [pk, increment]
+  funcionario_id bigint [not null, ref: > personal.funcionarios.id]
+  cargo_firma text [not null]
+  contexto text
+  fecha_inicio date [not null]
+  fecha_fin date
+  activa boolean [default: true]
+  firma_url text
+  sello_url text
+}
+
+// =============================================================================
+// AUD — auditoría
+// =============================================================================
+Table aud.log_cambios {
+  id bigint [pk, increment]
+  schema_name text [not null]
+  table_name text [not null]
+  registro_id text
+  operacion operacion_audit
+  valor_anterior text [note: 'JSONB']
+  valor_nuevo text [note: 'JSONB']
+  campos_cambiados text [note: 'JSONB']
+  usuario_id bigint
+  usuario_nombre text
+  ip text
+  fecha timestamptz
+}
+
+Table aud.log_accesos {
+  id bigint [pk, increment]
+  usuario_id bigint [ref: > seguridad.usuarios.id]
+  usuario citext
+  ip text
+  user_agent text
+  sistema_op text
+  navegador text
+  tipo_evento tipo_evento_acceso
+  detalle text
+  fecha timestamptz
+}
+
+// =============================================================================
+// FIN
+// =============================================================================
