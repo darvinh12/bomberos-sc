@@ -1,5 +1,7 @@
+import Link from "next/link";
 import { api } from "@/lib/api";
 import { requireAuth } from "@/lib/session";
+import { hasAnyRole } from "@/lib/roles";
 import { formatDate } from "@/lib/utils";
 
 interface Row {
@@ -22,6 +24,10 @@ interface Row {
 
 export default async function VacacionesPage() {
   const token = await requireAuth();
+  const me = await api
+    .get<{ roles: string[] }>("/auth/me", token)
+    .catch(() => ({ roles: [] as string[] }));
+  const puedeEditar = hasAnyRole(me.roles, ["ADMIN", "RRHH"]);
   let rows: Row[] = [];
   let err: string | null = null;
   try {
@@ -58,6 +64,7 @@ export default async function VacacionesPage() {
                 <th className="text-right p-3">Días</th>
                 <th className="text-left p-3">Estado</th>
                 <th className="text-left p-3">Bono</th>
+                <th className="text-right p-3"></th>
               </tr>
             </thead>
             <tbody>
@@ -89,11 +96,23 @@ export default async function VacacionesPage() {
                       <span className="text-muted-foreground">pendiente</span>
                     )}
                   </td>
+                  <td className="p-3 text-right">
+                    {puedeEditar ? (
+                      <Link
+                        href={`/editar-pendiente/vacaciones?id=${r.id}&desde=/ops/vacaciones`}
+                        className="text-primary hover:underline text-xs"
+                      >
+                        Editar →
+                      </Link>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">—</span>
+                    )}
+                  </td>
                 </tr>
               ))}
               {rows.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="p-8 text-center text-muted-foreground">
+                  <td colSpan={9} className="p-8 text-center text-muted-foreground">
                     Sin vacaciones registradas.
                   </td>
                 </tr>

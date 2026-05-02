@@ -1,6 +1,7 @@
+import Link from "next/link";
 import { api } from "@/lib/api";
 import { requireAuth } from "@/lib/session";
-import { requireRoleOrRedirect } from "@/lib/roles";
+import { requireRoleOrRedirect, hasAnyRole } from "@/lib/roles";
 import { formatDate } from "@/lib/utils";
 
 interface Ayuda {
@@ -42,6 +43,7 @@ export default async function BeneficiosPage({ searchParams }: SearchProps) {
   const token = await requireAuth();
   const me = await api.get<{ roles: string[] }>("/auth/me", token).catch(() => ({ roles: [] as string[] }));
   requireRoleOrRedirect(me.roles, ["ADMIN", "RRHH"]);
+  const puedeEditar = hasAnyRole(me.roles, ["ADMIN", "RRHH"]);
 
   const page = Number(searchParams.page ?? 1);
   const params = new URLSearchParams({ page: String(page), page_size: "50" });
@@ -113,6 +115,7 @@ export default async function BeneficiosPage({ searchParams }: SearchProps) {
                   <th className="text-right p-3">Pagado</th>
                   <th className="text-left p-3">Solicitud</th>
                   <th className="text-left p-3">Estatus</th>
+                  <th className="text-right p-3"></th>
                 </tr>
               </thead>
               <tbody>
@@ -143,11 +146,23 @@ export default async function BeneficiosPage({ searchParams }: SearchProps) {
                         {a.estatus}
                       </span>
                     </td>
+                    <td className="p-3 text-right">
+                      {puedeEditar ? (
+                        <Link
+                          href={`/beneficios/${a.id}/editar`}
+                          className="text-primary hover:underline text-xs"
+                        >
+                          Procesar →
+                        </Link>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )}
+                    </td>
                   </tr>
                 ))}
                 {data.items.length === 0 && (
                   <tr>
-                    <td colSpan={7} className="p-8 text-center text-muted-foreground">
+                    <td colSpan={8} className="p-8 text-center text-muted-foreground">
                       Sin solicitudes.
                     </td>
                   </tr>

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { api } from "@/lib/api";
 import { requireAuth } from "@/lib/session";
 import { requireRoleOrRedirect } from "@/lib/roles";
@@ -81,6 +82,7 @@ export default async function UsuariosAdminPage({ searchParams }: SearchProps) {
                   <th className="text-left p-3">MFA</th>
                   <th className="text-left p-3">Intentos</th>
                   <th className="text-left p-3">Último acceso</th>
+                  <th className="text-right p-3"></th>
                 </tr>
               </thead>
               <tbody>
@@ -139,12 +141,20 @@ export default async function UsuariosAdminPage({ searchParams }: SearchProps) {
                           })
                         : "Nunca"}
                     </td>
+                    <td className="p-3 text-right">
+                      <Link
+                        href={`/admin/usuarios/${u.id}`}
+                        className="text-primary hover:underline text-xs font-medium"
+                      >
+                        Editar roles →
+                      </Link>
+                    </td>
                   </tr>
                 ))}
                 {data.items.length === 0 && (
                   <tr>
                     <td
-                      colSpan={7}
+                      colSpan={8}
                       className="p-8 text-center text-muted-foreground"
                     >
                       Sin usuarios registrados.
@@ -159,9 +169,10 @@ export default async function UsuariosAdminPage({ searchParams }: SearchProps) {
 
       <div className="rounded-xl border bg-muted/30 p-4 text-xs text-muted-foreground">
         <p>
-          La creación, edición y reset de password se hacen vía API (
-          <code className="font-mono">/admin/usuarios</code>). Una UI de edición
-          está en el roadmap.
+          Clic en <strong>Editar roles</strong> para asignar o revocar permisos
+          a cada usuario. La creación de nuevos usuarios y reset de password se
+          hace via API (<code className="font-mono">/admin/usuarios</code>) — la
+          UI de creación llega pronto.
         </p>
       </div>
     </div>

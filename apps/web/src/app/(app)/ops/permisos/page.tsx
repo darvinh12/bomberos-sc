@@ -1,5 +1,7 @@
+import Link from "next/link";
 import { api } from "@/lib/api";
 import { requireAuth } from "@/lib/session";
+import { hasAnyRole } from "@/lib/roles";
 import { formatDate } from "@/lib/utils";
 
 interface Permiso {
@@ -27,6 +29,10 @@ interface SearchProps {
 
 export default async function PermisosPage({ searchParams }: SearchProps) {
   const token = await requireAuth();
+  const me = await api
+    .get<{ roles: string[] }>("/auth/me", token)
+    .catch(() => ({ roles: [] as string[] }));
+  const puedeEditar = hasAnyRole(me.roles, ["ADMIN", "RRHH", "SUPERVISOR"]);
   const page = Number(searchParams.page ?? 1);
   const params = new URLSearchParams({ page: String(page), page_size: "50" });
   if (searchParams.autorizado) params.set("autorizado", searchParams.autorizado);
@@ -85,6 +91,7 @@ export default async function PermisosPage({ searchParams }: SearchProps) {
                   <th className="text-right p-3">Horas</th>
                   <th className="text-left p-3">Motivo</th>
                   <th className="text-left p-3">Estado</th>
+                  <th className="text-right p-3"></th>
                 </tr>
               </thead>
               <tbody>
@@ -109,11 +116,23 @@ export default async function PermisosPage({ searchParams }: SearchProps) {
                         </span>
                       )}
                     </td>
+                    <td className="p-3 text-right">
+                      {puedeEditar ? (
+                        <Link
+                          href={`/editar-pendiente/permisos?id=${p.id}&desde=/ops/permisos`}
+                          className="text-primary hover:underline text-xs"
+                        >
+                          {p.autorizado ? "Editar" : "Autorizar"} →
+                        </Link>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )}
+                    </td>
                   </tr>
                 ))}
                 {data.items.length === 0 && (
                   <tr>
-                    <td colSpan={7} className="p-8 text-center text-muted-foreground">
+                    <td colSpan={8} className="p-8 text-center text-muted-foreground">
                       Sin permisos.
                     </td>
                   </tr>

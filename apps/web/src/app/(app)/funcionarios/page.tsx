@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { api } from "@/lib/api";
 import { requireAuth } from "@/lib/session";
+import { hasAnyRole } from "@/lib/roles";
 import { formatCedula, formatDate } from "@/lib/utils";
 
 interface FuncionarioListItem {
@@ -66,6 +67,10 @@ export default async function FuncionariosPage({ searchParams }: SearchProps) {
     err = e instanceof Error ? e.message : "Error";
   }
   const jerMap = new Map(jer.map((j) => [j.id, j.nombre]));
+  const me = await api
+    .get<{ roles: string[] }>("/auth/me", token)
+    .catch(() => ({ roles: [] as string[] }));
+  const puedeEditar = hasAnyRole(me.roles, ["ADMIN", "RRHH"]);
 
   return (
     <div className="space-y-6">
@@ -166,13 +171,21 @@ export default async function FuncionariosPage({ searchParams }: SearchProps) {
                     <td className="p-3 text-muted-foreground">
                       {formatDate(f.fecha_primer_ingreso)}
                     </td>
-                    <td className="p-3 text-right">
+                    <td className="p-3 text-right space-x-3">
                       <Link
                         href={`/funcionarios/${f.id}`}
                         className="text-primary hover:underline text-xs"
                       >
-                        Ver →
+                        Ver
                       </Link>
+                      {puedeEditar && (
+                        <Link
+                          href={`/funcionarios/${f.id}/editar`}
+                          className="text-primary hover:underline text-xs font-medium"
+                        >
+                          Editar →
+                        </Link>
+                      )}
                     </td>
                   </tr>
                 ))}

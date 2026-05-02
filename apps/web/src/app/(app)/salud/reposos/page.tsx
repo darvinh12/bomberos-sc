@@ -1,6 +1,7 @@
+import Link from "next/link";
 import { api } from "@/lib/api";
 import { requireAuth } from "@/lib/session";
-import { requireRoleOrRedirect } from "@/lib/roles";
+import { requireRoleOrRedirect, hasAnyRole } from "@/lib/roles";
 import { formatDate } from "@/lib/utils";
 
 interface Row {
@@ -21,6 +22,7 @@ export default async function RepososPage() {
   const token = await requireAuth();
   const me = await api.get<{ roles: string[] }>("/auth/me", token).catch(() => ({ roles: [] as string[] }));
   requireRoleOrRedirect(me.roles, ["ADMIN", "RRHH", "SUPERVISOR"]);
+  const puedeEditar = hasAnyRole(me.roles, ["ADMIN", "RRHH"]);
 
   let rows: Row[] = [];
   let err: string | null = null;
@@ -59,6 +61,7 @@ export default async function RepososPage() {
                 <th className="text-left p-3">Tipo</th>
                 <th className="text-left p-3">Diagnóstico</th>
                 <th className="text-left p-3">Estado</th>
+                <th className="text-right p-3"></th>
               </tr>
             </thead>
             <tbody>
@@ -83,11 +86,23 @@ export default async function RepososPage() {
                       {r.estado_vigencia}
                     </span>
                   </td>
+                  <td className="p-3 text-right">
+                    {puedeEditar ? (
+                      <Link
+                        href={`/salud/reposos/${r.id}/editar`}
+                        className="text-primary hover:underline text-xs"
+                      >
+                        Editar →
+                      </Link>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">—</span>
+                    )}
+                  </td>
                 </tr>
               ))}
               {rows.length === 0 && (
                 <tr>
-                  <td colSpan={9} className="p-8 text-center text-muted-foreground">
+                  <td colSpan={10} className="p-8 text-center text-muted-foreground">
                     Sin reposos vigentes.
                   </td>
                 </tr>

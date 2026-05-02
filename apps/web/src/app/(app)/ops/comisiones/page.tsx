@@ -1,5 +1,7 @@
+import Link from "next/link";
 import { api } from "@/lib/api";
 import { requireAuth } from "@/lib/session";
+import { hasAnyRole } from "@/lib/roles";
 import { formatDate } from "@/lib/utils";
 
 interface Comision {
@@ -27,6 +29,10 @@ interface SearchProps {
 
 export default async function ComisionesPage({ searchParams }: SearchProps) {
   const token = await requireAuth();
+  const me = await api
+    .get<{ roles: string[] }>("/auth/me", token)
+    .catch(() => ({ roles: [] as string[] }));
+  const puedeEditar = hasAnyRole(me.roles, ["ADMIN", "RRHH"]);
   const page = Number(searchParams.page ?? 1);
   const params = new URLSearchParams({ page: String(page), page_size: "50" });
   if (searchParams.activo) params.set("activo", searchParams.activo);
@@ -85,6 +91,7 @@ export default async function ComisionesPage({ searchParams }: SearchProps) {
                   <th className="text-left p-3">Fin</th>
                   <th className="text-left p-3">Resolución</th>
                   <th className="text-left p-3">Estado</th>
+                  <th className="text-right p-3"></th>
                 </tr>
               </thead>
               <tbody>
@@ -115,11 +122,23 @@ export default async function ComisionesPage({ searchParams }: SearchProps) {
                         </span>
                       )}
                     </td>
+                    <td className="p-3 text-right">
+                      {puedeEditar ? (
+                        <Link
+                          href={`/editar-pendiente/comisiones?id=${c.id}&desde=/ops/comisiones`}
+                          className="text-primary hover:underline text-xs"
+                        >
+                          Editar →
+                        </Link>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )}
+                    </td>
                   </tr>
                 ))}
                 {data.items.length === 0 && (
                   <tr>
-                    <td colSpan={7} className="p-8 text-center text-muted-foreground">
+                    <td colSpan={8} className="p-8 text-center text-muted-foreground">
                       Sin comisiones.
                     </td>
                   </tr>
