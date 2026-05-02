@@ -1,0 +1,31 @@
+# Dumps locales / dB binarios
+*.bak
+*.dump
+*.backup
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Sistema operativo
+Thumbs.db
+.DS_Store
+
+# Datos sensibles
+.env
+.env.*
+secrets/
+*.pem
+*.key
+
+# Logs
+*.log
+
+# Output de psql
+*.out
+
+# Carpetas comunes de scripts
+node_modules/
+__pycache__/
