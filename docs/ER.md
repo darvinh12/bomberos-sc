@@ -1,37 +1,34 @@
 # Modelo Entidad-Relación
 
-GitHub renderiza Mermaid directamente, por lo que esta página es navegable sin instalar nada.
-Para una vista interactiva (zoom, pan, exportar PNG/PDF) usa el archivo
-[`schema.dbml`](./schema.dbml) en https://dbdiagram.io/d (File → Import → DBML).
+GitHub renderiza Mermaid directamente. Para vista interactiva con zoom, pan y export
+a PNG/PDF usa [`schema.dbml`](./schema.dbml) en https://dbdiagram.io/d
+(File → Import → DBML).
+
+> Nota: Mermaid en GitHub solo acepta `PK` y `FK` como key annotations. Las cajas
+> muestran solo columnas clave; el detalle completo está en `sql/02_dominio.sql`
+> y en `schema.dbml`.
 
 ---
 
-## 0. Vista general — schemas y dependencias principales
+## 0. Vista general — schemas y dependencias
 
 ```mermaid
-flowchart LR
-    classDef cat fill:#FFF3CD,stroke:#856404,color:#000
-    classDef pers fill:#D1ECF1,stroke:#0C5460,color:#000
-    classDef ops fill:#D4EDDA,stroke:#155724,color:#000
-    classDef sec fill:#F8D7DA,stroke:#721C24,color:#000
-
-    core[core - catalogos]:::cat
-    geo[geo - estados/municipios/parroquias]:::cat
-    org[org - zonas/estaciones/areas]:::cat
-    sys[sys - parametros]:::cat
-
-    personal[personal - funcionarios + identidad + historicos]:::pers
-    salud[salud]:::pers
-    ops[ops - guardias/permisos/vacaciones]:::ops
-    carrera[carrera - ascensos/cursos/evaluaciones]:::ops
-    equipo[equipo - proteccion/uniformes/radios]:::ops
-    beneficios[beneficios]:::ops
-    vivienda[vivienda]:::ops
-    egresos[egresos]:::ops
-    documentos[documentos - acervo/oficios/actas]:::ops
-
-    seguridad[seguridad - usuarios/roles]:::sec
-    aud[aud - log_cambios JSONB]:::sec
+graph TD
+    core[core<br/>catalogos]
+    geo[geo<br/>estados/municipios/parroquias]
+    org[org<br/>zonas/estaciones/areas]
+    sys[sys<br/>parametros]
+    personal[personal<br/>funcionarios + identidad + historicos]
+    salud[salud]
+    ops[ops<br/>guardias/permisos/vacaciones]
+    carrera[carrera<br/>ascensos/cursos/evaluaciones]
+    equipo[equipo<br/>proteccion/uniformes/radios]
+    beneficios[beneficios]
+    vivienda[vivienda]
+    egresos[egresos]
+    documentos[documentos]
+    seguridad[seguridad<br/>usuarios/roles]
+    aud[aud<br/>log_cambios JSONB]
 
     geo --> org
     core --> personal
@@ -46,10 +43,10 @@ flowchart LR
     personal --> vivienda
     personal --> egresos
     personal --> documentos
-    seguridad -.audit.-> aud
-    personal -.audit.-> aud
-    salud -.audit.-> aud
-    ops -.audit.-> aud
+    seguridad --> aud
+    personal --> aud
+    salud --> aud
+    ops --> aud
 ```
 
 ---
@@ -58,45 +55,44 @@ flowchart LR
 
 ```mermaid
 erDiagram
-    FUNCIONARIOS ||--o{ PERIODOS_SERVICIO : "1..N ciclos"
+    FUNCIONARIOS ||--o{ PERIODOS_SERVICIO : "ciclos"
     FUNCIONARIOS ||--o{ HISTORICO_JERARQUIAS : "ascensos"
     FUNCIONARIOS ||--o{ HISTORICO_UBICACIONES : "movimientos"
     FUNCIONARIOS ||--o{ HISTORICO_CONDICIONES : "transiciones"
     FUNCIONARIOS ||--o{ HISTORICO_NUMEROS_EQUIPO : "asignaciones"
-    FUNCIONARIOS ||--o{ DIRECCIONES : "una actual"
+    FUNCIONARIOS ||--o{ DIRECCIONES : "tiene"
     FUNCIONARIOS ||--o{ CARGA_FAMILIAR : "dependientes"
     FUNCIONARIOS ||--o{ EDUCACION : "titulos"
-    FUNCIONARIOS ||--o{ HABILIDADES : "idiomas/skills"
-    FUNCIONARIOS ||--o{ ACTIVIDADES : "extracurriculares"
-    FUNCIONARIOS ||--o{ TIEMPO_ADMPUBLICA : "trabajo previo"
-    FUNCIONARIOS ||--o{ CUENTAS_BANCARIAS : "una actual"
+    FUNCIONARIOS ||--o{ HABILIDADES : "skills"
+    FUNCIONARIOS ||--o{ ACTIVIDADES : "extras"
+    FUNCIONARIOS ||--o{ TIEMPO_ADMPUBLICA : "previo"
+    FUNCIONARIOS ||--o{ CUENTAS_BANCARIAS : "cuentas"
     FUNCIONARIOS ||--o{ LICENCIAS_CONDUCIR : "renovaciones"
-    FUNCIONARIOS ||--o{ CARNETS : "cedula/patria/votacion"
-    FUNCIONARIOS ||--|| REGISTRO_VOTACION : ""
-    FUNCIONARIOS ||--o{ HOGARES_PATRIA : ""
-    FUNCIONARIOS ||--o{ GDC_HABITACIONAL : ""
-
-    JERARQUIAS ||--o{ FUNCIONARIOS : ""
-    CARGOS ||--o{ FUNCIONARIOS : ""
-    CONDICIONES ||--o{ FUNCIONARIOS : ""
-    ZONAS ||--o{ FUNCIONARIOS : ""
-    ESTACIONES ||--o{ FUNCIONARIOS : ""
+    FUNCIONARIOS ||--o{ CARNETS : "tiene"
+    FUNCIONARIOS ||--|| REGISTRO_VOTACION : "tiene"
+    FUNCIONARIOS ||--o{ HOGARES_PATRIA : "tiene"
+    FUNCIONARIOS ||--o{ GDC_HABITACIONAL : "postula"
+    JERARQUIAS ||--o{ FUNCIONARIOS : "actual"
+    CARGOS ||--o{ FUNCIONARIOS : "actual"
+    CONDICIONES ||--o{ FUNCIONARIOS : "actual"
+    ZONAS ||--o{ FUNCIONARIOS : "asignados"
+    ESTACIONES ||--o{ FUNCIONARIOS : "asignados"
 
     FUNCIONARIOS {
         bigint id PK
         char nacionalidad
-        int cedula UK
+        int cedula
         text apellidos
         text nombres
-        text nombre_completo "generated"
+        text nombre_completo
         date fecha_nacimiento
-        date fecha_primer_ingreso "inmutable"
+        date fecha_primer_ingreso
         smallint jerarquia_id FK
         smallint cargo_id FK
         smallint zona_id FK
         smallint estacion_id FK
-        text estatus "ACTIVO/REPOSO/JUBILADO..."
-        text numero_empleado UK
+        text estatus
+        text numero_empleado
         text numero_equipo
     }
     PERIODOS_SERVICIO {
@@ -104,7 +100,7 @@ erDiagram
         bigint funcionario_id FK
         smallint numero_periodo
         date fecha_ingreso
-        date fecha_egreso "NULL=activo"
+        date fecha_egreso
         text tipo_ingreso
         text tipo_egreso
         text numero_resolucion
@@ -146,7 +142,7 @@ erDiagram
     CARNETS {
         bigint id PK
         bigint funcionario_id FK
-        smallint tipo_carnet_id FK "PATRIA/VOTACION/CIVICO/MILITAR..."
+        smallint tipo_carnet_id FK
         text numero
         date fecha_emision
         date fecha_vence
@@ -164,7 +160,7 @@ erDiagram
     DIRECCIONES {
         bigint id PK
         bigint funcionario_id FK
-        boolean es_actual "unique partial"
+        boolean es_actual
         int parroquia_id FK
         text direccion_completa
     }
@@ -191,6 +187,46 @@ erDiagram
         boolean es_jefe_hogar
         boolean recibe_clap
     }
+    REGISTRO_VOTACION {
+        bigint id PK
+        bigint funcionario_id FK
+        text centro_electoral
+        text mesa
+    }
+    GDC_HABITACIONAL {
+        bigint id PK
+        bigint funcionario_id FK
+        text codigo_postulacion
+        text programa
+        text estado
+    }
+    EDUCACION {
+        bigint id PK
+        bigint funcionario_id FK
+        smallint nivel_id FK
+        text titulo
+        text institucion
+    }
+    HABILIDADES {
+        bigint id PK
+        bigint funcionario_id FK
+        text grupo
+        text nombre
+        text nivel
+    }
+    ACTIVIDADES {
+        bigint id PK
+        bigint funcionario_id FK
+        text tipo
+        text nombre
+    }
+    TIEMPO_ADMPUBLICA {
+        bigint id PK
+        bigint funcionario_id FK
+        text institucion
+        date fecha_inicio
+        date fecha_fin
+    }
 ```
 
 ---
@@ -199,23 +235,22 @@ erDiagram
 
 ```mermaid
 erDiagram
-    FUNCIONARIOS ||--o{ REPOSOS : tiene
-    FUNCIONARIOS ||--o{ LESIONES : ""
-    FUNCIONARIOS ||--o{ HOSPITALIZACIONES : ""
-    FUNCIONARIOS ||--o{ CONSULTAS : ""
-    FUNCIONARIOS ||--o{ HCM : poliza
-    FUNCIONARIOS ||--o{ EVALUACION_FISICA : anual
-    FUNCIONARIOS ||--o{ RECURRENCIAS : analisis
-
-    DIAGNOSTICOS ||--o{ REPOSOS : ""
-    DIAGNOSTICOS ||--o{ LESIONES : ""
-    DIAGNOSTICOS ||--o{ HOSPITALIZACIONES : ""
-    GRUPOS_DIAGNOSTICOS ||--o{ DIAGNOSTICOS : ""
-    MEDICOS ||--o{ REPOSOS : firma
-    MEDICOS ||--o{ CONSULTAS : ""
-    CENTROS_MEDICOS ||--o{ REPOSOS : ""
-    CENTROS_MEDICOS ||--o{ HOSPITALIZACIONES : ""
-    TIPOS_REPOSO ||--o{ REPOSOS : ""
+    FUNCIONARIOS ||--o{ REPOSOS : "tiene"
+    FUNCIONARIOS ||--o{ LESIONES : "registra"
+    FUNCIONARIOS ||--o{ HOSPITALIZACIONES : "ingresa"
+    FUNCIONARIOS ||--o{ CONSULTAS : "asiste"
+    FUNCIONARIOS ||--o{ HCM : "poliza"
+    FUNCIONARIOS ||--o{ EVALUACION_FISICA : "anual"
+    FUNCIONARIOS ||--o{ RECURRENCIAS : "analisis"
+    DIAGNOSTICOS ||--o{ REPOSOS : "diagnostica"
+    DIAGNOSTICOS ||--o{ LESIONES : "diagnostica"
+    DIAGNOSTICOS ||--o{ HOSPITALIZACIONES : "diagnostica"
+    GRUPOS_DIAGNOSTICOS ||--o{ DIAGNOSTICOS : "agrupa"
+    MEDICOS ||--o{ REPOSOS : "firma"
+    MEDICOS ||--o{ CONSULTAS : "atiende"
+    CENTROS_MEDICOS ||--o{ REPOSOS : "expide"
+    CENTROS_MEDICOS ||--o{ HOSPITALIZACIONES : "atiende"
+    TIPOS_REPOSO ||--o{ REPOSOS : "clasifica"
     CARGA_FAMILIAR ||--o{ HOSPITALIZACIONES : "familiar"
 
     REPOSOS {
@@ -226,13 +261,13 @@ erDiagram
         bigint medico_id FK
         date fecha_inicio
         date fecha_fin
-        smallint dias "generated"
+        smallint dias
         text folio
         boolean anulado
     }
     DIAGNOSTICOS {
         int id PK
-        text codigo_cie UK
+        text codigo_cie
         smallint grupo_id FK
         text nombre
     }
@@ -242,11 +277,11 @@ erDiagram
         int cedula
         text apellidos
         text nombres
-        text mpps UK
+        text mpps
     }
     CENTROS_MEDICOS {
         bigint id PK
-        text rif UK
+        text rif
         text nombre
         text tipo
         boolean convenio_hcm
@@ -275,27 +310,49 @@ erDiagram
         date fecha
         numeric peso_kg
         numeric estatura_cm
-        numeric imc "generated"
+        numeric imc
         boolean apto
+    }
+    HCM {
+        bigint id PK
+        bigint funcionario_id FK
+        text poliza
+        text aseguradora
+        date fecha_inicio
+        date fecha_fin
+    }
+    CONSULTAS {
+        bigint id PK
+        bigint funcionario_id FK
+        bigint medico_id FK
+        timestamp fecha
+        int diagnostico_id FK
+    }
+    RECURRENCIAS {
+        bigint id PK
+        bigint funcionario_id FK
+        int diagnostico_id FK
+        smallint cantidad_episodios
+        int total_dias
     }
 ```
 
 ---
 
-## 3. Operaciones (guardias, permisos, vacaciones, comisiones)
+## 3. Operaciones
 
 ```mermaid
 erDiagram
-    ESTACIONES ||--o{ GUARDIAS : ""
-    GUARDIAS ||--o{ GUARDIA_FUNCIONARIOS : detalle
-    FUNCIONARIOS ||--o{ GUARDIA_FUNCIONARIOS : asignados
-    FUNCIONARIOS ||--o{ PERMISOS : ""
-    FUNCIONARIOS ||--o{ VACACIONES : ""
-    FUNCIONARIOS ||--o{ COMISIONES_SERVICIO : ""
-    FUNCIONARIOS ||--o{ FALTAS : ""
-    FUNCIONARIOS ||--o{ PROCESOS_ADMINISTRATIVOS : ""
-    FUNCIONARIOS ||--o{ SOLICITUDES_PERMISO : ""
-    INSTITUCIONES ||--o{ COMISIONES_SERVICIO : ""
+    ESTACIONES ||--o{ GUARDIAS : "tiene"
+    GUARDIAS ||--o{ GUARDIA_FUNCIONARIOS : "asigna"
+    FUNCIONARIOS ||--o{ GUARDIA_FUNCIONARIOS : "participa"
+    FUNCIONARIOS ||--o{ PERMISOS : "solicita"
+    FUNCIONARIOS ||--o{ VACACIONES : "disfruta"
+    FUNCIONARIOS ||--o{ COMISIONES_SERVICIO : "asignado"
+    FUNCIONARIOS ||--o{ FALTAS : "cometio"
+    FUNCIONARIOS ||--o{ PROCESOS_ADMINISTRATIVOS : "expediente"
+    FUNCIONARIOS ||--o{ SOLICITUDES_PERMISO : "envia"
+    INSTITUCIONES ||--o{ COMISIONES_SERVICIO : "recibe"
 
     GUARDIAS {
         bigint id PK
@@ -327,7 +384,7 @@ erDiagram
         smallint periodo_anio
         date fecha_inicio
         date fecha_fin
-        smallint dias_calendario "generated"
+        smallint dias_calendario
         boolean bono_pagado
         numeric monto_bono
     }
@@ -346,43 +403,56 @@ erDiagram
         date fecha
         smallint dias_suspension
     }
+    PROCESOS_ADMINISTRATIVOS {
+        bigint id PK
+        bigint funcionario_id FK
+        text expediente
+        date fecha_apertura
+        text estatus
+    }
+    SOLICITUDES_PERMISO {
+        bigint id PK
+        bigint funcionario_id FK
+        date fecha_inicio
+        date fecha_fin
+        text estatus
+    }
     ORDENES_GENERALES {
         bigint id PK
-        text numero UK
+        text numero
         date fecha
         text asunto
     }
     ACTIVIDADES_OPERATIVAS {
         bigint id PK
         smallint estacion_id FK
-        timestamptz fecha
-        text tipo "INCENDIO/RESCATE/EMG_MED"
+        timestamp fecha
+        text tipo
         int parroquia_id FK
     }
 ```
 
 ---
 
-## 4. Carrera (ascensos, evaluaciones, cursos, méritos)
+## 4. Carrera
 
 ```mermaid
 erDiagram
-    FUNCIONARIOS ||--o{ ASCENSOS : ""
-    FUNCIONARIOS ||--o{ EVALUACIONES : ""
-    FUNCIONARIOS ||--o{ CURSOS_REALIZADOS : ""
-    FUNCIONARIOS ||--o{ RECONOCIMIENTOS : ""
-    FUNCIONARIOS ||--o{ MERITOS : ""
-
-    PROCESOS_ASCENSO ||--o{ ASCENSOS : ""
-    JERARQUIAS ||--o{ ASCENSOS : "anterior/nueva"
-    PERIODOS_EVALUACION ||--o{ EVALUACIONES : ""
-    PERIODOS_EVALUACION ||--o{ MERITOS : ""
-    EVALUACIONES ||--o{ EVALUACIONES_DETALLE : ""
-    CATEGORIAS_EVALUAR ||--o{ EVALUACIONES_DETALLE : ""
-    CATEGORIAS_EVALUAR ||--o{ FACTORES_PORCENTAJES : ""
-    CURSOS ||--o{ CURSOS_REALIZADOS : ""
-    CONDECORACIONES ||--o{ RECONOCIMIENTOS : ""
-    INSTITUCIONES ||--o{ RECONOCIMIENTOS : ""
+    FUNCIONARIOS ||--o{ ASCENSOS : "asciende"
+    FUNCIONARIOS ||--o{ EVALUACIONES : "evaluado"
+    FUNCIONARIOS ||--o{ CURSOS_REALIZADOS : "cursa"
+    FUNCIONARIOS ||--o{ RECONOCIMIENTOS : "recibe"
+    FUNCIONARIOS ||--o{ MERITOS : "acumula"
+    PROCESOS_ASCENSO ||--o{ ASCENSOS : "rige"
+    JERARQUIAS ||--o{ ASCENSOS : "destino"
+    PERIODOS_EVALUACION ||--o{ EVALUACIONES : "periodo"
+    PERIODOS_EVALUACION ||--o{ MERITOS : "calcula"
+    EVALUACIONES ||--o{ EVALUACIONES_DETALLE : "tiene"
+    CATEGORIAS_EVALUAR ||--o{ EVALUACIONES_DETALLE : "categoriza"
+    CATEGORIAS_EVALUAR ||--o{ FACTORES_PORCENTAJES : "compone"
+    CURSOS ||--o{ CURSOS_REALIZADOS : "instancia"
+    CONDECORACIONES ||--o{ RECONOCIMIENTOS : "tipo"
+    INSTITUCIONES ||--o{ RECONOCIMIENTOS : "otorga"
 
     ASCENSOS {
         bigint id PK
@@ -397,8 +467,15 @@ erDiagram
         bigint id PK
         bigint funcionario_id FK
         smallint periodo_id FK
-        text tipo "DESEMPENO/FISICA/INTEGRAL"
+        text tipo
         numeric nota_total
+    }
+    EVALUACIONES_DETALLE {
+        bigint id PK
+        bigint evaluacion_id FK
+        smallint categoria_id FK
+        smallint factor_id FK
+        numeric puntaje
     }
     CURSOS_REALIZADOS {
         bigint id PK
@@ -420,36 +497,49 @@ erDiagram
         smallint condecoracion_id FK
         date fecha_otorgamiento
     }
+    PROCESOS_ASCENSO {
+        bigint id PK
+        text nombre
+        date fecha_inicio
+        smallint jerarquia_origen_id FK
+        smallint jerarquia_destino_id FK
+        text estatus
+    }
 ```
 
 ---
 
-## 5. Equipamiento (protección, uniformes, radios)
+## 5. Equipamiento
 
 ```mermaid
 erDiagram
-    TIPOS_PROTECCION ||--o{ PROTECCION_INVENTARIO : ""
-    PROTECCION_INVENTARIO ||--o{ PROTECCION_ASIGNACIONES : ""
-    FUNCIONARIOS ||--o{ PROTECCION_ASIGNACIONES : ""
-    PROTECCION_DESPACHOS ||--o{ PROTECCION_DESPACHO_DETALLE : ""
+    TIPOS_PROTECCION ||--o{ PROTECCION_INVENTARIO : "tipo"
+    PROTECCION_INVENTARIO ||--o{ PROTECCION_ASIGNACIONES : "se_asigna"
+    FUNCIONARIOS ||--o{ PROTECCION_ASIGNACIONES : "porta"
+    PROTECCION_DESPACHOS ||--o{ PROTECCION_DESPACHO_DETALLE : "detalle"
+    TIPOS_UNIFORME ||--o{ UNIFORMES_INVENTARIO : "tipo"
+    FUNCIONARIOS ||--o{ UNIFORMES_ASIGNACIONES : "recibe"
+    UNIFORMES_DESPACHOS ||--o{ UNIFORMES_DESPACHO_DETALLE : "detalle"
+    RADIO_MARCAS ||--o{ RADIO_MODELOS : "marca"
+    RADIO_MODELOS ||--o{ RADIOS : "modelo"
+    RADIOS ||--o{ RADIO_ASIGNACIONES : "se_asigna"
+    RADIOS ||--o{ RADIO_MANTENIMIENTOS : "se_repara"
+    FUNCIONARIOS ||--o{ RADIO_ASIGNACIONES : "porta"
+    ESTACIONES ||--o{ RADIO_ASIGNACIONES : "ubica"
 
-    TIPOS_UNIFORME ||--o{ UNIFORMES_INVENTARIO : ""
-    FUNCIONARIOS ||--o{ UNIFORMES_ASIGNACIONES : ""
-    UNIFORMES_DESPACHOS ||--o{ UNIFORMES_DESPACHO_DETALLE : ""
-
-    RADIO_MARCAS ||--o{ RADIO_MODELOS : ""
-    RADIO_MODELOS ||--o{ RADIOS : ""
-    RADIOS ||--o{ RADIO_ASIGNACIONES : ""
-    RADIOS ||--o{ RADIO_MANTENIMIENTOS : ""
-    FUNCIONARIOS ||--o{ RADIO_ASIGNACIONES : ""
-    ESTACIONES ||--o{ RADIO_ASIGNACIONES : ""
-
+    TIPOS_PROTECCION {
+        smallint id PK
+        text codigo
+        text nombre
+        boolean requiere_talla
+        smallint vida_util_meses
+    }
     PROTECCION_INVENTARIO {
         bigint id PK
         smallint tipo_id FK
         smallint talla_id FK
-        text numero_serie UK
-        text estatus "DISPONIBLE/ASIGNADO/BAJA/REPARACION"
+        text numero_serie
+        text estatus
     }
     PROTECCION_ASIGNACIONES {
         bigint id PK
@@ -458,12 +548,64 @@ erDiagram
         date fecha_entrega
         date fecha_devolucion
     }
+    PROTECCION_DESPACHOS {
+        bigint id PK
+        text numero
+        date fecha
+        smallint estacion_id FK
+        text tipo_movimiento
+    }
+    PROTECCION_DESPACHO_DETALLE {
+        bigint id PK
+        bigint despacho_id FK
+        bigint inventario_id FK
+        int cantidad
+    }
+    TIPOS_UNIFORME {
+        smallint id PK
+        text codigo
+        text nombre
+    }
+    UNIFORMES_INVENTARIO {
+        bigint id PK
+        smallint tipo_id FK
+        smallint talla_id FK
+        int cantidad_disponible
+    }
+    UNIFORMES_ASIGNACIONES {
+        bigint id PK
+        bigint funcionario_id FK
+        smallint tipo_id FK
+        date fecha_entrega
+    }
+    UNIFORMES_DESPACHOS {
+        bigint id PK
+        text numero
+        date fecha
+    }
+    UNIFORMES_DESPACHO_DETALLE {
+        bigint id PK
+        bigint despacho_id FK
+        smallint tipo_id FK
+        int cantidad
+    }
     RADIOS {
         bigint id PK
         smallint modelo_id FK
-        text serial UK
+        text serial
         smallint estacion_id FK
         text estatus
+    }
+    RADIO_MARCAS {
+        smallint id PK
+        text codigo
+        text nombre
+    }
+    RADIO_MODELOS {
+        smallint id PK
+        smallint marca_id FK
+        text codigo
+        text nombre
     }
     RADIO_ASIGNACIONES {
         bigint id PK
@@ -473,6 +615,13 @@ erDiagram
         date fecha_asignacion
         date fecha_devolucion
     }
+    RADIO_MANTENIMIENTOS {
+        bigint id PK
+        bigint radio_id FK
+        date fecha_ingreso
+        date fecha_salida
+        numeric costo
+    }
 ```
 
 ---
@@ -481,22 +630,21 @@ erDiagram
 
 ```mermaid
 erDiagram
-    FUNCIONARIOS ||--o{ AYUDAS : ""
-    FUNCIONARIOS ||--o{ ENTREGAS : ""
-    FUNCIONARIOS ||--o{ POSTULACIONES_VIVIENDA : ""
-    FUNCIONARIOS ||--o{ CASOS_SOCIALES : ""
-    FUNCIONARIOS ||--o{ SOLICITUDES_JUBILACION : ""
-    FUNCIONARIOS ||--|| PRE_JUBILADOS : ""
-    FUNCIONARIOS ||--|| JUBILADOS : ""
-    FUNCIONARIOS ||--|| FALLECIMIENTOS : ""
-
-    TIPOS_SOLICITUD ||--o{ AYUDAS : ""
-    TIPOS_BENEFICIO ||--o{ ENTREGAS : ""
-    AYUDAS ||--o{ AYUDA_DETALLE : ""
-    ENTREGAS ||--o{ ENTREGA_PAGOS : ""
-    PROGRAMAS_VIVIENDA ||--o{ POSTULACIONES_VIVIENDA : ""
-    POSTULACIONES_VIVIENDA ||--|| ADJUDICACIONES : ""
-    CASOS_SOCIALES ||--o{ VISITAS_SOCIALES : ""
+    FUNCIONARIOS ||--o{ AYUDAS : "solicita"
+    FUNCIONARIOS ||--o{ ENTREGAS : "recibe"
+    FUNCIONARIOS ||--o{ POSTULACIONES_VIVIENDA : "postula"
+    FUNCIONARIOS ||--o{ CASOS_SOCIALES : "atendido"
+    FUNCIONARIOS ||--o{ SOLICITUDES_JUBILACION : "solicita"
+    FUNCIONARIOS ||--|| PRE_JUBILADOS : "es"
+    FUNCIONARIOS ||--|| JUBILADOS : "es"
+    FUNCIONARIOS ||--|| FALLECIMIENTOS : "registra"
+    TIPOS_SOLICITUD ||--o{ AYUDAS : "tipo"
+    TIPOS_BENEFICIO ||--o{ ENTREGAS : "tipo"
+    AYUDAS ||--o{ AYUDA_DETALLE : "tiene"
+    ENTREGAS ||--o{ ENTREGA_PAGOS : "tiene"
+    PROGRAMAS_VIVIENDA ||--o{ POSTULACIONES_VIVIENDA : "incluye"
+    POSTULACIONES_VIVIENDA ||--|| ADJUDICACIONES : "resulta"
+    CASOS_SOCIALES ||--o{ VISITAS_SOCIALES : "visitas"
 
     AYUDAS {
         bigint id PK
@@ -507,6 +655,12 @@ erDiagram
         text estatus
         date fecha_solicitud
     }
+    AYUDA_DETALLE {
+        bigint id PK
+        bigint ayuda_id FK
+        text concepto
+        numeric monto_total
+    }
     ENTREGAS {
         bigint id PK
         bigint funcionario_id FK
@@ -514,24 +668,78 @@ erDiagram
         text periodo
         numeric monto
     }
+    ENTREGA_PAGOS {
+        bigint id PK
+        bigint entrega_id FK
+        numeric monto
+        date fecha
+    }
     POSTULACIONES_VIVIENDA {
         bigint id PK
         smallint programa_id FK
         bigint funcionario_id FK
         text estatus
     }
+    ADJUDICACIONES {
+        bigint id PK
+        bigint postulacion_id FK
+        date fecha_adjudicacion
+        text direccion
+    }
+    CASOS_SOCIALES {
+        bigint id PK
+        bigint funcionario_id FK
+        text tipo_caso
+        date fecha_apertura
+        text estatus
+    }
+    VISITAS_SOCIALES {
+        bigint id PK
+        bigint caso_id FK
+        date fecha
+        bigint visitador_id FK
+    }
+    PRE_JUBILADOS {
+        bigint id PK
+        bigint funcionario_id FK
+        date fecha_inicio
+        numeric pension_estimada
+    }
     JUBILADOS {
         bigint id PK
-        bigint funcionario_id FK,UK
+        bigint funcionario_id FK
         date fecha_jubilacion
         numeric anios_servicio
         numeric pension_mensual
     }
     FALLECIMIENTOS {
         bigint id PK
-        bigint funcionario_id FK,UK
+        bigint funcionario_id FK
         date fecha_fallecimiento
         boolean en_servicio
+    }
+    SOLICITUDES_JUBILACION {
+        bigint id PK
+        bigint funcionario_id FK
+        date fecha_solicitud
+        text estatus
+    }
+    PROGRAMAS_VIVIENDA {
+        smallint id PK
+        text codigo
+        text nombre
+        int cupos_total
+    }
+    TIPOS_SOLICITUD {
+        smallint id PK
+        text codigo
+        text nombre
+    }
+    TIPOS_BENEFICIO {
+        smallint id PK
+        text codigo
+        text nombre
+        text periodicidad
     }
 ```
 
@@ -541,31 +749,68 @@ erDiagram
 
 ```mermaid
 erDiagram
-    FUNCIONARIOS ||--o{ ACERVO : ""
-    TIPOS_DOCUMENTO ||--o{ ACERVO : ""
-    FUNCIONARIOS ||--o{ OFICIOS : remitente
-    OFICIOS ||--o{ OFICIOS_DESTINATARIOS : ""
-    ACTAS ||--o{ ACTAS_ASISTENTES : ""
-    FUNCIONARIOS ||--o{ FIRMAS_AUTORIZADAS : ""
-
-    USUARIOS ||--|| FUNCIONARIOS : "puede vincular"
-    ROLES ||--o{ ROL_PERMISOS : ""
-    MODULOS ||--o{ ROL_PERMISOS : ""
-    USUARIOS ||--o{ USUARIO_ROLES : ""
-    ROLES ||--o{ USUARIO_ROLES : ""
+    FUNCIONARIOS ||--o{ ACERVO : "documentos"
+    TIPOS_DOCUMENTO ||--o{ ACERVO : "tipo"
+    FUNCIONARIOS ||--o{ OFICIOS : "remite"
+    OFICIOS ||--o{ OFICIOS_DESTINATARIOS : "envia_a"
+    ACTAS ||--o{ ACTAS_ASISTENTES : "asiste"
+    FUNCIONARIOS ||--o{ FIRMAS_AUTORIZADAS : "firma"
+    USUARIOS ||--|| FUNCIONARIOS : "vincula"
+    ROLES ||--o{ ROL_PERMISOS : "tiene"
+    MODULOS ||--o{ ROL_PERMISOS : "asigna"
+    USUARIOS ||--o{ USUARIO_ROLES : "tiene"
+    ROLES ||--o{ USUARIO_ROLES : "asigna"
     USUARIOS ||--o{ USUARIO_PERMISOS : "override"
-    USUARIOS ||--o{ USUARIO_SCOPES : "zona/estacion"
-    USUARIOS ||--o{ SESIONES : ""
-    USUARIOS ||--o{ LOG_ACCESOS : ""
+    USUARIOS ||--o{ USUARIO_SCOPES : "alcance"
+    USUARIOS ||--o{ SESIONES : "inicia"
+    USUARIOS ||--o{ LOG_ACCESOS : "registra"
 
     USUARIOS {
         bigint id PK
         bigint funcionario_id FK
-        citext usuario UK
+        citext usuario
         text password_hash
         boolean activo
         boolean bloqueado
         boolean mfa_activo
+    }
+    ROLES {
+        smallint id PK
+        text codigo
+        text nombre
+    }
+    MODULOS {
+        smallint id PK
+        text codigo
+        text nombre
+    }
+    ROL_PERMISOS {
+        smallint rol_id FK
+        smallint modulo_id FK
+        boolean puede_ver
+        boolean puede_crear
+        boolean puede_editar
+    }
+    USUARIO_ROLES {
+        bigint usuario_id FK
+        smallint rol_id FK
+    }
+    USUARIO_PERMISOS {
+        bigint usuario_id FK
+        smallint modulo_id FK
+        boolean puede_ver
+    }
+    USUARIO_SCOPES {
+        bigint id PK
+        bigint usuario_id FK
+        smallint zona_id FK
+        smallint estacion_id FK
+    }
+    SESIONES {
+        uuid id PK
+        bigint usuario_id FK
+        text token_hash
+        timestamp expira_at
     }
     ACERVO {
         bigint id PK
@@ -574,17 +819,58 @@ erDiagram
         text titulo
         text documento_url
     }
+    OFICIOS {
+        bigint id PK
+        text numero
+        date fecha
+        text asunto
+        bigint remitente_id FK
+    }
+    OFICIOS_DESTINATARIOS {
+        bigint id PK
+        bigint oficio_id FK
+        bigint funcionario_id FK
+        boolean es_copia
+    }
+    ACTAS {
+        bigint id PK
+        text numero
+        date fecha
+        text tipo
+    }
+    ACTAS_ASISTENTES {
+        bigint id PK
+        bigint acta_id FK
+        bigint funcionario_id FK
+        boolean firmo
+    }
+    FIRMAS_AUTORIZADAS {
+        bigint id PK
+        bigint funcionario_id FK
+        text cargo_firma
+        date fecha_inicio
+        boolean activa
+    }
     LOG_CAMBIOS {
         bigint id PK
         text schema_name
         text table_name
-        text registro_id
         char operacion
-        jsonb valor_anterior
-        jsonb valor_nuevo
-        jsonb campos_cambiados
+        text valor_anterior
+        text valor_nuevo
         bigint usuario_id
-        timestamptz fecha
+        timestamp fecha
+    }
+    LOG_ACCESOS {
+        bigint id PK
+        bigint usuario_id FK
+        text tipo_evento
+        timestamp fecha
+    }
+    TIPOS_DOCUMENTO {
+        smallint id PK
+        text codigo
+        text nombre
     }
 ```
 
@@ -592,7 +878,8 @@ erDiagram
 
 ## Convenciones
 
-- `||--o{` = uno a muchos · `||--||` = uno a uno · `--|{` = obligatorio
-- `PK` = primary key · `FK` = foreign key · `UK` = unique
-- `generated` = columna calculada (`GENERATED ALWAYS AS ... STORED`)
-- Las cajas no muestran TODAS las columnas — solo las clave. El esquema completo está en `sql/02_dominio.sql` y en `docs/schema.dbml`.
+- `||--o{` = uno a muchos
+- `||--||` = uno a uno
+- `PK` = primary key · `FK` = foreign key
+- Las cajas muestran solo columnas clave. El esquema completo está en
+  [`../sql/02_dominio.sql`](../sql/02_dominio.sql) y en [`schema.dbml`](./schema.dbml).
