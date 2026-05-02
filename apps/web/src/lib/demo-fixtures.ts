@@ -3,9 +3,20 @@
  * Activado vía NEXT_PUBLIC_DEMO_MODE=1.
  */
 
-export const DEMO_MODE =
-  process.env.NEXT_PUBLIC_DEMO_MODE === "1" ||
-  process.env.DEMO_MODE === "1";
+/**
+ * Función en lugar de constante: garantiza que se evalúe en runtime
+ * (Next.js sólo inlina constantes top-level en client bundles).
+ */
+export function isDemoMode(): boolean {
+  if (process.env.NEXT_PUBLIC_DEMO_MODE === "1") return true;
+  if (process.env.DEMO_MODE === "1") return true;
+  // Fallback: si NO hay API URL configurada, asumimos modo demo.
+  if (!process.env.NEXT_PUBLIC_API_URL && !process.env.API_INTERNAL_URL) return true;
+  return false;
+}
+
+/** @deprecated usar isDemoMode() para evaluación runtime correcta */
+export const DEMO_MODE = isDemoMode();
 
 const NOMBRES = [
   "José",
