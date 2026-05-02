@@ -1,5 +1,6 @@
 import { api } from "@/lib/api";
 import { requireAuth } from "@/lib/session";
+import { requireRoleOrRedirect } from "@/lib/roles";
 import { formatDate } from "@/lib/utils";
 
 interface Ayuda {
@@ -39,6 +40,9 @@ interface SearchProps {
 
 export default async function BeneficiosPage({ searchParams }: SearchProps) {
   const token = await requireAuth();
+  const me = await api.get<{ roles: string[] }>("/auth/me", token).catch(() => ({ roles: [] as string[] }));
+  requireRoleOrRedirect(me.roles, ["ADMIN", "RRHH"]);
+
   const page = Number(searchParams.page ?? 1);
   const params = new URLSearchParams({ page: String(page), page_size: "50" });
   if (searchParams.estatus) params.set("estatus", searchParams.estatus);

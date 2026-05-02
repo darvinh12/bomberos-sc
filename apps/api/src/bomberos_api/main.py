@@ -16,6 +16,7 @@ from bomberos_api.routers import (
     admin,
     auth,
     beneficios,
+    campos_custom,
     carrera,
     catalogos,
     dashboard,
@@ -77,6 +78,7 @@ def create_app() -> FastAPI:
     app.include_router(egresos.router)
     app.include_router(dashboard.router)
     app.include_router(admin.router)
+    app.include_router(campos_custom.router)
 
     return app
 

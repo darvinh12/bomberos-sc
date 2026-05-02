@@ -432,21 +432,35 @@ export const DEMO_LOGIN_RESPONSE = {
   expires_in: 60 * 30,
 };
 
-export const DEMO_ME = {
-  id: 1,
-  usuario: "admin",
-  nombre_completo: "Administrador DEMO",
-  correo: "admin@bomberos.gob.ve",
-  roles: ["ADMIN"],
-  debe_cambiar_password: false,
-};
+export function demoMe(rol: string = "ADMIN") {
+  const ROLE_NAMES: Record<string, string> = {
+    ADMIN: "Administrador DEMO",
+    RRHH: "Ana Pérez (RRHH DEMO)",
+    SUPERVISOR: "Luis González (Supervisor DEMO)",
+    LOGISTICA: "Carmen Torres (Logística DEMO)",
+    OPERADOR: "José Martínez (Operador DEMO)",
+    INSPECTOR: "Pedro López (Inspector DEMO)",
+    LECTURA: "Visitante DEMO",
+  };
+  return {
+    id: 1,
+    usuario: rol.toLowerCase(),
+    nombre_completo: ROLE_NAMES[rol] ?? "Usuario DEMO",
+    correo: `${rol.toLowerCase()}@bomberos.gob.ve`,
+    roles: [rol],
+    debe_cambiar_password: false,
+  };
+}
 
-export function demoResolve(path: string): unknown {
+/** @deprecated usar demoMe(rol) para soportar rol dinámico */
+export const DEMO_ME = demoMe("ADMIN");
+
+export function demoResolve(path: string, rolActivo: string = "ADMIN"): unknown {
   const { base, page, page_size, estatus, q } = parseQuery(path);
 
   switch (true) {
     case base === "/auth/me":
-      return DEMO_ME;
+      return demoMe(rolActivo);
 
     case base === "/funcionarios": {
       let items = FUNCIONARIOS;

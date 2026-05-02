@@ -21,7 +21,17 @@ async function request<T>(
   token?: string,
 ): Promise<T> {
   if (isDemoMode()) {
-    if ((init.method ?? "GET") === "GET") return demoResolve(path) as T;
+    if ((init.method ?? "GET") === "GET") {
+      // Lee rol demo desde cookie cuando estamos en server-side
+      let rol = "ADMIN";
+      try {
+        const { cookies } = await import("next/headers");
+        rol = cookies().get("bcd_demo_role")?.value ?? "ADMIN";
+      } catch {
+        // En client-side no hay next/headers
+      }
+      return demoResolve(path, rol) as T;
+    }
     return undefined as T;
   }
   const headers = new Headers(init.headers);

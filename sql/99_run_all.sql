@@ -15,5 +15,8 @@
 \echo '=== 04_seed.sql ==='
 \i 04_seed.sql
 
+\echo '=== 05_campos_custom.sql ==='
+\i 05_campos_custom.sql
+
 \echo ''
 \echo 'Instalación completa.'

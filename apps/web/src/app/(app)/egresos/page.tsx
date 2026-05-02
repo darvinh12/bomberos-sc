@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { api } from "@/lib/api";
 import { requireAuth } from "@/lib/session";
+import { requireRoleOrRedirect } from "@/lib/roles";
 import { formatDate } from "@/lib/utils";
 
 type Tab = "jubilados" | "solicitudes";
@@ -55,6 +56,9 @@ interface SearchProps {
 
 export default async function EgresosPage({ searchParams }: SearchProps) {
   const token = await requireAuth();
+  const me = await api.get<{ roles: string[] }>("/auth/me", token).catch(() => ({ roles: [] as string[] }));
+  requireRoleOrRedirect(me.roles, ["ADMIN", "RRHH"]);
+
   const tab: Tab =
     (TABS.find((t) => t.key === searchParams.tab)?.key as Tab) ?? "jubilados";
   const page = Number(searchParams.page ?? 1);

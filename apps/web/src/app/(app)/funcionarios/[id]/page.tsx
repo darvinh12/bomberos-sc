@@ -58,11 +58,15 @@ export default async function FuncionarioDetailPage({
     if (e instanceof ApiError && e.status === 404) notFound();
     throw e;
   }
+  const me = await api
+    .get<{ roles: string[] }>("/auth/me", token)
+    .catch(() => ({ roles: [] as string[] }));
+  const puedeEditar = me.roles.includes("ADMIN") || me.roles.includes("RRHH");
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between">
-        <div className="flex items-start gap-4">
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex items-start gap-4 flex-1">
           <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center text-3xl">
             {f.foto_url ? (
               <img src={f.foto_url} alt="" className="w-20 h-20 rounded-full object-cover" />
@@ -85,6 +89,14 @@ export default async function FuncionarioDetailPage({
             </p>
           </div>
         </div>
+        {puedeEditar && (
+          <Link
+            href={`/funcionarios/${f.id}/editar`}
+            className="rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-medium hover:opacity-90"
+          >
+            ✎ Editar
+          </Link>
+        )}
       </div>
 
       <div className="grid md:grid-cols-3 gap-6">

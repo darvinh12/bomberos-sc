@@ -1,5 +1,6 @@
 import { api } from "@/lib/api";
 import { requireAuth } from "@/lib/session";
+import { requireRoleOrRedirect } from "@/lib/roles";
 import { formatDate } from "@/lib/utils";
 
 interface Row {
@@ -18,6 +19,9 @@ interface Row {
 
 export default async function RepososPage() {
   const token = await requireAuth();
+  const me = await api.get<{ roles: string[] }>("/auth/me", token).catch(() => ({ roles: [] as string[] }));
+  requireRoleOrRedirect(me.roles, ["ADMIN", "RRHH", "SUPERVISOR"]);
+
   let rows: Row[] = [];
   let err: string | null = null;
   try {
