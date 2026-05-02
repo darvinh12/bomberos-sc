@@ -99,7 +99,7 @@ export default async function VacacionesPage() {
                   <td className="p-3 text-right">
                     {puedeEditar ? (
                       <Link
-                        href={`/editar-pendiente/vacaciones?id=${r.id}&desde=/ops/vacaciones`}
+                        href={`/ops/vacaciones/${r.id}/editar`}
                         className="text-primary hover:underline text-xs"
                       >
                         Editar →

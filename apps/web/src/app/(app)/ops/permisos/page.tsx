@@ -119,7 +119,7 @@ export default async function PermisosPage({ searchParams }: SearchProps) {
                     <td className="p-3 text-right">
                       {puedeEditar ? (
                         <Link
-                          href={`/editar-pendiente/permisos?id=${p.id}&desde=/ops/permisos`}
+                          href={`/ops/permisos/${p.id}/editar`}
                           className="text-primary hover:underline text-xs"
                         >
                           {p.autorizado ? "Editar" : "Autorizar"} →

@@ -59,6 +59,12 @@ export default async function UsuariosAdminPage({ searchParams }: SearchProps) {
               : "Cargando…"}
           </p>
         </div>
+        <Link
+          href="/admin/usuarios/nuevo"
+          className="rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-medium hover:opacity-90"
+        >
+          + Nuevo usuario
+        </Link>
       </div>
 
       {err && (
