@@ -1,10 +1,18 @@
 import Link from "next/link";
+import {
+  LayoutDashboard, Users, ShieldCheck, CalendarDays, FileCheck2,
+  Briefcase, AlertTriangle, HeartPulse, Award, HardHat, Radio,
+  HandCoins, DoorOpen, BookOpen, Settings, UserCog, Lock, Boxes,
+  Building2, BookMarked, SlidersHorizontal, LayoutGrid, ClipboardList,
+  type LucideIcon,
+} from "lucide-react";
 import { requireAuth } from "@/lib/session";
 import { api } from "@/lib/api";
 import { puedeVer } from "@/lib/roles";
 import LogoutButton from "@/components/layout/LogoutButton";
 import RoleSwitcher from "@/components/layout/RoleSwitcher";
 import GlobalSearch from "@/components/layout/GlobalSearch";
+import MobileSidebar from "@/components/layout/MobileSidebar";
 
 interface Me {
   id: number;
@@ -15,72 +23,72 @@ interface Me {
   debe_cambiar_password: boolean;
 }
 
-interface NavItem {
+export interface NavItem {
   href: string;
   label: string;
-  icon: string;
+  Icon: LucideIcon;
 }
 
 const NAV_GENERAL: NavItem[] = [
-  { href: "/dashboard", label: "Dashboard", icon: "🏠" },
-  { href: "/funcionarios", label: "Personal", icon: "👥" },
+  { href: "/dashboard",   label: "Dashboard", Icon: LayoutDashboard },
+  { href: "/funcionarios",label: "Personal",  Icon: Users },
 ];
 
 const NAV_OPERATIVO: NavItem[] = [
-  { href: "/ops/guardias", label: "Guardias", icon: "🚒" },
-  { href: "/ops/vacaciones", label: "Vacaciones", icon: "🌴" },
-  { href: "/ops/permisos", label: "Permisos", icon: "📝" },
-  { href: "/ops/comisiones", label: "Comisiones", icon: "📋" },
-  { href: "/ops/faltas", label: "Faltas", icon: "⚠️" },
-  { href: "/salud/reposos", label: "Reposos", icon: "🏥" },
+  { href: "/ops/guardias",   label: "Guardias",   Icon: ShieldCheck },
+  { href: "/ops/vacaciones", label: "Vacaciones", Icon: CalendarDays },
+  { href: "/ops/permisos",   label: "Permisos",   Icon: FileCheck2 },
+  { href: "/ops/comisiones", label: "Comisiones", Icon: Briefcase },
+  { href: "/ops/faltas",     label: "Faltas",     Icon: AlertTriangle },
+  { href: "/salud/reposos",  label: "Reposos",    Icon: HeartPulse },
 ];
 
 const NAV_GESTION: NavItem[] = [
-  { href: "/carrera", label: "Carrera", icon: "🎖️" },
-  { href: "/equipo/proteccion", label: "Protección", icon: "🦺" },
-  { href: "/equipo/radios", label: "Radios", icon: "📡" },
-  { href: "/beneficios", label: "Beneficios", icon: "💰" },
-  { href: "/egresos", label: "Egresos", icon: "🏁" },
+  { href: "/carrera",           label: "Carrera",    Icon: Award },
+  { href: "/equipo/proteccion", label: "Protección", Icon: HardHat },
+  { href: "/equipo/radios",     label: "Radios",     Icon: Radio },
+  { href: "/beneficios",        label: "Beneficios", Icon: HandCoins },
+  { href: "/egresos",           label: "Egresos",    Icon: DoorOpen },
 ];
 
 const NAV_REFERENCIA: NavItem[] = [
-  { href: "/catalogos", label: "Catálogos", icon: "📚" },
+  { href: "/catalogos", label: "Catálogos", Icon: BookOpen },
 ];
 
 const NAV_ADMIN: NavItem[] = [
-  { href: "/admin", label: "Panel admin", icon: "⚙️" },
-  { href: "/admin/usuarios", label: "Usuarios", icon: "🔑" },
-  { href: "/admin/roles", label: "Roles", icon: "🎭" },
-  { href: "/admin/modulos", label: "Módulos", icon: "🧩" },
-  { href: "/admin/permisos", label: "Matriz de permisos", icon: "🔐" },
-  { href: "/admin/organizacion", label: "Departamentos", icon: "🏢" },
-  { href: "/admin/catalogos", label: "Catálogos", icon: "📚" },
-  { href: "/admin/parametros", label: "Parámetros", icon: "⚙️" },
-  { href: "/admin/campos-custom", label: "Campos personalizados", icon: "✨" },
-  { href: "/admin/auditoria", label: "Auditoría", icon: "🕵️" },
+  { href: "/admin",               label: "Panel admin",          Icon: Settings },
+  { href: "/admin/usuarios",      label: "Usuarios",             Icon: UserCog },
+  { href: "/admin/roles",         label: "Roles",                Icon: Lock },
+  { href: "/admin/modulos",       label: "Módulos",              Icon: Boxes },
+  { href: "/admin/permisos",      label: "Matriz de permisos",   Icon: LayoutGrid },
+  { href: "/admin/organizacion",  label: "Departamentos",        Icon: Building2 },
+  { href: "/admin/catalogos",     label: "Catálogos",            Icon: BookMarked },
+  { href: "/admin/parametros",    label: "Parámetros",           Icon: SlidersHorizontal },
+  { href: "/admin/campos-custom", label: "Campos personalizados",Icon: ClipboardList },
+  { href: "/admin/auditoria",     label: "Auditoría",            Icon: BookOpen },
 ];
 
 function filtrar(items: NavItem[], roles: string[]) {
   return items.filter((i) => puedeVer(i.href, roles));
 }
 
-function NavGroup({ title, items }: { title?: string; items: NavItem[] }) {
+export function NavGroup({ title, items }: { title?: string; items: NavItem[] }) {
   if (items.length === 0) return null;
   return (
-    <div className="space-y-1">
+    <div>
       {title && (
-        <div className="pt-3 pb-1 px-3 text-[10px] uppercase tracking-wider text-muted-foreground">
+        <div className="px-3 pt-5 pb-1 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">
           {title}
         </div>
       )}
-      {items.map((item) => (
+      {items.map(({ href, label, Icon }) => (
         <Link
-          key={item.href}
-          href={item.href}
-          className="flex items-center gap-3 px-3 py-2 rounded-md text-sm hover:bg-accent transition"
+          key={href}
+          href={href}
+          className="flex items-center gap-2.5 px-3 py-1.5 rounded text-[13px] text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
         >
-          <span>{item.icon}</span>
-          <span>{item.label}</span>
+          <Icon className="w-3.5 h-3.5 shrink-0 opacity-70" />
+          {label}
         </Link>
       ))}
     </div>
@@ -97,29 +105,38 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   }
   const roles = me?.roles ?? [];
 
-  const general = filtrar(NAV_GENERAL, roles);
-  const operativo = filtrar(NAV_OPERATIVO, roles);
-  const gestion = filtrar(NAV_GESTION, roles);
+  const general    = filtrar(NAV_GENERAL, roles);
+  const operativo  = filtrar(NAV_OPERATIVO, roles);
+  const gestion    = filtrar(NAV_GESTION, roles);
   const referencia = filtrar(NAV_REFERENCIA, roles);
-  const admin = roles.includes("ADMIN") ? NAV_ADMIN : [];
+  const admin      = roles.includes("ADMIN") ? NAV_ADMIN : [];
 
   return (
-    <div className="min-h-screen flex bg-secondary/30">
-      <aside className="w-64 bg-card border-r flex flex-col">
-        <div className="p-4 border-b">
-          <Link href="/dashboard" className="flex items-center gap-2">
-            <span className="text-2xl">🚒</span>
-            <span className="font-bold text-sm leading-tight">
-              Bomberos<br />Caracas
-            </span>
+    <div className="min-h-screen flex bg-background">
+
+      {/* ── Sidebar — hidden on mobile ── */}
+      <aside className="w-56 bg-background hidden md:flex flex-col shrink-0 border-r border-border">
+
+        {/* Logo */}
+        <div className="h-14 flex items-center px-4 border-b border-border shrink-0">
+          <Link href="/dashboard" className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-primary rounded flex items-center justify-center shrink-0">
+              <span className="text-primary-foreground text-[11px] font-bold tracking-wide">CB</span>
+            </div>
+            <div className="leading-snug">
+              <div className="text-foreground text-sm font-semibold">Bomberos</div>
+              <div className="text-muted-foreground text-[11px] font-medium">Caracas</div>
+            </div>
           </Link>
         </div>
 
-        <div className="px-3 pt-3">
+        {/* Search */}
+        <div className="px-3 pt-3 shrink-0">
           <GlobalSearch />
         </div>
 
-        <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
+        {/* Nav */}
+        <nav className="flex-1 px-2 py-2 overflow-y-auto space-y-0.5">
           <NavGroup items={general} />
           <NavGroup title="Operativo" items={operativo} />
           <NavGroup title="Gestión" items={gestion} />
@@ -127,18 +144,21 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <NavGroup title="Administración" items={admin} />
         </nav>
 
+        {/* User footer */}
         {me && (
-          <div className="p-3 border-t space-y-2">
+          <div className="shrink-0 border-t border-border px-3 pt-3 pb-3 space-y-2">
             <RoleSwitcher currentRoles={roles} />
-            <div className="px-3 py-2 text-xs">
-              <div className="font-semibold truncate">{me.nombre_completo}</div>
-              <div className="text-muted-foreground">@{me.usuario}</div>
+            <div className="px-1">
+              <div className="text-[13px] font-medium text-foreground truncate">
+                {me.nombre_completo}
+              </div>
+              <div className="text-[11px] text-muted-foreground">@{me.usuario}</div>
               {roles.length > 0 && (
-                <div className="mt-1 flex flex-wrap gap-1">
+                <div className="mt-1.5 flex flex-wrap gap-1">
                   {roles.map((r) => (
                     <span
                       key={r}
-                      className="inline-block px-1.5 py-0.5 bg-primary/10 text-primary rounded text-[10px]"
+                      className="inline-block px-1.5 py-0.5 bg-primary/20 text-primary/80 rounded text-[10px] font-medium uppercase tracking-wide"
                     >
                       {r}
                     </span>
@@ -151,15 +171,40 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         )}
       </aside>
 
-      <main className="flex-1 overflow-auto">
+      {/* ── Main column ── */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+
+        {/* Mobile topbar */}
+        <div className="md:hidden h-14 flex items-center gap-3 px-3 border-b border-border shrink-0 bg-card">
+          <MobileSidebar me={me ? { nombre_completo: me.nombre_completo, usuario: me.usuario, roles } : null}>
+            <NavGroup items={general} />
+            <NavGroup title="Operativo" items={operativo} />
+            <NavGroup title="Gestión" items={gestion} />
+            <NavGroup title="Referencia" items={referencia} />
+            {admin.length > 0 && <NavGroup title="Administración" items={admin} />}
+          </MobileSidebar>
+          <Link href="/dashboard" className="flex items-center gap-2.5">
+            <div className="w-7 h-7 bg-primary rounded flex items-center justify-center shrink-0">
+              <span className="text-primary-foreground text-[10px] font-bold tracking-wide">CB</span>
+            </div>
+            <span className="text-foreground text-sm font-semibold">Bomberos Caracas</span>
+          </Link>
+        </div>
+
+        {/* Password change alert */}
         {me?.debe_cambiar_password && (
-          <div className="bg-yellow-50 border-b border-yellow-200 px-6 py-2 text-sm text-yellow-800">
-            Tu contraseña debe cambiarse.{" "}
-            <Link href="/perfil" className="underline">Cambiar ahora</Link>
+          <div className="shrink-0 bg-amber-950/40 border-b border-amber-800/50 px-6 py-2 text-sm text-amber-300">
+            Su contraseña debe cambiarse.{" "}
+            <Link href="/perfil" className="font-semibold underline">
+              Cambiar ahora
+            </Link>
           </div>
         )}
-        <div className="p-6">{children}</div>
-      </main>
+
+        <main className="flex-1 overflow-auto">
+          <div className="p-4 md:p-6">{children}</div>
+        </main>
+      </div>
     </div>
   );
 }

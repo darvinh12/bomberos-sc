@@ -4,53 +4,52 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 9%;
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 9%;
-    --primary: 0 73% 41%;            /* rojo bombero */
-    --primary-foreground: 0 0% 100%;
-    --secondary: 0 0% 96%;
-    --secondary-foreground: 0 0% 9%;
-    --muted: 0 0% 96%;
-    --muted-foreground: 0 0% 45%;
-    --accent: 0 0% 96%;
-    --accent-foreground: 0 0% 9%;
-    --destructive: 0 84% 60%;
+    /* Deep navy + dark burgundy theme */
+    --background: 218 28% 7%;         /* #0c0f15 */
+    --foreground: 213 20% 88%;        /* #dce3f0 */
+
+    --card: 220 24% 12%;              /* #131720 */
+    --card-foreground: 213 20% 88%;
+
+    --primary: 355 72% 19%;           /* #540e14 — burdeos oscuro */
+    --primary-foreground: 0 0% 92%;
+
+    --secondary: 220 28% 17%;         /* #1e2433 */
+    --secondary-foreground: 213 20% 88%;
+
+    --muted: 220 24% 14%;             /* #181d28 */
+    --muted-foreground: 220 18% 38%;  /* #4a5570 */
+
+    --accent: 220 26% 16%;            /* #1a2030 */
+    --accent-foreground: 213 20% 88%;
+
+    --destructive: 0 72% 52%;
     --destructive-foreground: 0 0% 100%;
-    --border: 0 0% 90%;
-    --input: 0 0% 90%;
-    --ring: 0 73% 41%;
-    --radius: 0.5rem;
+
+    --border: 220 28% 17%;            /* #1e2433 */
+    --input: 220 24% 12%;             /* #131720 */
+    --ring: 355 58% 35%;              /* #8c2535 — hover/focus */
+
+    --radius: 0.25rem;
   }
-  .dark {
-    --background: 0 0% 8%;
-    --foreground: 0 0% 96%;
-    --card: 0 0% 12%;
-    --card-foreground: 0 0% 96%;
-    --primary: 0 73% 51%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 0 0% 16%;
-    --secondary-foreground: 0 0% 96%;
-    --muted: 0 0% 16%;
-    --muted-foreground: 0 0% 63%;
-    --accent: 0 0% 16%;
-    --accent-foreground: 0 0% 96%;
-    --destructive: 0 62% 50%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 0 0% 20%;
-    --input: 0 0% 20%;
-    --ring: 0 73% 51%;
-  }
+
   body {
     @apply bg-background text-foreground;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    font-feature-settings: "rlig" 1, "calt" 1, "tnum" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3 {
+    @apply tracking-tight;
   }
 }
 
 @layer components {
   .input {
-    @apply w-full rounded-md border border-input bg-background px-3 py-2 text-sm
-           focus:outline-none focus:ring-2 focus:ring-ring;
+    @apply w-full rounded border border-border bg-input px-3 py-2 text-sm text-foreground
+           placeholder:text-muted-foreground
+           focus:outline-none focus:ring-1 focus:ring-ring focus:border-ring
+           transition-colors;
   }
 }
