@@ -11,7 +11,14 @@ import re
 from bomberos_api.core.crud import client_ip, integrity_409, not_found, paginate, set_audit_ctx
 from bomberos_api.core.deps import CurrentUser, DbSession, require_role
 from bomberos_api.core.security import hash_password
-from bomberos_api.models.usuario import Modulo, Rol, RolPermiso, Usuario, UsuarioRol
+from bomberos_api.models.usuario import (
+    Modulo,
+    Rol,
+    RolPermiso,
+    Usuario,
+    UsuarioRol,
+    UsuarioScope,
+)
 from bomberos_api.schemas.common import Page
 
 router = APIRouter(
@@ -553,3 +560,92 @@ async def upsert_permiso(
         setattr(p, k, v)
     await db.flush()
     return PermisoCell.model_validate(p)
+
+
+# =============================================================================
+# Scopes por usuario (row-level: zonas, estaciones, divisiones, áreas)
+# =============================================================================
+
+
+class ScopeOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    usuario_id: int
+    zona_id: int | None
+    estacion_id: int | None
+    division_id: int | None
+    area_id: int | None
+
+
+class ScopeCreate(BaseModel):
+    zona_id: int | None = None
+    estacion_id: int | None = None
+    division_id: int | None = None
+    area_id: int | None = None
+
+    @field_validator("area_id")
+    @classmethod
+    def al_menos_uno(cls, v: int | None, info: object) -> int | None:  # type: ignore[override]
+        data = getattr(info, "data", {}) or {}
+        if (
+            v is None
+            and data.get("zona_id") is None
+            and data.get("estacion_id") is None
+            and data.get("division_id") is None
+        ):
+            raise ValueError("Especificá al menos uno: zona, estación, división o área")
+        return v
+
+
+@router.get("/usuarios/{usuario_id}/scopes", response_model=list[ScopeOut])
+async def listar_scopes(usuario_id: int, db: DbSession, _: CurrentUser) -> list[ScopeOut]:
+    rows = (
+        await db.execute(
+            select(UsuarioScope).where(UsuarioScope.usuario_id == usuario_id)
+        )
+    ).scalars().all()
+    return [ScopeOut.model_validate(s) for s in rows]
+
+
+@router.post(
+    "/usuarios/{usuario_id}/scopes",
+    response_model=ScopeOut,
+    status_code=status.HTTP_201_CREATED,
+)
+async def crear_scope(
+    request: Request,
+    usuario_id: int,
+    payload: ScopeCreate,
+    db: DbSession,
+    user: CurrentUser,
+) -> ScopeOut:
+    await set_audit_ctx(db, user.id, client_ip(request))
+    if await db.scalar(select(Usuario).where(Usuario.id == usuario_id)) is None:
+        raise not_found("Usuario")
+    s = UsuarioScope(usuario_id=usuario_id, **payload.model_dump())
+    db.add(s)
+    try:
+        await db.flush()
+    except IntegrityError as e:
+        raise integrity_409(e) from e
+    return ScopeOut.model_validate(s)
+
+
+@router.delete(
+    "/usuarios/{usuario_id}/scopes/{scope_id}", status_code=status.HTTP_204_NO_CONTENT
+)
+async def borrar_scope(
+    request: Request,
+    usuario_id: int,
+    scope_id: int,
+    db: DbSession,
+    user: CurrentUser,
+) -> None:
+    from sqlalchemy import delete
+
+    await set_audit_ctx(db, user.id, client_ip(request))
+    await db.execute(
+        delete(UsuarioScope).where(
+            UsuarioScope.id == scope_id, UsuarioScope.usuario_id == usuario_id
+        )
+    )

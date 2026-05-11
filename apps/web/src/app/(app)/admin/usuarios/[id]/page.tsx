@@ -9,6 +9,8 @@ import {
   type UsuarioDetalle,
 } from "./actions";
 import RolesEditor from "./roles-editor";
+import { listarScopes } from "./scope-actions";
+import ScopeEditor from "./scope-editor";
 
 export default async function UsuarioDetallePage({
   params,
@@ -31,6 +33,19 @@ export default async function UsuarioDetallePage({
     if (e instanceof ApiError && e.status === 404) notFound();
     throw e;
   }
+
+  const [scopes, zonas, estaciones, divisiones, areas] = await Promise.all([
+    listarScopes(id),
+    api.get<{ id: number; nombre: string }[]>("/catalogos/zonas", token).catch(() => []),
+    api
+      .get<{ id: number; nombre: string; zona_id: number }[]>(
+        "/catalogos/estaciones",
+        token,
+      )
+      .catch(() => []),
+    api.get<{ id: number; nombre: string }[]>("/catalogos/divisiones", token).catch(() => []),
+    api.get<{ id: number; nombre: string }[]>("/catalogos/areas", token).catch(() => []),
+  ]);
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -99,6 +114,18 @@ export default async function UsuarioDetallePage({
           />
         </section>
       </div>
+
+      <section className="rounded-xl border bg-card p-5">
+        <h2 className="font-semibold mb-2">Departamentos asignados (scope)</h2>
+        <ScopeEditor
+          usuarioId={u.id}
+          scopesIniciales={scopes}
+          zonas={zonas}
+          estaciones={estaciones}
+          divisiones={divisiones}
+          areas={areas}
+        />
+      </section>
     </div>
   );
 }

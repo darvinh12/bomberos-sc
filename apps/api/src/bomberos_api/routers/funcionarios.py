@@ -1,11 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
-from sqlalchemy import func, or_, select, text
+from sqlalchemy import and_, func, or_, select, text
 from sqlalchemy.exc import IntegrityError
 
 from bomberos_api.core.deps import CurrentUser, DbSession, require_role
 from bomberos_api.models.catalogos import Cargo, Condicion, Jerarquia
 from bomberos_api.models.funcionario import Funcionario, PeriodoServicio
 from bomberos_api.models.org import Estacion, Zona
+from bomberos_api.models.usuario import Rol, UsuarioRol, UsuarioScope
 from bomberos_api.schemas.common import Page
 from bomberos_api.schemas.funcionario import (
     FuncionarioCreate,
@@ -28,6 +29,40 @@ async def _set_audit_ctx(db, usuario_id: int, ip: str | None) -> None:
     await db.execute(text("SET LOCAL app.usuario_id = :v").bindparams(v=str(usuario_id)))
     if ip:
         await db.execute(text("SET LOCAL app.usuario_ip = :v").bindparams(v=ip))
+
+
+async def _scope_filter(db, user) -> object | None:
+    """Devuelve una condición SQLAlchemy si el usuario tiene scopes, o None
+    si es ADMIN o no tiene scopes asignados."""
+    es_admin = await db.scalar(
+        select(func.count())
+        .select_from(UsuarioRol)
+        .join(Rol, Rol.id == UsuarioRol.rol_id)
+        .where(UsuarioRol.usuario_id == user.id, Rol.codigo == "ADMIN")
+    )
+    if es_admin:
+        return None
+    scopes = (
+        await db.execute(
+            select(UsuarioScope).where(UsuarioScope.usuario_id == user.id)
+        )
+    ).scalars().all()
+    if not scopes:
+        return None
+    conds: list = []
+    for s in scopes:
+        partes = []
+        if s.zona_id is not None:
+            partes.append(Funcionario.zona_id == s.zona_id)
+        if s.estacion_id is not None:
+            partes.append(Funcionario.estacion_id == s.estacion_id)
+        if s.division_id is not None:
+            partes.append(Funcionario.division_id == s.division_id)
+        if s.area_id is not None:
+            partes.append(Funcionario.area_id == s.area_id)
+        if partes:
+            conds.append(and_(*partes))
+    return or_(*conds) if conds else None
 
 
 @router.get("", response_model=Page[FuncionarioListItem])
@@ -63,6 +98,10 @@ async def listar(
         if q.isdigit():
             cond = or_(cond, Funcionario.cedula == int(q))
         filters.append(cond)
+
+    scope_cond = await _scope_filter(db, user)
+    if scope_cond is not None:
+        filters.append(scope_cond)
 
     if filters:
         stmt = stmt.where(*filters)

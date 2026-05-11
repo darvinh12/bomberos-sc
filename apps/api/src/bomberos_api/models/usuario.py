@@ -109,3 +109,26 @@ class RolPermiso(Base):
     puede_eliminar: Mapped[bool] = mapped_column(Boolean, default=False)
     puede_exportar: Mapped[bool] = mapped_column(Boolean, default=False)
     puede_aprobar: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class UsuarioScope(Base):
+    """Restringe a un usuario a ciertas zonas/estaciones/divisiones/áreas.
+
+    Si un usuario tiene una sola fila en esta tabla, ese es su scope.
+    Múltiples filas = unión de scopes.
+    Cero filas = sin restricción (ve todo).
+    """
+
+    __tablename__ = "usuario_scopes"
+    __table_args__ = {"schema": "seguridad"}
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    usuario_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey("seguridad.usuarios.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    zona_id: Mapped[int | None] = mapped_column(SmallInteger)
+    estacion_id: Mapped[int | None] = mapped_column(SmallInteger)
+    division_id: Mapped[int | None] = mapped_column(SmallInteger)
+    area_id: Mapped[int | None] = mapped_column(SmallInteger)
