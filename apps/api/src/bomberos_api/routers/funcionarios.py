@@ -3,6 +3,7 @@ from sqlalchemy import and_, func, or_, select, text
 from sqlalchemy.exc import IntegrityError
 
 from bomberos_api.core.deps import CurrentUser, DbSession, require_role
+from bomberos_api.core.scope_check import assert_scope_funcionario
 from bomberos_api.models.catalogos import Cargo, Condicion, Jerarquia
 from bomberos_api.models.funcionario import Funcionario, PeriodoServicio
 from bomberos_api.models.org import Estacion, Zona
@@ -152,6 +153,7 @@ async def obtener(funcionario_id: int, db: DbSession, user: CurrentUser) -> Func
             status_code=status.HTTP_404_NOT_FOUND, detail="Funcionario no encontrado"
         )
     funcionario = row[0]
+    await assert_scope_funcionario(db, user, funcionario)
     detail = FuncionarioDetail.model_validate(funcionario)
     detail.jerarquia_nombre = row.jerarquia_nombre
     detail.jerarquia_nombre_corto = row.jerarquia_nombre_corto
@@ -234,6 +236,9 @@ async def actualizar(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Funcionario no encontrado"
         )
+
+    # Si el usuario tiene scope restringido, validar que el funcionario está dentro
+    await assert_scope_funcionario(db, user, funcionario)
 
     data = payload.model_dump(exclude_unset=True)
     for field, value in data.items():

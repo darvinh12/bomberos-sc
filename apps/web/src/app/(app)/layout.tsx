@@ -54,6 +54,8 @@ const NAV_ADMIN: NavItem[] = [
   { href: "/admin/modulos", label: "Módulos", icon: "🧩" },
   { href: "/admin/permisos", label: "Matriz de permisos", icon: "🔐" },
   { href: "/admin/organizacion", label: "Departamentos", icon: "🏢" },
+  { href: "/admin/catalogos", label: "Catálogos", icon: "📚" },
+  { href: "/admin/parametros", label: "Parámetros", icon: "⚙️" },
   { href: "/admin/campos-custom", label: "Campos personalizados", icon: "✨" },
   { href: "/admin/auditoria", label: "Auditoría", icon: "🕵️" },
 ];

@@ -47,6 +47,20 @@ const CARDS: Card[] = [
     emoji: "🏢",
   },
   {
+    href: "/admin/catalogos",
+    titulo: "Catálogos del sistema",
+    descripcion:
+      "Jerarquías, cargos, condiciones, niveles educativos, especialidades, estados civiles, grupos sanguíneos, bancos.",
+    emoji: "📚",
+  },
+  {
+    href: "/admin/parametros",
+    titulo: "Parámetros del sistema",
+    descripcion:
+      "Configuración global: días de vacaciones, timeouts, etc. Valores editables.",
+    emoji: "⚙️",
+  },
+  {
     href: "/admin/campos-custom",
     titulo: "Campos personalizados",
     descripcion:
