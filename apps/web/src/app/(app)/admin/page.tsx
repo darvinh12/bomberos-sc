@@ -40,6 +40,13 @@ const CARDS: Card[] = [
     emoji: "🔐",
   },
   {
+    href: "/admin/organizacion",
+    titulo: "Departamentos",
+    descripcion:
+      "Zonas, estaciones, divisiones, áreas y dependencias. Cambios afectan los dropdowns de toda la app.",
+    emoji: "🏢",
+  },
+  {
     href: "/admin/campos-custom",
     titulo: "Campos personalizados",
     descripcion:
