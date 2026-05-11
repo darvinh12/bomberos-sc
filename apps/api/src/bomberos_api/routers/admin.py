@@ -17,6 +17,7 @@ from bomberos_api.models.usuario import (
     RolPermiso,
     Usuario,
     UsuarioRol,
+    UsuarioRolScope,
     UsuarioScope,
 )
 from bomberos_api.schemas.common import Page
@@ -647,5 +648,108 @@ async def borrar_scope(
     await db.execute(
         delete(UsuarioScope).where(
             UsuarioScope.id == scope_id, UsuarioScope.usuario_id == usuario_id
+        )
+    )
+
+
+# =============================================================================
+# Roles asignados con scope por departamento
+# =============================================================================
+
+
+class RolScopeOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    usuario_id: int
+    rol_id: int
+    zona_id: int | None
+    estacion_id: int | None
+    division_id: int | None
+    area_id: int | None
+
+
+class RolScopeCreate(BaseModel):
+    rol_id: int
+    zona_id: int | None = None
+    estacion_id: int | None = None
+    division_id: int | None = None
+    area_id: int | None = None
+
+    @field_validator("area_id")
+    @classmethod
+    def al_menos_uno(cls, v: int | None, info: object) -> int | None:  # type: ignore[override]
+        data = getattr(info, "data", {}) or {}
+        if (
+            v is None
+            and data.get("zona_id") is None
+            and data.get("estacion_id") is None
+            and data.get("division_id") is None
+        ):
+            raise ValueError("Especificá al menos uno: zona, estación, división o área")
+        return v
+
+
+@router.get(
+    "/usuarios/{usuario_id}/rol-scopes", response_model=list[RolScopeOut]
+)
+async def listar_rol_scopes(
+    usuario_id: int, db: DbSession, _: CurrentUser
+) -> list[RolScopeOut]:
+    rows = (
+        await db.execute(
+            select(UsuarioRolScope).where(UsuarioRolScope.usuario_id == usuario_id)
+        )
+    ).scalars().all()
+    return [RolScopeOut.model_validate(s) for s in rows]
+
+
+@router.post(
+    "/usuarios/{usuario_id}/rol-scopes",
+    response_model=RolScopeOut,
+    status_code=status.HTTP_201_CREATED,
+)
+async def crear_rol_scope(
+    request: Request,
+    usuario_id: int,
+    payload: RolScopeCreate,
+    db: DbSession,
+    user: CurrentUser,
+) -> RolScopeOut:
+    await set_audit_ctx(db, user.id, client_ip(request))
+    if await db.scalar(select(Usuario).where(Usuario.id == usuario_id)) is None:
+        raise not_found("Usuario")
+    if await db.scalar(select(Rol).where(Rol.id == payload.rol_id)) is None:
+        raise not_found("Rol")
+    s = UsuarioRolScope(
+        usuario_id=usuario_id,
+        asignado_por=user.id,
+        **payload.model_dump(),
+    )
+    db.add(s)
+    try:
+        await db.flush()
+    except IntegrityError as e:
+        raise integrity_409(e) from e
+    return RolScopeOut.model_validate(s)
+
+
+@router.delete(
+    "/usuarios/{usuario_id}/rol-scopes/{rs_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def borrar_rol_scope(
+    request: Request,
+    usuario_id: int,
+    rs_id: int,
+    db: DbSession,
+    user: CurrentUser,
+) -> None:
+    from sqlalchemy import delete
+
+    await set_audit_ctx(db, user.id, client_ip(request))
+    await db.execute(
+        delete(UsuarioRolScope).where(
+            UsuarioRolScope.id == rs_id,
+            UsuarioRolScope.usuario_id == usuario_id,
         )
     )

@@ -11,6 +11,9 @@ import {
 import RolesEditor from "./roles-editor";
 import { listarScopes } from "./scope-actions";
 import ScopeEditor from "./scope-editor";
+import { listarRolScopes } from "./rol-scope-actions";
+import RolScopeEditor from "./rol-scope-editor";
+import { listarRoles } from "../../roles/actions";
 
 export default async function UsuarioDetallePage({
   params,
@@ -34,8 +37,10 @@ export default async function UsuarioDetallePage({
     throw e;
   }
 
-  const [scopes, zonas, estaciones, divisiones, areas] = await Promise.all([
+  const [scopes, rolScopes, rolesDB, zonas, estaciones, divisiones, areas] = await Promise.all([
     listarScopes(id),
+    listarRolScopes(id),
+    listarRoles(),
     api.get<{ id: number; nombre: string }[]>("/catalogos/zonas", token).catch(() => []),
     api
       .get<{ id: number; nombre: string; zona_id: number }[]>(
@@ -120,6 +125,19 @@ export default async function UsuarioDetallePage({
         <ScopeEditor
           usuarioId={u.id}
           scopesIniciales={scopes}
+          zonas={zonas}
+          estaciones={estaciones}
+          divisiones={divisiones}
+          areas={areas}
+        />
+      </section>
+
+      <section className="rounded-xl border bg-card p-5">
+        <h2 className="font-semibold mb-2">Roles por departamento</h2>
+        <RolScopeEditor
+          usuarioId={u.id}
+          scopesIniciales={rolScopes}
+          roles={rolesDB}
           zonas={zonas}
           estaciones={estaciones}
           divisiones={divisiones}

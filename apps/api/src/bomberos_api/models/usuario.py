@@ -132,3 +132,28 @@ class UsuarioScope(Base):
     estacion_id: Mapped[int | None] = mapped_column(SmallInteger)
     division_id: Mapped[int | None] = mapped_column(SmallInteger)
     area_id: Mapped[int | None] = mapped_column(SmallInteger)
+
+
+class UsuarioRolScope(Base):
+    """Asignación de rol con scope: usuario tiene rol X SOLO en departamento Y."""
+
+    __tablename__ = "usuario_rol_scope"
+    __table_args__ = {"schema": "seguridad"}
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    usuario_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey("seguridad.usuarios.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    rol_id: Mapped[int] = mapped_column(
+        SmallInteger,
+        ForeignKey("seguridad.roles.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    zona_id: Mapped[int | None] = mapped_column(SmallInteger)
+    estacion_id: Mapped[int | None] = mapped_column(SmallInteger)
+    division_id: Mapped[int | None] = mapped_column(SmallInteger)
+    area_id: Mapped[int | None] = mapped_column(SmallInteger)
+    asignado_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    asignado_por: Mapped[int | None] = mapped_column(BigInteger)
