@@ -3,7 +3,9 @@ from sqlalchemy import func, or_, select, text
 from sqlalchemy.exc import IntegrityError
 
 from bomberos_api.core.deps import CurrentUser, DbSession, require_role
+from bomberos_api.models.catalogos import Cargo, Condicion, Jerarquia
 from bomberos_api.models.funcionario import Funcionario, PeriodoServicio
+from bomberos_api.models.org import Estacion, Zona
 from bomberos_api.schemas.common import Page
 from bomberos_api.schemas.funcionario import (
     FuncionarioCreate,
@@ -88,14 +90,37 @@ async def listar(
 
 @router.get("/{funcionario_id}", response_model=FuncionarioDetail)
 async def obtener(funcionario_id: int, db: DbSession, user: CurrentUser) -> FuncionarioDetail:
-    funcionario = await db.scalar(
-        select(Funcionario).where(Funcionario.id == funcionario_id)
+    stmt = (
+        select(
+            Funcionario,
+            Jerarquia.nombre.label("jerarquia_nombre"),
+            Jerarquia.nombre_corto.label("jerarquia_nombre_corto"),
+            Cargo.nombre.label("cargo_nombre"),
+            Condicion.nombre.label("condicion_nombre"),
+            Zona.nombre.label("zona_nombre"),
+            Estacion.nombre.label("estacion_nombre"),
+        )
+        .outerjoin(Jerarquia, Jerarquia.id == Funcionario.jerarquia_id)
+        .outerjoin(Cargo, Cargo.id == Funcionario.cargo_id)
+        .outerjoin(Condicion, Condicion.id == Funcionario.condicion_id)
+        .outerjoin(Zona, Zona.id == Funcionario.zona_id)
+        .outerjoin(Estacion, Estacion.id == Funcionario.estacion_id)
+        .where(Funcionario.id == funcionario_id)
     )
-    if funcionario is None:
+    row = (await db.execute(stmt)).first()
+    if row is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Funcionario no encontrado"
         )
-    return FuncionarioDetail.model_validate(funcionario)
+    funcionario = row[0]
+    detail = FuncionarioDetail.model_validate(funcionario)
+    detail.jerarquia_nombre = row.jerarquia_nombre
+    detail.jerarquia_nombre_corto = row.jerarquia_nombre_corto
+    detail.cargo_nombre = row.cargo_nombre
+    detail.condicion_nombre = row.condicion_nombre
+    detail.zona_nombre = row.zona_nombre
+    detail.estacion_nombre = row.estacion_nombre
+    return detail
 
 
 @router.post(

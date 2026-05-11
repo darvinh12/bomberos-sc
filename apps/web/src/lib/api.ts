@@ -69,6 +69,8 @@ export const api = {
     request<T>(p, { method: "POST", body: body ? JSON.stringify(body) : undefined }, token),
   patch: <T>(p: string, body?: unknown, token?: string) =>
     request<T>(p, { method: "PATCH", body: body ? JSON.stringify(body) : undefined }, token),
+  put: <T>(p: string, body?: unknown, token?: string) =>
+    request<T>(p, { method: "PUT", body: body ? JSON.stringify(body) : undefined }, token),
   del: <T>(p: string, token?: string) => request<T>(p, { method: "DELETE" }, token),
   loginForm: async (usuario: string, password: string) => {
     if (isDemoMode()) {

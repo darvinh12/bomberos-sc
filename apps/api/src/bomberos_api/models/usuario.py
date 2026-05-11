@@ -74,3 +74,38 @@ class UsuarioRol(Base):
 
     usuario: Mapped[Usuario] = relationship("Usuario", back_populates="roles")
     rol: Mapped[Rol] = relationship("Rol", lazy="joined")
+
+
+class Modulo(Base):
+    __tablename__ = "modulos"
+    __table_args__ = {"schema": "seguridad"}
+
+    id: Mapped[int] = mapped_column(SmallInteger, primary_key=True)
+    codigo: Mapped[str] = mapped_column(String, unique=True, nullable=False)
+    nombre: Mapped[str] = mapped_column(String, nullable=False)
+    descripcion: Mapped[str | None] = mapped_column(String)
+    icono: Mapped[str | None] = mapped_column(String)
+    orden: Mapped[int] = mapped_column(SmallInteger, default=0)
+    activo: Mapped[bool] = mapped_column(Boolean, default=True)
+
+
+class RolPermiso(Base):
+    __tablename__ = "rol_permisos"
+    __table_args__ = {"schema": "seguridad"}
+
+    rol_id: Mapped[int] = mapped_column(
+        SmallInteger,
+        ForeignKey("seguridad.roles.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    modulo_id: Mapped[int] = mapped_column(
+        SmallInteger,
+        ForeignKey("seguridad.modulos.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    puede_ver: Mapped[bool] = mapped_column(Boolean, default=False)
+    puede_crear: Mapped[bool] = mapped_column(Boolean, default=False)
+    puede_editar: Mapped[bool] = mapped_column(Boolean, default=False)
+    puede_eliminar: Mapped[bool] = mapped_column(Boolean, default=False)
+    puede_exportar: Mapped[bool] = mapped_column(Boolean, default=False)
+    puede_aprobar: Mapped[bool] = mapped_column(Boolean, default=False)

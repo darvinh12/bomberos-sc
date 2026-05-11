@@ -542,15 +542,24 @@ export function demoResolve(path: string, rolActivo: string = "ADMIN"): unknown 
     case base.startsWith("/funcionarios/"): {
       const id = Number(base.split("/")[2]);
       const f = FUNCIONARIOS.find((x) => x.id === id) ?? FUNCIONARIOS[0];
+      const jerarquia = JERARQUIAS.find((j) => j.id === f.jerarquia_id);
+      const zona = ZONAS.find((z) => z.id === f.zona_id);
+      const estacion = ESTACIONES.find((e) => e.id === f.estacion_id);
+      const cargoIdx = (f.id % 20) + 1;
+      const condicionIdx = (f.id % 8) + 1;
       return {
         ...f,
         fecha_nacimiento: "1985-06-12",
         sexo: id % 3 === 0 ? "F" : "M",
         estado_civil_id: 1,
         grupo_sanguineo_id: 3,
-        tipo_personal: "UNIFORMADO",
+        tipo_personal: jerarquia?.es_oficial ? "OFICIAL" : "UNIFORMADO",
         numero_empleado: `EMP-${1000 + f.id}`,
         numero_equipo: String(2000 + f.id),
+        cargo_id: cargoIdx,
+        condicion_id: condicionIdx,
+        seccion: ["A", "B", "C", "D"][f.id % 4],
+        horario: ["Diurno", "Nocturno", "24x48", "8 hrs administrativo"][f.id % 4],
         telefono_movil: "+58 414 555-0100",
         correo: `funcionario${f.id}@bomberos.gob.ve`,
         persona_contacto: "Familiar autorizado",
@@ -560,6 +569,12 @@ export function demoResolve(path: string, rolActivo: string = "ADMIN"): unknown 
         egresado_unes: false,
         foto_url: null,
         observaciones: null,
+        jerarquia_nombre: jerarquia?.nombre ?? null,
+        jerarquia_nombre_corto: jerarquia?.nombre_corto ?? null,
+        cargo_nombre: `Cargo ${cargoIdx}`,
+        condicion_nombre: `Condición ${condicionIdx}`,
+        zona_nombre: zona?.nombre ?? null,
+        estacion_nombre: estacion?.nombre ?? null,
       };
     }
 
@@ -678,7 +693,45 @@ export function demoResolve(path: string, rolActivo: string = "ADMIN"): unknown 
     case base === "/admin/usuarios":
       return paginate(USUARIOS, page, page_size);
 
+    case base === "/admin/roles":
+      return ROLES_DEMO;
+    case base === "/admin/modulos":
+      return MODULOS_DEMO;
+    case base === "/admin/permisos":
+      // En demo los permisos los maneja la cookie en server actions —
+      // este fallback solo aplica si nadie escribió todavía.
+      return [];
+
     default:
       return paginate([], page, page_size);
   }
 }
+
+// ----- Roles y módulos demo (matriz de permisos) -----
+
+const ROLES_DEMO = [
+  { id: 1, codigo: "ADMIN",      nombre: "Administrador",  descripcion: "Acceso completo al sistema",  es_sistema: true,  activo: true },
+  { id: 2, codigo: "RRHH",       nombre: "RRHH",           descripcion: "Personal, salud, beneficios", es_sistema: true,  activo: true },
+  { id: 3, codigo: "SUPERVISOR", nombre: "Supervisor",     descripcion: "Supervisión y aprobaciones",  es_sistema: true,  activo: true },
+  { id: 4, codigo: "LOGISTICA",  nombre: "Logística",      descripcion: "Equipo y radios",             es_sistema: true,  activo: true },
+  { id: 5, codigo: "OPERADOR",   nombre: "Operador",       descripcion: "Operaciones día a día",       es_sistema: true,  activo: true },
+  { id: 6, codigo: "INSPECTOR",  nombre: "Inspector",      descripcion: "Faltas y comisiones",         es_sistema: true,  activo: true },
+  { id: 7, codigo: "LECTURA",    nombre: "Solo lectura",   descripcion: "Visualización general",       es_sistema: true,  activo: true },
+];
+
+const MODULOS_DEMO = [
+  { id: 1,  codigo: "dashboard",     nombre: "Dashboard",        descripcion: "Resumen general",                  icono: "chart",     orden: 1,  activo: true },
+  { id: 2,  codigo: "funcionarios",  nombre: "Funcionarios",     descripcion: "Personal activo y egresado",        icono: "users",     orden: 2,  activo: true },
+  { id: 3,  codigo: "salud",         nombre: "Salud",            descripcion: "Reposos y diagnósticos",            icono: "heart",     orden: 3,  activo: true },
+  { id: 4,  codigo: "ops_guardias",  nombre: "Guardias",         descripcion: "Operaciones — guardias",            icono: "shield",    orden: 4,  activo: true },
+  { id: 5,  codigo: "ops_vacaciones",nombre: "Vacaciones",       descripcion: "Operaciones — vacaciones",          icono: "sun",       orden: 5,  activo: true },
+  { id: 6,  codigo: "ops_permisos",  nombre: "Permisos",         descripcion: "Operaciones — permisos",            icono: "calendar",  orden: 6,  activo: true },
+  { id: 7,  codigo: "ops_comisiones",nombre: "Comisiones",       descripcion: "Comisiones de servicio",            icono: "briefcase", orden: 7,  activo: true },
+  { id: 8,  codigo: "ops_faltas",    nombre: "Faltas",           descripcion: "Faltas y reincidencias",            icono: "alert",     orden: 8,  activo: true },
+  { id: 9,  codigo: "carrera",       nombre: "Carrera",          descripcion: "Ascensos, cursos, evaluaciones",    icono: "trophy",    orden: 9,  activo: true },
+  { id: 10, codigo: "equipo",        nombre: "Equipo",           descripcion: "Protección y radios",               icono: "tools",     orden: 10, activo: true },
+  { id: 11, codigo: "beneficios",    nombre: "Beneficios",       descripcion: "Ayudas y solicitudes",              icono: "gift",      orden: 11, activo: true },
+  { id: 12, codigo: "egresos",       nombre: "Egresos",          descripcion: "Jubilados y solicitudes",           icono: "logout",    orden: 12, activo: true },
+  { id: 13, codigo: "catalogos",     nombre: "Catálogos",        descripcion: "Lectura de catálogos",              icono: "book",      orden: 13, activo: true },
+  { id: 14, codigo: "admin",         nombre: "Administración",   descripcion: "Usuarios, roles, módulos",          icono: "settings",  orden: 14, activo: true },
+];
