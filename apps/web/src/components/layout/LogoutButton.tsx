@@ -9,9 +9,9 @@ export default function LogoutButton() {
     <button
       onClick={() => start(() => logoutAction())}
       disabled={pending}
-      className="w-full mt-1 text-left px-3 py-2 text-xs rounded-md hover:bg-accent transition disabled:opacity-50"
+      className="w-full text-left px-2 py-1.5 text-[12px] rounded text-slate-500 hover:bg-slate-800 hover:text-slate-300 transition-colors disabled:opacity-50"
     >
-      {pending ? "Cerrando…" : "🚪 Cerrar sesión"}
+      {pending ? "Cerrando sesión…" : "Cerrar sesión"}
     </button>
   );
 }

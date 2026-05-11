@@ -3,6 +3,10 @@
 import { useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 import {
+  HeartPulse, Briefcase, AlertTriangle, ClipboardList, LogOut, Minus,
+  type LucideIcon,
+} from "lucide-react";
+import {
   asignarComision,
   iniciarReposo,
   jubilar,
@@ -23,18 +27,17 @@ type AccionKey =
 interface AccionDef {
   key: AccionKey;
   label: string;
-  icon: string;
-  color: string;
+  Icon: LucideIcon;
   disabled?: (estatus: string) => boolean;
 }
 
 const ACCIONES: AccionDef[] = [
-  { key: "reposo", label: "Iniciar reposo", icon: "🏥", color: "bg-yellow-500", disabled: (s) => s !== "ACTIVO" },
-  { key: "comision", label: "Asignar a comisión", icon: "📋", color: "bg-blue-500", disabled: (s) => !["ACTIVO", "REPOSO"].includes(s) },
-  { key: "sancion", label: "Sancionar", icon: "⚠️", color: "bg-orange-500" },
-  { key: "pre-jubilar", label: "Solicitar jubilación", icon: "📝", color: "bg-purple-500", disabled: (s) => ["JUBILADO", "FALLECIDO", "EGRESADO"].includes(s) },
-  { key: "jubilar", label: "Jubilar", icon: "🏁", color: "bg-purple-700", disabled: (s) => ["JUBILADO", "FALLECIDO", "EGRESADO"].includes(s) },
-  { key: "fallecimiento", label: "Registrar fallecimiento", icon: "🕊️", color: "bg-gray-700", disabled: (s) => ["FALLECIDO", "EGRESADO"].includes(s) },
+  { key: "reposo",       label: "Iniciar reposo",          Icon: HeartPulse,    disabled: (s) => s !== "ACTIVO" },
+  { key: "comision",     label: "Asignar a comisión",      Icon: Briefcase,     disabled: (s) => !["ACTIVO", "REPOSO"].includes(s) },
+  { key: "sancion",      label: "Sancionar",               Icon: AlertTriangle },
+  { key: "pre-jubilar",  label: "Solicitar jubilación",    Icon: ClipboardList, disabled: (s) => ["JUBILADO", "FALLECIDO", "EGRESADO"].includes(s) },
+  { key: "jubilar",      label: "Jubilar",                 Icon: LogOut,        disabled: (s) => ["JUBILADO", "FALLECIDO", "EGRESADO"].includes(s) },
+  { key: "fallecimiento",label: "Registrar fallecimiento", Icon: Minus,         disabled: (s) => ["FALLECIDO", "EGRESADO"].includes(s) },
 ];
 
 function Submit({ label }: { label: string }) {
@@ -76,7 +79,7 @@ export default function PanelAcciones({
                 abierto === a.key ? "border-primary bg-primary/5" : ""
               }`}
             >
-              <span className="text-2xl">{a.icon}</span>
+              <a.Icon className="w-5 h-5 opacity-80" />
               <span>{a.label}</span>
             </button>
           );
@@ -298,8 +301,9 @@ function JubilarForm({ funcionarioId, onClose }: { funcionarioId: number; onClos
   return (
     <form action={action}>
       <FormWrapper title="Ejecutar jubilación" state={state} onClose={onClose} submitLabel="Jubilar (irreversible)">
-        <div className="rounded-md bg-yellow-50 border border-yellow-300 p-2 text-xs text-yellow-800">
-          ⚠️ Esto cierra el período de servicio del funcionario y cambia su estatus a JUBILADO.
+        <div className="rounded bg-yellow-950/40 border border-yellow-800/50 p-2 text-xs text-yellow-300 flex items-start gap-1.5">
+          <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+          <span>Esto cierra el período de servicio del funcionario y cambia su estatus a JUBILADO.</span>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <div>
@@ -366,8 +370,9 @@ function FallecimientoForm({
         onClose={onClose}
         submitLabel="Registrar (irreversible)"
       >
-        <div className="rounded-md bg-yellow-50 border border-yellow-300 p-2 text-xs text-yellow-800">
-          ⚠️ Cierra el período de servicio y cambia el estatus a FALLECIDO.
+        <div className="rounded bg-yellow-950/40 border border-yellow-800/50 p-2 text-xs text-yellow-300 flex items-start gap-1.5">
+          <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+          <span>Cierra el período de servicio y cambia el estatus a FALLECIDO.</span>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div>

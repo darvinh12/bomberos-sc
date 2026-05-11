@@ -1,7 +1,6 @@
 "use client";
 
 import { useFormState, useFormStatus } from "react-dom";
-import Link from "next/link";
 import { loginAction, type LoginState } from "./actions";
 
 const initial: LoginState = {};
@@ -12,9 +11,9 @@ function SubmitButton() {
     <button
       type="submit"
       disabled={pending}
-      className="w-full rounded-md bg-primary text-primary-foreground py-2.5 font-semibold hover:opacity-90 disabled:opacity-60 transition"
+      className="w-full rounded border border-transparent bg-primary text-primary-foreground py-2.5 text-sm font-semibold hover:opacity-90 disabled:opacity-60 transition-opacity"
     >
-      {pending ? "Verificando…" : "Ingresar"}
+      {pending ? "Verificando…" : "Ingresar al sistema"}
     </button>
   );
 }
@@ -23,61 +22,107 @@ export default function LoginPage() {
   const [state, action] = useFormState(loginAction, initial);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-700 to-red-900 p-4">
-      <div className="w-full max-w-md bg-card text-card-foreground rounded-2xl shadow-2xl p-8">
-        <div className="text-center mb-8">
-          <div className="text-5xl mb-2">🚒</div>
-          <h1 className="text-2xl font-bold">Bomberos Caracas</h1>
-          <p className="text-sm text-muted-foreground mt-1">
+    <div className="min-h-screen flex bg-slate-900">
+      {/* Left panel — branding */}
+      <div className="hidden lg:flex lg:w-1/2 flex-col justify-between p-12 border-r border-slate-800">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 bg-primary rounded flex items-center justify-center">
+            <span className="text-white text-xs font-bold tracking-wide">CB</span>
+          </div>
+          <span className="text-white text-sm font-semibold">
             Cuerpo de Bomberos del Distrito Capital
+          </span>
+        </div>
+        <div>
+          <h1 className="text-3xl font-bold text-white leading-tight">
+            Sistema Integrado<br />de Gestión de Personal
+          </h1>
+          <p className="mt-4 text-slate-400 text-sm leading-relaxed max-w-sm">
+            Plataforma institucional para la administración del recurso humano,
+            operaciones y carrera del cuerpo de bomberos.
+          </p>
+          <div className="mt-8 flex items-center gap-2">
+            <div className="w-1 h-8 bg-primary rounded-full" />
+            <p className="text-slate-500 text-xs">
+              Acceso restringido a personal autorizado.<br />
+              Las sesiones son auditadas.
+            </p>
+          </div>
+        </div>
+        <div className="text-slate-700 text-xs">
+          Bomberos Caracas · Sistema SIGP v2
+        </div>
+      </div>
+
+      {/* Right panel — form */}
+      <div className="flex-1 flex items-center justify-center p-6">
+        <div className="w-full max-w-sm">
+
+          {/* Mobile logo */}
+          <div className="lg:hidden flex items-center gap-3 mb-8">
+            <div className="w-9 h-9 bg-primary rounded flex items-center justify-center">
+              <span className="text-white text-xs font-bold tracking-wide">CB</span>
+            </div>
+            <div>
+              <div className="text-white text-sm font-semibold">Bomberos Caracas</div>
+              <div className="text-slate-500 text-xs">Cuerpo del Distrito Capital</div>
+            </div>
+          </div>
+
+          <div className="bg-slate-800 rounded p-8 shadow-2xl border border-slate-700">
+            <div className="mb-6">
+              <h2 className="text-lg font-semibold text-foreground">Iniciar sesión</h2>
+              <p className="text-sm text-muted-foreground mt-0.5">
+                Ingrese sus credenciales institucionales
+              </p>
+            </div>
+
+            {state.error && (
+              <div className="mb-5 px-4 py-3 rounded border border-destructive/30 bg-destructive/5 text-destructive text-sm">
+                {state.error}
+              </div>
+            )}
+
+            <form action={action} className="space-y-4">
+              <div>
+                <label htmlFor="usuario" className="block text-xs font-semibold text-foreground mb-1.5 uppercase tracking-wide">
+                  Usuario
+                </label>
+                <input
+                  id="usuario"
+                  name="usuario"
+                  type="text"
+                  autoComplete="username"
+                  required
+                  autoFocus
+                  className="input"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="password" className="block text-xs font-semibold text-foreground mb-1.5 uppercase tracking-wide">
+                  Contraseña
+                </label>
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  autoComplete="current-password"
+                  required
+                  className="input"
+                />
+              </div>
+
+              <div className="pt-1">
+                <SubmitButton />
+              </div>
+            </form>
+          </div>
+
+          <p className="mt-4 text-center text-xs text-slate-500">
+            Acceso restringido · Sesiones auditadas
           </p>
         </div>
-
-        {state.error && (
-          <div className="mb-4 px-4 py-3 rounded-md bg-destructive/10 border border-destructive/30 text-destructive text-sm">
-            {state.error}
-          </div>
-        )}
-
-        <form action={action} className="space-y-4">
-          <div>
-            <label htmlFor="usuario" className="block text-sm font-medium mb-1.5">
-              Usuario
-            </label>
-            <input
-              id="usuario"
-              name="usuario"
-              type="text"
-              autoComplete="username"
-              required
-              autoFocus
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-            />
-          </div>
-
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium mb-1.5">
-              Contraseña
-            </label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              autoComplete="current-password"
-              required
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-            />
-          </div>
-
-          <SubmitButton />
-        </form>
-
-        <p className="mt-6 text-center text-xs text-muted-foreground">
-          Acceso restringido a personal autorizado.{" "}
-          <Link href="https://github.com/ganesh4494/bomberos-caracas-bd" className="underline">
-            Repo
-          </Link>
-        </p>
       </div>
     </div>
   );

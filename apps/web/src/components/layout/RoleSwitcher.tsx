@@ -4,11 +4,6 @@ import { useTransition } from "react";
 import { switchDemoRole } from "@/app/actions/demo";
 import { ROLES_DISPONIBLES } from "@/lib/roles";
 
-/**
- * Selector de rol para modo DEMO. Permite probar el control de acceso
- * sin tener una BD real con múltiples usuarios. Solo visible si el
- * usuario actual tiene rol DEMO/ADMIN o estamos en modo demo.
- */
 export default function RoleSwitcher({ currentRoles }: { currentRoles: string[] }) {
   const [pending, start] = useTransition();
   const current = currentRoles[0] ?? "ADMIN";
@@ -16,21 +11,18 @@ export default function RoleSwitcher({ currentRoles }: { currentRoles: string[] 
   return (
     <form
       action={(fd) => {
-        start(() => {
-          void switchDemoRole(fd);
-        });
+        start(() => { void switchDemoRole(fd); });
       }}
-      className="px-3"
     >
-      <label className="block text-[10px] uppercase tracking-wider text-muted-foreground mb-1">
-        Modo demo — cambiar rol
+      <label className="block text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-1 px-1">
+        Demo — rol
       </label>
       <select
         name="rol"
         defaultValue={current}
         disabled={pending}
         onChange={(e) => e.currentTarget.form?.requestSubmit()}
-        className="w-full text-xs rounded-md border border-input bg-background px-2 py-1 disabled:opacity-50"
+        className="w-full text-[12px] rounded bg-slate-800 border border-slate-700 text-slate-300 px-2 py-1.5 disabled:opacity-50 focus:outline-none focus:ring-1 focus:ring-slate-600"
       >
         {ROLES_DISPONIBLES.map((r) => (
           <option key={r.codigo} value={r.codigo} title={r.descripcion}>
