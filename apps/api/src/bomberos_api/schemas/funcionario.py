@@ -54,6 +54,14 @@ class FuncionarioDetail(FuncionarioListItem):
     merito: float | None
     es_voluntario: bool
 
+    # Nombres resueltos desde catálogos (rellenados por el router).
+    jerarquia_nombre: str | None = None
+    jerarquia_nombre_corto: str | None = None
+    cargo_nombre: str | None = None
+    condicion_nombre: str | None = None
+    zona_nombre: str | None = None
+    estacion_nombre: str | None = None
+
 
 class FuncionarioCreate(BaseModel):
     """Alta de funcionario. La 1ra entrada genera automáticamente periodo_servicio #1."""

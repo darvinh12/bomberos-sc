@@ -1,5 +1,7 @@
+import Link from "next/link";
 import { api } from "@/lib/api";
 import { requireAuth } from "@/lib/session";
+import { hasAnyRole } from "@/lib/roles";
 import { formatDate } from "@/lib/utils";
 
 interface Row {
@@ -22,6 +24,11 @@ interface Page<T> {
 
 export default async function GuardiasPage() {
   const token = await requireAuth();
+  const me = await api
+    .get<{ roles: string[] }>("/auth/me", token)
+    .catch(() => ({ roles: [] as string[] }));
+  const puedeCrear = hasAnyRole(me.roles, ["ADMIN", "OPERADOR"]);
+
   let data: Page<Row> | null = null;
   let err: string | null = null;
   try {
@@ -32,11 +39,21 @@ export default async function GuardiasPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Guardias</h1>
-        <p className="text-sm text-muted-foreground">
-          {data ? `${data.total} guardias programadas` : "Cargando…"}
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold">Guardias</h1>
+          <p className="text-sm text-muted-foreground">
+            {data ? `${data.total} guardias programadas` : "Cargando…"}
+          </p>
+        </div>
+        {puedeCrear && (
+          <Link
+            href="/ops/guardias/nuevo"
+            className="rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-medium hover:opacity-90"
+          >
+            + Nueva guardia
+          </Link>
+        )}
       </div>
 
       {err && (
@@ -57,6 +74,7 @@ export default async function GuardiasPage() {
                   <th className="text-left p-3">Turno</th>
                   <th className="text-left p-3">Hora</th>
                   <th className="text-left p-3">Estado</th>
+                  <th className="text-right p-3"></th>
                 </tr>
               </thead>
               <tbody>
@@ -80,11 +98,19 @@ export default async function GuardiasPage() {
                         {g.cerrada ? "CERRADA" : "ABIERTA"}
                       </span>
                     </td>
+                    <td className="p-3 text-right">
+                      <Link
+                        href={`/ops/guardias/${g.id}`}
+                        className="text-primary hover:underline text-xs"
+                      >
+                        Ver / Asignar →
+                      </Link>
+                    </td>
                   </tr>
                 ))}
                 {data.items.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="p-8 text-center text-muted-foreground">
+                    <td colSpan={7} className="p-8 text-center text-muted-foreground">
                       Sin guardias registradas.
                     </td>
                   </tr>

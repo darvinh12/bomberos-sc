@@ -4,14 +4,22 @@ from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 import re
 
 from bomberos_api.core.crud import client_ip, integrity_409, not_found, paginate, set_audit_ctx
 from bomberos_api.core.deps import CurrentUser, DbSession, require_role
 from bomberos_api.core.security import hash_password
-from bomberos_api.models.usuario import Rol, Usuario, UsuarioRol
+from bomberos_api.models.usuario import (
+    Modulo,
+    Rol,
+    RolPermiso,
+    Usuario,
+    UsuarioRol,
+    UsuarioRolScope,
+    UsuarioScope,
+)
 from bomberos_api.schemas.common import Page
 
 router = APIRouter(
@@ -201,6 +209,68 @@ async def asignar_rol(
         raise integrity_409(e) from e
 
 
+class AuditoriaOut(BaseModel):
+    id: int
+    schema_name: str
+    table_name: str
+    registro_id: str | None
+    operacion: str
+    usuario_id: int | None
+    usuario_nombre: str | None
+    ip: str | None
+    fecha: datetime
+    campos_cambiados: dict | list | None = None
+
+
+@router.get("/auditoria", response_model=Page[AuditoriaOut])
+async def listar_auditoria(
+    db: DbSession,
+    _: CurrentUser,
+    table_name: str | None = None,
+    schema_name: str | None = None,
+    usuario_id: int | None = None,
+    operacion: str | None = None,
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=50, ge=1, le=200),
+) -> Page[AuditoriaOut]:
+    from sqlalchemy import text
+
+    where_clauses = []
+    params: dict[str, object] = {}
+    if table_name:
+        where_clauses.append("table_name = :table_name")
+        params["table_name"] = table_name
+    if schema_name:
+        where_clauses.append("schema_name = :schema_name")
+        params["schema_name"] = schema_name
+    if usuario_id:
+        where_clauses.append("usuario_id = :usuario_id")
+        params["usuario_id"] = usuario_id
+    if operacion:
+        where_clauses.append("operacion::text = :operacion")
+        params["operacion"] = operacion
+    where_sql = ("WHERE " + " AND ".join(where_clauses)) if where_clauses else ""
+
+    total = (
+        await db.scalar(text(f"SELECT count(*) FROM aud.log_cambios {where_sql}").bindparams(**params))
+    ) or 0
+    res = await db.execute(
+        text(
+            f"""SELECT id, schema_name, table_name, registro_id,
+                       operacion::text AS operacion, usuario_id, usuario_nombre,
+                       ip::text AS ip, fecha, campos_cambiados
+                FROM aud.log_cambios {where_sql}
+                ORDER BY fecha DESC
+                OFFSET :offset LIMIT :limit"""
+        ).bindparams(**params, offset=(page - 1) * page_size, limit=page_size)
+    )
+    items = [AuditoriaOut.model_validate(dict(r._mapping)) for r in res]
+    return Page[AuditoriaOut](
+        items=items, total=total, page=page, page_size=page_size,
+        pages=(total + page_size - 1) // page_size,
+    )
+
+
 @router.delete(
     "/usuarios/{usuario_id}/roles/{rol_codigo}", status_code=status.HTTP_204_NO_CONTENT
 )
@@ -220,5 +290,466 @@ async def remover_rol(
     await db.execute(
         delete(UsuarioRol).where(
             UsuarioRol.usuario_id == usuario_id, UsuarioRol.rol_id == rol_id
+        )
+    )
+
+
+# =============================================================================
+# Roles — CRUD (los roles con es_sistema=true no son editables ni borrables)
+# =============================================================================
+
+
+class RolOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    codigo: str
+    nombre: str
+    descripcion: str | None
+    es_sistema: bool
+    activo: bool
+
+
+_CODIGO_RE = re.compile(r"^[A-Z][A-Z0-9_]{1,31}$")
+
+
+class RolCreate(BaseModel):
+    codigo: str = Field(min_length=2, max_length=32)
+    nombre: str = Field(min_length=2, max_length=64)
+    descripcion: str | None = Field(default=None, max_length=255)
+    activo: bool = True
+
+    @field_validator("codigo")
+    @classmethod
+    def codigo_format(cls, v: str) -> str:
+        v = v.strip().upper()
+        if not _CODIGO_RE.match(v):
+            raise ValueError("Código: mayúsculas, dígitos o '_', empezar con letra")
+        return v
+
+
+class RolUpdate(BaseModel):
+    nombre: str | None = Field(default=None, min_length=2, max_length=64)
+    descripcion: str | None = Field(default=None, max_length=255)
+    activo: bool | None = None
+
+
+@router.get("/roles", response_model=list[RolOut])
+async def listar_roles(db: DbSession, _: CurrentUser) -> list[RolOut]:
+    rows = (await db.execute(select(Rol).order_by(Rol.es_sistema.desc(), Rol.codigo))).scalars().all()
+    return [RolOut.model_validate(r) for r in rows]
+
+
+@router.post("/roles", response_model=RolOut, status_code=status.HTTP_201_CREATED)
+async def crear_rol(
+    request: Request, payload: RolCreate, db: DbSession, user: CurrentUser
+) -> RolOut:
+    await set_audit_ctx(db, user.id, client_ip(request))
+    r = Rol(
+        codigo=payload.codigo,
+        nombre=payload.nombre,
+        descripcion=payload.descripcion,
+        es_sistema=False,
+        activo=payload.activo,
+    )
+    db.add(r)
+    try:
+        await db.flush()
+    except IntegrityError as e:
+        raise integrity_409(e) from e
+    return RolOut.model_validate(r)
+
+
+@router.patch("/roles/{rol_id}", response_model=RolOut)
+async def actualizar_rol(
+    request: Request,
+    rol_id: int,
+    payload: RolUpdate,
+    db: DbSession,
+    user: CurrentUser,
+) -> RolOut:
+    await set_audit_ctx(db, user.id, client_ip(request))
+    r = await db.scalar(select(Rol).where(Rol.id == rol_id))
+    if r is None:
+        raise not_found("Rol")
+    if r.es_sistema and payload.activo is False:
+        raise HTTPException(status_code=400, detail="No se puede desactivar un rol de sistema")
+    for k, v in payload.model_dump(exclude_unset=True).items():
+        setattr(r, k, v)
+    await db.flush()
+    return RolOut.model_validate(r)
+
+
+@router.delete("/roles/{rol_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def borrar_rol(
+    request: Request, rol_id: int, db: DbSession, user: CurrentUser
+) -> None:
+    from sqlalchemy import delete
+
+    await set_audit_ctx(db, user.id, client_ip(request))
+    r = await db.scalar(select(Rol).where(Rol.id == rol_id))
+    if r is None:
+        raise not_found("Rol")
+    if r.es_sistema:
+        raise HTTPException(status_code=400, detail="No se puede borrar un rol de sistema")
+    asignados = await db.scalar(
+        select(func.count()).select_from(UsuarioRol).where(UsuarioRol.rol_id == rol_id)
+    )
+    if asignados:
+        raise HTTPException(
+            status_code=409,
+            detail=f"El rol tiene {asignados} usuarios asignados — desasignar antes de borrar",
+        )
+    await db.execute(delete(RolPermiso).where(RolPermiso.rol_id == rol_id))
+    await db.execute(delete(Rol).where(Rol.id == rol_id))
+
+
+# =============================================================================
+# Módulos — CRUD
+# =============================================================================
+
+
+class ModuloOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    codigo: str
+    nombre: str
+    descripcion: str | None
+    icono: str | None
+    orden: int
+    activo: bool
+
+
+_MODULO_CODE_RE = re.compile(r"^[a-z][a-z0-9_]{1,31}$")
+
+
+class ModuloCreate(BaseModel):
+    codigo: str = Field(min_length=2, max_length=32)
+    nombre: str = Field(min_length=2, max_length=64)
+    descripcion: str | None = Field(default=None, max_length=255)
+    icono: str | None = Field(default=None, max_length=32)
+    orden: int = 0
+    activo: bool = True
+
+    @field_validator("codigo")
+    @classmethod
+    def codigo_format(cls, v: str) -> str:
+        v = v.strip().lower()
+        if not _MODULO_CODE_RE.match(v):
+            raise ValueError("Código: minúsculas, dígitos o '_', empezar con letra")
+        return v
+
+
+class ModuloUpdate(BaseModel):
+    nombre: str | None = Field(default=None, min_length=2, max_length=64)
+    descripcion: str | None = Field(default=None, max_length=255)
+    icono: str | None = Field(default=None, max_length=32)
+    orden: int | None = None
+    activo: bool | None = None
+
+
+@router.get("/modulos", response_model=list[ModuloOut])
+async def listar_modulos(db: DbSession, _: CurrentUser) -> list[ModuloOut]:
+    rows = (await db.execute(select(Modulo).order_by(Modulo.orden, Modulo.nombre))).scalars().all()
+    return [ModuloOut.model_validate(m) for m in rows]
+
+
+@router.post("/modulos", response_model=ModuloOut, status_code=status.HTTP_201_CREATED)
+async def crear_modulo(
+    request: Request, payload: ModuloCreate, db: DbSession, user: CurrentUser
+) -> ModuloOut:
+    await set_audit_ctx(db, user.id, client_ip(request))
+    m = Modulo(**payload.model_dump())
+    db.add(m)
+    try:
+        await db.flush()
+    except IntegrityError as e:
+        raise integrity_409(e) from e
+    return ModuloOut.model_validate(m)
+
+
+@router.patch("/modulos/{modulo_id}", response_model=ModuloOut)
+async def actualizar_modulo(
+    request: Request,
+    modulo_id: int,
+    payload: ModuloUpdate,
+    db: DbSession,
+    user: CurrentUser,
+) -> ModuloOut:
+    await set_audit_ctx(db, user.id, client_ip(request))
+    m = await db.scalar(select(Modulo).where(Modulo.id == modulo_id))
+    if m is None:
+        raise not_found("Módulo")
+    for k, v in payload.model_dump(exclude_unset=True).items():
+        setattr(m, k, v)
+    await db.flush()
+    return ModuloOut.model_validate(m)
+
+
+@router.delete("/modulos/{modulo_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def borrar_modulo(
+    request: Request, modulo_id: int, db: DbSession, user: CurrentUser
+) -> None:
+    from sqlalchemy import delete
+
+    await set_audit_ctx(db, user.id, client_ip(request))
+    m = await db.scalar(select(Modulo).where(Modulo.id == modulo_id))
+    if m is None:
+        raise not_found("Módulo")
+    await db.execute(delete(RolPermiso).where(RolPermiso.modulo_id == modulo_id))
+    await db.execute(delete(Modulo).where(Modulo.id == modulo_id))
+
+
+# =============================================================================
+# Matriz de permisos rol × módulo
+# =============================================================================
+
+
+class PermisoCell(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    rol_id: int
+    modulo_id: int
+    puede_ver: bool
+    puede_crear: bool
+    puede_editar: bool
+    puede_eliminar: bool
+    puede_exportar: bool
+    puede_aprobar: bool
+
+
+class PermisoUpdate(BaseModel):
+    puede_ver: bool | None = None
+    puede_crear: bool | None = None
+    puede_editar: bool | None = None
+    puede_eliminar: bool | None = None
+    puede_exportar: bool | None = None
+    puede_aprobar: bool | None = None
+
+
+@router.get("/permisos", response_model=list[PermisoCell])
+async def listar_permisos(db: DbSession, _: CurrentUser) -> list[PermisoCell]:
+    rows = (await db.execute(select(RolPermiso))).scalars().all()
+    return [PermisoCell.model_validate(r) for r in rows]
+
+
+@router.put("/permisos/{rol_id}/{modulo_id}", response_model=PermisoCell)
+async def upsert_permiso(
+    request: Request,
+    rol_id: int,
+    modulo_id: int,
+    payload: PermisoUpdate,
+    db: DbSession,
+    user: CurrentUser,
+) -> PermisoCell:
+    """Upsert de una celda de la matriz. Crea la fila si no existe."""
+    await set_audit_ctx(db, user.id, client_ip(request))
+    rol = await db.scalar(select(Rol).where(Rol.id == rol_id))
+    if rol is None:
+        raise not_found("Rol")
+    mod = await db.scalar(select(Modulo).where(Modulo.id == modulo_id))
+    if mod is None:
+        raise not_found("Módulo")
+
+    p = await db.scalar(
+        select(RolPermiso).where(
+            RolPermiso.rol_id == rol_id, RolPermiso.modulo_id == modulo_id
+        )
+    )
+    if p is None:
+        p = RolPermiso(rol_id=rol_id, modulo_id=modulo_id)
+        db.add(p)
+    for k, v in payload.model_dump(exclude_unset=True).items():
+        setattr(p, k, v)
+    await db.flush()
+    return PermisoCell.model_validate(p)
+
+
+# =============================================================================
+# Scopes por usuario (row-level: zonas, estaciones, divisiones, áreas)
+# =============================================================================
+
+
+class ScopeOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    usuario_id: int
+    zona_id: int | None
+    estacion_id: int | None
+    division_id: int | None
+    area_id: int | None
+
+
+class ScopeCreate(BaseModel):
+    zona_id: int | None = None
+    estacion_id: int | None = None
+    division_id: int | None = None
+    area_id: int | None = None
+
+    @field_validator("area_id")
+    @classmethod
+    def al_menos_uno(cls, v: int | None, info: object) -> int | None:  # type: ignore[override]
+        data = getattr(info, "data", {}) or {}
+        if (
+            v is None
+            and data.get("zona_id") is None
+            and data.get("estacion_id") is None
+            and data.get("division_id") is None
+        ):
+            raise ValueError("Especificá al menos uno: zona, estación, división o área")
+        return v
+
+
+@router.get("/usuarios/{usuario_id}/scopes", response_model=list[ScopeOut])
+async def listar_scopes(usuario_id: int, db: DbSession, _: CurrentUser) -> list[ScopeOut]:
+    rows = (
+        await db.execute(
+            select(UsuarioScope).where(UsuarioScope.usuario_id == usuario_id)
+        )
+    ).scalars().all()
+    return [ScopeOut.model_validate(s) for s in rows]
+
+
+@router.post(
+    "/usuarios/{usuario_id}/scopes",
+    response_model=ScopeOut,
+    status_code=status.HTTP_201_CREATED,
+)
+async def crear_scope(
+    request: Request,
+    usuario_id: int,
+    payload: ScopeCreate,
+    db: DbSession,
+    user: CurrentUser,
+) -> ScopeOut:
+    await set_audit_ctx(db, user.id, client_ip(request))
+    if await db.scalar(select(Usuario).where(Usuario.id == usuario_id)) is None:
+        raise not_found("Usuario")
+    s = UsuarioScope(usuario_id=usuario_id, **payload.model_dump())
+    db.add(s)
+    try:
+        await db.flush()
+    except IntegrityError as e:
+        raise integrity_409(e) from e
+    return ScopeOut.model_validate(s)
+
+
+@router.delete(
+    "/usuarios/{usuario_id}/scopes/{scope_id}", status_code=status.HTTP_204_NO_CONTENT
+)
+async def borrar_scope(
+    request: Request,
+    usuario_id: int,
+    scope_id: int,
+    db: DbSession,
+    user: CurrentUser,
+) -> None:
+    from sqlalchemy import delete
+
+    await set_audit_ctx(db, user.id, client_ip(request))
+    await db.execute(
+        delete(UsuarioScope).where(
+            UsuarioScope.id == scope_id, UsuarioScope.usuario_id == usuario_id
+        )
+    )
+
+
+# =============================================================================
+# Roles asignados con scope por departamento
+# =============================================================================
+
+
+class RolScopeOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    usuario_id: int
+    rol_id: int
+    zona_id: int | None
+    estacion_id: int | None
+    division_id: int | None
+    area_id: int | None
+
+
+class RolScopeCreate(BaseModel):
+    rol_id: int
+    zona_id: int | None = None
+    estacion_id: int | None = None
+    division_id: int | None = None
+    area_id: int | None = None
+
+    @field_validator("area_id")
+    @classmethod
+    def al_menos_uno(cls, v: int | None, info: object) -> int | None:  # type: ignore[override]
+        data = getattr(info, "data", {}) or {}
+        if (
+            v is None
+            and data.get("zona_id") is None
+            and data.get("estacion_id") is None
+            and data.get("division_id") is None
+        ):
+            raise ValueError("Especificá al menos uno: zona, estación, división o área")
+        return v
+
+
+@router.get(
+    "/usuarios/{usuario_id}/rol-scopes", response_model=list[RolScopeOut]
+)
+async def listar_rol_scopes(
+    usuario_id: int, db: DbSession, _: CurrentUser
+) -> list[RolScopeOut]:
+    rows = (
+        await db.execute(
+            select(UsuarioRolScope).where(UsuarioRolScope.usuario_id == usuario_id)
+        )
+    ).scalars().all()
+    return [RolScopeOut.model_validate(s) for s in rows]
+
+
+@router.post(
+    "/usuarios/{usuario_id}/rol-scopes",
+    response_model=RolScopeOut,
+    status_code=status.HTTP_201_CREATED,
+)
+async def crear_rol_scope(
+    request: Request,
+    usuario_id: int,
+    payload: RolScopeCreate,
+    db: DbSession,
+    user: CurrentUser,
+) -> RolScopeOut:
+    await set_audit_ctx(db, user.id, client_ip(request))
+    if await db.scalar(select(Usuario).where(Usuario.id == usuario_id)) is None:
+        raise not_found("Usuario")
+    if await db.scalar(select(Rol).where(Rol.id == payload.rol_id)) is None:
+        raise not_found("Rol")
+    s = UsuarioRolScope(
+        usuario_id=usuario_id,
+        asignado_por=user.id,
+        **payload.model_dump(),
+    )
+    db.add(s)
+    try:
+        await db.flush()
+    except IntegrityError as e:
+        raise integrity_409(e) from e
+    return RolScopeOut.model_validate(s)
+
+
+@router.delete(
+    "/usuarios/{usuario_id}/rol-scopes/{rs_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def borrar_rol_scope(
+    request: Request,
+    usuario_id: int,
+    rs_id: int,
+    db: DbSession,
+    user: CurrentUser,
+) -> None:
+    from sqlalchemy import delete
+
+    await set_audit_ctx(db, user.id, client_ip(request))
+    await db.execute(
+        delete(UsuarioRolScope).where(
+            UsuarioRolScope.id == rs_id,
+            UsuarioRolScope.usuario_id == usuario_id,
         )
     )

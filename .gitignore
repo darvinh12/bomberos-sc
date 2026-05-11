@@ -29,3 +29,9 @@ secrets/
 # Carpetas comunes de scripts
 node_modules/
 __pycache__/
+_ci_*.json
+_ci_*.zip
+
+apps/migration/.venv/
+apps/migration/.env
+apps/web/.env.local

@@ -74,3 +74,86 @@ class UsuarioRol(Base):
 
     usuario: Mapped[Usuario] = relationship("Usuario", back_populates="roles")
     rol: Mapped[Rol] = relationship("Rol", lazy="joined")
+
+
+class Modulo(Base):
+    __tablename__ = "modulos"
+    __table_args__ = {"schema": "seguridad"}
+
+    id: Mapped[int] = mapped_column(SmallInteger, primary_key=True)
+    codigo: Mapped[str] = mapped_column(String, unique=True, nullable=False)
+    nombre: Mapped[str] = mapped_column(String, nullable=False)
+    descripcion: Mapped[str | None] = mapped_column(String)
+    icono: Mapped[str | None] = mapped_column(String)
+    orden: Mapped[int] = mapped_column(SmallInteger, default=0)
+    activo: Mapped[bool] = mapped_column(Boolean, default=True)
+
+
+class RolPermiso(Base):
+    __tablename__ = "rol_permisos"
+    __table_args__ = {"schema": "seguridad"}
+
+    rol_id: Mapped[int] = mapped_column(
+        SmallInteger,
+        ForeignKey("seguridad.roles.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    modulo_id: Mapped[int] = mapped_column(
+        SmallInteger,
+        ForeignKey("seguridad.modulos.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    puede_ver: Mapped[bool] = mapped_column(Boolean, default=False)
+    puede_crear: Mapped[bool] = mapped_column(Boolean, default=False)
+    puede_editar: Mapped[bool] = mapped_column(Boolean, default=False)
+    puede_eliminar: Mapped[bool] = mapped_column(Boolean, default=False)
+    puede_exportar: Mapped[bool] = mapped_column(Boolean, default=False)
+    puede_aprobar: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class UsuarioScope(Base):
+    """Restringe a un usuario a ciertas zonas/estaciones/divisiones/áreas.
+
+    Si un usuario tiene una sola fila en esta tabla, ese es su scope.
+    Múltiples filas = unión de scopes.
+    Cero filas = sin restricción (ve todo).
+    """
+
+    __tablename__ = "usuario_scopes"
+    __table_args__ = {"schema": "seguridad"}
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    usuario_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey("seguridad.usuarios.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    zona_id: Mapped[int | None] = mapped_column(SmallInteger)
+    estacion_id: Mapped[int | None] = mapped_column(SmallInteger)
+    division_id: Mapped[int | None] = mapped_column(SmallInteger)
+    area_id: Mapped[int | None] = mapped_column(SmallInteger)
+
+
+class UsuarioRolScope(Base):
+    """Asignación de rol con scope: usuario tiene rol X SOLO en departamento Y."""
+
+    __tablename__ = "usuario_rol_scope"
+    __table_args__ = {"schema": "seguridad"}
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    usuario_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey("seguridad.usuarios.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    rol_id: Mapped[int] = mapped_column(
+        SmallInteger,
+        ForeignKey("seguridad.roles.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    zona_id: Mapped[int | None] = mapped_column(SmallInteger)
+    estacion_id: Mapped[int | None] = mapped_column(SmallInteger)
+    division_id: Mapped[int | None] = mapped_column(SmallInteger)
+    area_id: Mapped[int | None] = mapped_column(SmallInteger)
+    asignado_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    asignado_por: Mapped[int | None] = mapped_column(BigInteger)

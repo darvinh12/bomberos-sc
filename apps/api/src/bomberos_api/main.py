@@ -14,8 +14,12 @@ from bomberos_api.database import dispose_engine, get_engine
 from bomberos_api.logging import configure_logging, get_logger
 from bomberos_api.routers import (
     admin,
+    admin_catalogos,
+    admin_organizacion,
+    admin_parametros,
     auth,
     beneficios,
+    campos_custom,
     carrera,
     catalogos,
     dashboard,
@@ -77,6 +81,10 @@ def create_app() -> FastAPI:
     app.include_router(egresos.router)
     app.include_router(dashboard.router)
     app.include_router(admin.router)
+    app.include_router(admin_organizacion.router)
+    app.include_router(admin_catalogos.router)
+    app.include_router(admin_parametros.router)
+    app.include_router(campos_custom.router)
 
     return app
 

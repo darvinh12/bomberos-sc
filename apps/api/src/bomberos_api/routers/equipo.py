@@ -78,6 +78,28 @@ async def crear_inv_proteccion(
 # -------- Protección: asignaciones --------
 
 
+@router.get("/proteccion/asignaciones", response_model=Page[ProteccionAsignacionOut])
+async def listar_asignaciones_proteccion(
+    db: DbSession,
+    _: CurrentUser,
+    devuelto: bool | None = None,
+    funcionario_id: int | None = None,
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=50, ge=1, le=200),
+) -> Page[ProteccionAsignacionOut]:
+    stmt = select(ProteccionAsignacion).order_by(ProteccionAsignacion.id.desc())
+    if devuelto is not None:
+        stmt = stmt.where(ProteccionAsignacion.devuelto == devuelto)
+    if funcionario_id is not None:
+        stmt = stmt.where(ProteccionAsignacion.funcionario_id == funcionario_id)
+    items, total = await paginate(db, stmt, page=page, page_size=page_size)
+    return Page[ProteccionAsignacionOut](
+        items=[ProteccionAsignacionOut.model_validate(i) for i in items],
+        total=total, page=page, page_size=page_size,
+        pages=(total + page_size - 1) // page_size,
+    )
+
+
 @router.post(
     "/proteccion/asignaciones",
     response_model=ProteccionAsignacionOut,

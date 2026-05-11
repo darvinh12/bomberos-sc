@@ -1,9 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
-from sqlalchemy import func, or_, select, text
+from sqlalchemy import and_, func, or_, select, text
 from sqlalchemy.exc import IntegrityError
 
 from bomberos_api.core.deps import CurrentUser, DbSession, require_role
+from bomberos_api.core.scope_check import assert_scope_funcionario
+from bomberos_api.models.catalogos import Cargo, Condicion, Jerarquia
 from bomberos_api.models.funcionario import Funcionario, PeriodoServicio
+from bomberos_api.models.org import Estacion, Zona
+from bomberos_api.models.usuario import Rol, UsuarioRol, UsuarioScope
 from bomberos_api.schemas.common import Page
 from bomberos_api.schemas.funcionario import (
     FuncionarioCreate,
@@ -26,6 +30,40 @@ async def _set_audit_ctx(db, usuario_id: int, ip: str | None) -> None:
     await db.execute(text("SET LOCAL app.usuario_id = :v").bindparams(v=str(usuario_id)))
     if ip:
         await db.execute(text("SET LOCAL app.usuario_ip = :v").bindparams(v=ip))
+
+
+async def _scope_filter(db, user) -> object | None:
+    """Devuelve una condición SQLAlchemy si el usuario tiene scopes, o None
+    si es ADMIN o no tiene scopes asignados."""
+    es_admin = await db.scalar(
+        select(func.count())
+        .select_from(UsuarioRol)
+        .join(Rol, Rol.id == UsuarioRol.rol_id)
+        .where(UsuarioRol.usuario_id == user.id, Rol.codigo == "ADMIN")
+    )
+    if es_admin:
+        return None
+    scopes = (
+        await db.execute(
+            select(UsuarioScope).where(UsuarioScope.usuario_id == user.id)
+        )
+    ).scalars().all()
+    if not scopes:
+        return None
+    conds: list = []
+    for s in scopes:
+        partes = []
+        if s.zona_id is not None:
+            partes.append(Funcionario.zona_id == s.zona_id)
+        if s.estacion_id is not None:
+            partes.append(Funcionario.estacion_id == s.estacion_id)
+        if s.division_id is not None:
+            partes.append(Funcionario.division_id == s.division_id)
+        if s.area_id is not None:
+            partes.append(Funcionario.area_id == s.area_id)
+        if partes:
+            conds.append(and_(*partes))
+    return or_(*conds) if conds else None
 
 
 @router.get("", response_model=Page[FuncionarioListItem])
@@ -62,6 +100,10 @@ async def listar(
             cond = or_(cond, Funcionario.cedula == int(q))
         filters.append(cond)
 
+    scope_cond = await _scope_filter(db, user)
+    if scope_cond is not None:
+        filters.append(scope_cond)
+
     if filters:
         stmt = stmt.where(*filters)
         count_stmt = count_stmt.where(*filters)
@@ -88,14 +130,38 @@ async def listar(
 
 @router.get("/{funcionario_id}", response_model=FuncionarioDetail)
 async def obtener(funcionario_id: int, db: DbSession, user: CurrentUser) -> FuncionarioDetail:
-    funcionario = await db.scalar(
-        select(Funcionario).where(Funcionario.id == funcionario_id)
+    stmt = (
+        select(
+            Funcionario,
+            Jerarquia.nombre.label("jerarquia_nombre"),
+            Jerarquia.nombre_corto.label("jerarquia_nombre_corto"),
+            Cargo.nombre.label("cargo_nombre"),
+            Condicion.nombre.label("condicion_nombre"),
+            Zona.nombre.label("zona_nombre"),
+            Estacion.nombre.label("estacion_nombre"),
+        )
+        .outerjoin(Jerarquia, Jerarquia.id == Funcionario.jerarquia_id)
+        .outerjoin(Cargo, Cargo.id == Funcionario.cargo_id)
+        .outerjoin(Condicion, Condicion.id == Funcionario.condicion_id)
+        .outerjoin(Zona, Zona.id == Funcionario.zona_id)
+        .outerjoin(Estacion, Estacion.id == Funcionario.estacion_id)
+        .where(Funcionario.id == funcionario_id)
     )
-    if funcionario is None:
+    row = (await db.execute(stmt)).first()
+    if row is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Funcionario no encontrado"
         )
-    return FuncionarioDetail.model_validate(funcionario)
+    funcionario = row[0]
+    await assert_scope_funcionario(db, user, funcionario)
+    detail = FuncionarioDetail.model_validate(funcionario)
+    detail.jerarquia_nombre = row.jerarquia_nombre
+    detail.jerarquia_nombre_corto = row.jerarquia_nombre_corto
+    detail.cargo_nombre = row.cargo_nombre
+    detail.condicion_nombre = row.condicion_nombre
+    detail.zona_nombre = row.zona_nombre
+    detail.estacion_nombre = row.estacion_nombre
+    return detail
 
 
 @router.post(
@@ -170,6 +236,9 @@ async def actualizar(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Funcionario no encontrado"
         )
+
+    # Si el usuario tiene scope restringido, validar que el funcionario está dentro
+    await assert_scope_funcionario(db, user, funcionario)
 
     data = payload.model_dump(exclude_unset=True)
     for field, value in data.items():
