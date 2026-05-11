@@ -1,11 +1,52 @@
 # Scripts de inspeccion legacy
 
-Dos formas de generar el inventario sin instalar nada en su servidor.
-Cualquiera de los dos genera un archivo que me podes mandar para que yo arme `mapping.yaml` y los `tables/*.py`.
+Dos fases de inspeccion, ambas sin instalar nada en el servidor:
+
+| Fase | Script | Que extrae | Cuando correr |
+|---|---|---|---|
+| **1. Estructura** | `inspeccionar_legacy.ps1` | Tablas, columnas, tipos, PKs, FKs, vistas, procs | ✅ Hecho el 2026-05-04 |
+| **2. Valores opacos** | `inspeccionar_valores_opacos.ps1` | Valores unicos (con conteo) de columnas de estado / flags | ⏳ Pendiente — proxima visita |
+
+La Fase 2 **solo lista valores distintos con conteo** (DISTINCT + COUNT). NO lee filas individuales, NO expone PII (no toca cedula, nombres, telefonos, direcciones).
 
 ---
 
-## Opcion A — PowerShell (recomendada)
+## Fase 2 — Valores opacos (`inspeccionar_valores_opacos.ps1`)
+
+### Para correr en el servidor legacy
+
+```powershell
+cd apps\migration\scripts
+powershell -ExecutionPolicy Bypass -File .\inspeccionar_valores_opacos.ps1 `
+  -Server "localhost\SERVIDORDATOS" `
+  -Database PERSONALINTEGRADA
+```
+
+Tarda ~30-60 seg. Genera 2 archivos:
+- `legacy_values_<timestamp>.json` — machine-readable
+- `legacy_values_<timestamp>.md` — legible humano
+
+### Que pregunta exactamente
+
+41 columnas opacas en 9 tablas — todas son de clasificacion / estado / flags. Ninguna es PII:
+
+- **FUNCIONARIOS:** CONDICION, SECCION, HORARIO, ESTADO_CIVIL, PRE_JUBILADOS, ESTATUS, PROMOCION, LICENCIA, NACIONALIDAD, SEXO, GRUPO_SANGUINEO, FACTOR_SANGUINEO
+- **CARNET:** CHEQUEADO, LABORA_AI, LABORA_TELE, BRIGADISTA, TIPO_CARNET, MOTIVO_IMPRESION
+- **CARGA_FAMILIAR:** P_M, TIPO_MOVIMIENTO, CONDICION, VIVE, ESTUDIA, PARENTESCO, GRADO_INSTRUCCION
+- **VACACIONES:** Firma, Periodos, ESTATUS
+- **REPOSOS:** TIPOREPOSO, ORIGEN, ESTATUS_CONVALIDADO_IVSS, VERIFICADO_INSPECTORIA, RE_LABORAL, ARCHIVADO
+- **HIGUIENE_SEGURIDAD:** GRAVEDAD, PORTABA_EQUIPO_PROTECCION, UTILIZO_HERRAMIENTA_ADECUADA, CASO_ESPECIAL
+- **DETALLES_NACIONALIDAD:** TIPO_NACIONALIZACION, PAIS_ORIGEN, IDIOMA
+
+### Por que es necesario
+
+Sin esto no se puede decidir si `CHEQUEADO` (nvarchar) debe modelarse como BOOLEAN o como TEXT en el schema nuevo. Y eso afecta el SQL de extensiones (`06_legacy_extensions.sql`) y el `transform.py` final.
+
+---
+
+## Fase 1 — Estructura (`inspeccionar_legacy.ps1`) — YA HECHO
+
+### Opcion A — PowerShell (recomendada)
 
 **Requisitos:** Windows con PowerShell (cualquier version, ya viene con Windows). **No instala nada.** Usa `System.Data.SqlClient` que ya viene en .NET Framework.
 
