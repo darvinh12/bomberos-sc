@@ -51,23 +51,56 @@ async def _schema_exists(conn: asyncpg.Connection, schema: str) -> bool:
     )
 
 
+async def _table_exists(conn: asyncpg.Connection, schema: str, table: str) -> bool:
+    return bool(
+        await conn.fetchval(
+            "SELECT 1 FROM information_schema.tables "
+            "WHERE table_schema = $1 AND table_name = $2",
+            schema, table,
+        )
+    )
+
+
+# Sentinelas por archivo: si la tabla existe, se asume que el archivo ya fue aplicado.
+_FILE_SENTINELS: dict[str, tuple[str, str]] = {
+    "02_dominio.sql": ("personal", "funcionarios"),
+    "03_funciones_vistas.sql": ("aud", "log_cambios"),
+    "04_seed.sql": ("seguridad", "roles"),
+    "05_campos_custom.sql": ("sys", "campos_custom"),
+    "07_roles_por_departamento.sql": ("seguridad", "usuario_rol_scope"),
+}
+
+
 async def _apply_sql_files(conn: asyncpg.Connection, sql_dir: Path) -> list[str]:
     applied: list[str] = []
     files = sorted(p for p in sql_dir.iterdir() if p.suffix == ".sql")
     for path in files:
+        # Saltar si ya fue aplicado (basado en sentinela)
         sentinel_schema = "core" if path.name.startswith("01") else None
         if sentinel_schema and await _schema_exists(conn, sentinel_schema):
             print(f"[bootstrap] {path.name} omitido (schema {sentinel_schema} ya existe)")
             continue
+        if path.name in _FILE_SENTINELS:
+            schema, table = _FILE_SENTINELS[path.name]
+            if await _table_exists(conn, schema, table):
+                print(f"[bootstrap] {path.name} omitido ({schema}.{table} ya existe)")
+                continue
         print(f"[bootstrap] aplicando {path.name}…")
         sql = path.read_text(encoding="utf-8")
         try:
             await conn.execute(sql)
             applied.append(path.name)
-        except asyncpg.exceptions.DuplicateSchemaError:
-            print(f"[bootstrap] {path.name} ya aplicado (DuplicateSchemaError)")
-        except asyncpg.exceptions.DuplicateObjectError as e:
-            print(f"[bootstrap] {path.name} parcialmente aplicado: {e}")
+        except (
+            asyncpg.exceptions.DuplicateSchemaError,
+            asyncpg.exceptions.DuplicateObjectError,
+            asyncpg.exceptions.DuplicateTableError,
+            asyncpg.exceptions.DuplicateColumnError,
+            asyncpg.exceptions.DuplicateFunctionError,
+        ) as e:
+            print(f"[bootstrap] {path.name} parcialmente aplicado (ignorado): {type(e).__name__}: {str(e)[:200]}")
+        except Exception as e:
+            # No abortamos — queremos llegar a _ensure_admin_user igual.
+            print(f"[bootstrap] {path.name} ERROR (continuando): {type(e).__name__}: {str(e)[:200]}")
     return applied
 
 
@@ -141,12 +174,21 @@ async def main() -> int:
     print(f"[bootstrap] conectando a {dsn.split('@')[-1]}")
     conn = await asyncpg.connect(dsn)
     try:
-        applied = await _apply_sql_files(conn, sql_dir)
-        if applied:
-            print(f"[bootstrap] SQL aplicados: {', '.join(applied)}")
-        else:
-            print("[bootstrap] no se aplicaron SQL nuevos")
-        await _ensure_admin_user(conn)
+        # SQL files es best-effort — si falla algo continuamos al admin.
+        try:
+            applied = await _apply_sql_files(conn, sql_dir)
+            if applied:
+                print(f"[bootstrap] SQL aplicados: {', '.join(applied)}")
+            else:
+                print("[bootstrap] no se aplicaron SQL nuevos")
+        except Exception as e:
+            print(f"[bootstrap] _apply_sql_files falló (continuando): {type(e).__name__}: {e}")
+        # Crítico: siempre intentar resetear admin. Si esto falla, no podemos login.
+        try:
+            await _ensure_admin_user(conn)
+        except Exception as e:
+            print(f"[bootstrap] _ensure_admin_user falló: {type(e).__name__}: {e}")
+            raise
     finally:
         await conn.close()
     print("[bootstrap] OK")
