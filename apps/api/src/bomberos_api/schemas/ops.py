@@ -29,6 +29,24 @@ class GuardiaFuncionarioCreate(BaseModel):
     hora_salida: time | None = None
 
 
+class GuardiaFuncionarioOut(GuardiaFuncionarioCreate):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+
+
+class GuardiaDetalle(GuardiaOut):
+    funcionarios_asignados: list[GuardiaFuncionarioOut] = []
+
+
+class VacacionesUpdate(BaseModel):
+    fecha_inicio: date | None = None
+    fecha_fin: date | None = None
+    dias_habiles: int | None = None
+    fraccionada: bool | None = None
+    autorizado: bool | None = None
+    observaciones: str | None = None
+
+
 class PermisoCreate(BaseModel):
     funcionario_id: int
     tipo: str

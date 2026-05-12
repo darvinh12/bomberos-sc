@@ -29,24 +29,21 @@ export default async function EditarReposoPage({
     .catch(() => ({ roles: [] as string[] }));
   requireRoleOrRedirect(me.roles, ["ADMIN", "RRHH"]);
 
-  // En demo no hay endpoint /salud/reposos/{id} todavía, simulamos uno básico
   const id = Number(params.id);
-  const reposoMock: Reposo = {
-    id,
-    funcionario_id: 1,
-    fecha_inicio: "2026-04-15",
-    fecha_fin: "2026-05-15",
-    diagnostico_libre: "Lumbalgia aguda",
-    folio: "REP-2026-001",
-    documento_url: null,
-    observaciones: null,
-    anulado: false,
-    metadata: {},
-  };
+  const reposo = await api.get<Reposo>(`/salud/reposos/${id}`, token).catch(() => null);
 
   const camposCustom = await listarCamposCustom().then((cs) =>
     cs.filter((c) => c.entidad === "reposo" && c.activo),
   );
+
+  if (!reposo) {
+    return (
+      <div className="max-w-3xl mx-auto space-y-6">
+        <Link href="/salud/reposos" className="text-xs text-muted-foreground hover:underline">← Reposos</Link>
+        <p className="text-sm text-destructive">Reposo #{id} no encontrado.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
@@ -59,10 +56,10 @@ export default async function EditarReposoPage({
         </Link>
         <h1 className="text-2xl font-bold mt-1">Editar reposo #{id}</h1>
         <p className="text-sm text-muted-foreground">
-          Funcionario #{reposoMock.funcionario_id}
+          Funcionario #{reposo.funcionario_id}
         </p>
       </div>
-      <EditarForm reposo={reposoMock} camposCustom={camposCustom} />
+      <EditarForm reposo={reposo} camposCustom={camposCustom} />
     </div>
   );
 }

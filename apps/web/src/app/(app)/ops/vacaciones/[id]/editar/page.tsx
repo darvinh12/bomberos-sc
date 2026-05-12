@@ -16,18 +16,21 @@ export default async function EditarVacacionesPage({
   requireRoleOrRedirect(me.roles, ["ADMIN", "RRHH"]);
 
   const id = Number(params.id);
-  const v = {
-    id,
-    funcionario_id: 1,
-    periodo_anio: 2026,
-    fecha_inicio: "2026-05-10",
-    fecha_fin: "2026-05-31",
-    dias_calendario: 22,
-    dias_habiles: 15,
-    fraccionada: false,
-    autorizado: true,
-    observaciones: null as string | null,
-  };
+  const v = await api.get<{
+    id: number; funcionario_id: number; periodo_anio: number;
+    fecha_inicio: string; fecha_fin: string; dias_calendario: number | null;
+    dias_habiles: number | null; fraccionada: boolean; autorizado: boolean;
+    observaciones: string | null;
+  }>(`/ops/vacaciones/${id}`, token).catch(() => null);
+
+  if (!v) {
+    return (
+      <div className="max-w-3xl mx-auto space-y-6">
+        <Link href="/ops/vacaciones" className="text-xs text-muted-foreground hover:underline">← Vacaciones</Link>
+        <p className="text-sm text-destructive">Vacaciones #{id} no encontradas.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">

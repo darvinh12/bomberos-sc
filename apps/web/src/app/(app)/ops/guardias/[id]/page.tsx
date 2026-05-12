@@ -15,31 +15,36 @@ export default async function GuardiaDetallePage({ params }: { params: { id: str
   const puedeEditar = hasAnyRole(me.roles, ["ADMIN", "OPERADOR"]);
 
   const id = Number(params.id);
-  // En demo, el detalle no existe → mock
-  const guardia = {
-    id,
-    fecha: "2026-05-02",
-    estacion: "Estación Central",
-    estacion_id: 1,
-    turno: "DIURNO",
-    seccion: "A",
-    hora_inicio: "07:00:00",
-    hora_fin: "19:00:00",
-    cerrada: false,
-    funcionarios_asignados: [
-      { id: 1, nombre_completo: "Pérez García, José Luis DEMO", rol_guardia: "JEFE_GUARDIA", asistio: true },
-      { id: 2, nombre_completo: "Rodríguez López, María Ana DEMO", rol_guardia: "OPERADOR", asistio: null },
-      { id: 3, nombre_completo: "Hernández Pérez, Carlos DEMO", rol_guardia: "BOMBERO", asistio: null },
-    ],
-  };
+  const guardia = await api.get<{
+    id: number; fecha: string; estacion_id: number; turno: string;
+    seccion: string | null; hora_inicio: string; hora_fin: string; cerrada: boolean;
+    funcionarios_asignados: { id: number; funcionario_id: number; rol_guardia: string | null; asistio: boolean | null }[];
+  }>(`/ops/guardias/${id}`, token).catch(() => null);
 
-  // Funcionarios disponibles para asignar (activos de la estación)
+  if (!guardia) {
+    return (
+      <div className="max-w-5xl mx-auto space-y-6">
+        <Link href="/ops/guardias" className="text-xs text-muted-foreground hover:underline">← Guardias</Link>
+        <p className="text-sm text-destructive">Guardia #{id} no encontrada.</p>
+      </div>
+    );
+  }
+
   const funcs = await api
-    .get<Page<Func>>(`/funcionarios?page_size=100&estatus=ACTIVO&estacion_id=${guardia.estacion_id}`, token)
+    .get<Page<Func>>(`/funcionarios?page_size=200&estatus=ACTIVO`, token)
     .catch(() => ({ items: [] as Func[], total: 0 }));
 
-  const yaAsignados = new Set(guardia.funcionarios_asignados.map((f) => f.id));
-  const disponibles = funcs.items.filter((f) => !yaAsignados.has(f.id));
+  const funcMap = new Map(funcs.items.map((f) => [f.id, f.nombre_completo ?? `${f.apellidos}, ${f.nombres}`]));
+
+  const asignadosIds = new Set(guardia.funcionarios_asignados.map((a) => a.funcionario_id));
+  const disponibles = funcs.items.filter((f) => !asignadosIds.has(f.id));
+
+  const asignados = guardia.funcionarios_asignados.map((a) => ({
+    id: a.id,
+    nombre_completo: funcMap.get(a.funcionario_id) ?? `Funcionario #${a.funcionario_id}`,
+    rol_guardia: a.rol_guardia,
+    asistio: a.asistio,
+  }));
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
@@ -49,22 +54,22 @@ export default async function GuardiaDetallePage({ params }: { params: { id: str
           Guardia #{id} · {formatDate(guardia.fecha)}
         </h1>
         <div className="flex gap-2 items-center mt-1 text-sm">
-          <span className="text-muted-foreground">{guardia.estacion}</span>
+          <span className="text-muted-foreground">Estación #{guardia.estacion_id}</span>
           <span className="text-muted-foreground">·</span>
-          <span className="inline-block px-2 py-0.5 rounded-full text-xs bg-blue-100 text-blue-800">
+          <span className="inline-block px-2 py-0.5 rounded-full text-xs bg-blue-900/40 text-blue-400 border border-blue-700/50">
             {guardia.turno}
           </span>
           {guardia.seccion && (
-            <span className="inline-block px-2 py-0.5 rounded-full text-xs bg-gray-100">
+            <span className="inline-block px-2 py-0.5 rounded-full text-xs bg-muted text-muted-foreground">
               Sección {guardia.seccion}
             </span>
           )}
           {guardia.cerrada ? (
-            <span className="inline-block px-2 py-0.5 rounded-full text-xs bg-gray-200 text-gray-700">
+            <span className="inline-block px-2 py-0.5 rounded-full text-xs bg-muted text-muted-foreground">
               ✓ Cerrada
             </span>
           ) : (
-            <span className="inline-block px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-800">
+            <span className="inline-block px-2 py-0.5 rounded-full text-xs bg-emerald-900/40 text-emerald-400 border border-emerald-700/50">
               En curso
             </span>
           )}
@@ -74,7 +79,7 @@ export default async function GuardiaDetallePage({ params }: { params: { id: str
       <GuardiaPanel
         guardiaId={id}
         cerrada={guardia.cerrada}
-        asignados={guardia.funcionarios_asignados}
+        asignados={asignados}
         disponibles={disponibles}
         puedeEditar={puedeEditar}
       />

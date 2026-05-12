@@ -16,16 +16,20 @@ export default async function EditarPermisoPage({
   requireRoleOrRedirect(me.roles, ["ADMIN", "RRHH", "SUPERVISOR"]);
 
   const id = Number(params.id);
-  const p = {
-    id,
-    funcionario_id: 1,
-    tipo: "MEDICO",
-    fecha_inicio: "2026-05-05",
-    fecha_fin: "2026-05-07",
-    horas: 24,
-    motivo: "Trámite personal urgente",
-    autorizado: false,
-  };
+  const p = await api.get<{
+    id: number; funcionario_id: number; tipo: string;
+    fecha_inicio: string; fecha_fin: string; horas: number | null;
+    motivo: string; autorizado: boolean;
+  }>(`/ops/permisos/${id}`, token).catch(() => null);
+
+  if (!p) {
+    return (
+      <div className="max-w-2xl mx-auto space-y-6">
+        <Link href="/ops/permisos" className="text-xs text-muted-foreground hover:underline">← Permisos</Link>
+        <p className="text-sm text-destructive">Permiso #{id} no encontrado.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">

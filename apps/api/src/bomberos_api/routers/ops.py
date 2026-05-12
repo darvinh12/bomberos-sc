@@ -21,12 +21,14 @@ from bomberos_api.schemas.ops import (
     FaltaCreate,
     FaltaOut,
     GuardiaCreate,
+    GuardiaDetalle,
     GuardiaFuncionarioCreate,
     GuardiaOut,
     PermisoCreate,
     PermisoOut,
     VacacionesCreate,
     VacacionesOut,
+    VacacionesUpdate,
 )
 
 router = APIRouter(prefix="/ops", tags=["ops"])
@@ -57,6 +59,20 @@ async def listar_guardias(
         total=total, page=page, page_size=page_size,
         pages=(total + page_size - 1) // page_size,
     )
+
+
+@router.get("/guardias/{guardia_id}", response_model=GuardiaDetalle)
+async def obtener_guardia(guardia_id: int, db: DbSession, _: CurrentUser) -> GuardiaDetalle:
+    from bomberos_api.schemas.ops import GuardiaFuncionarioOut
+    g = await db.scalar(select(Guardia).where(Guardia.id == guardia_id))
+    if g is None:
+        raise not_found("Guardia")
+    asignados = (await db.scalars(
+        select(GuardiaFuncionario).where(GuardiaFuncionario.guardia_id == guardia_id)
+    )).all()
+    data = GuardiaDetalle.model_validate(g)
+    data.funcionarios_asignados = [GuardiaFuncionarioOut.model_validate(a) for a in asignados]
+    return data
 
 
 @router.post(
@@ -180,6 +196,14 @@ async def listar_permisos(
     )
 
 
+@router.get("/permisos/{permiso_id}", response_model=PermisoOut)
+async def obtener_permiso(permiso_id: int, db: DbSession, _: CurrentUser) -> PermisoOut:
+    p = await db.scalar(select(Permiso).where(Permiso.id == permiso_id))
+    if p is None:
+        raise not_found("Permiso")
+    return PermisoOut.model_validate(p)
+
+
 @router.post(
     "/permisos",
     response_model=PermisoOut,
@@ -244,6 +268,32 @@ async def listar_vacaciones(
         total=total, page=page, page_size=page_size,
         pages=(total + page_size - 1) // page_size,
     )
+
+
+@router.get("/vacaciones/{vacaciones_id}", response_model=VacacionesOut)
+async def obtener_vacaciones(vacaciones_id: int, db: DbSession, _: CurrentUser) -> VacacionesOut:
+    v = await db.scalar(select(Vacaciones).where(Vacaciones.id == vacaciones_id))
+    if v is None:
+        raise not_found("Vacaciones")
+    return VacacionesOut.model_validate(v)
+
+
+@router.patch(
+    "/vacaciones/{vacaciones_id}",
+    response_model=VacacionesOut,
+    dependencies=[Depends(require_role("RRHH", "ADMIN"))],
+)
+async def actualizar_vacaciones(
+    request: Request, vacaciones_id: int, payload: VacacionesUpdate, db: DbSession, user: CurrentUser
+) -> VacacionesOut:
+    await set_audit_ctx(db, user.id, client_ip(request))
+    v = await db.scalar(select(Vacaciones).where(Vacaciones.id == vacaciones_id))
+    if v is None:
+        raise not_found("Vacaciones")
+    for field, value in payload.model_dump(exclude_unset=True).items():
+        setattr(v, field, value)
+    await db.flush()
+    return VacacionesOut.model_validate(v)
 
 
 @router.post(
