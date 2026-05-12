@@ -22,7 +22,7 @@ services:
       - key: JWT_SECRET_KEY
         generateValue: true
       - key: CORS_ORIGINS
-        value: https://bomberos-caracas.vercel.app
+        value: https://bomberos-sc.vercel.app
       - key: DATABASE_URL
         sync: false
       - key: BOOTSTRAP_ADMIN_USER
