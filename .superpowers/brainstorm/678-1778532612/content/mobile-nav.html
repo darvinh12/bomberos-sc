@@ -1,0 +1,154 @@
+<h2>Navegación en móvil — ¿cómo debe comportarse el sidebar?</h2>
+<p class="subtitle">En escritorio el sidebar lateral queda igual. La pregunta es solo para pantallas pequeñas (teléfono/tablet).</p>
+
+<div class="cards">
+
+  <!-- OPCION A: Hamburger drawer -->
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:12px;background:#0c0f15;">
+      <div style="display:flex;gap:12px;align-items:flex-start;font-family:system-ui,sans-serif;">
+
+        <!-- Phone mockup -->
+        <div style="width:110px;background:#0f1117;border:2px solid #1e2433;border-radius:12px;overflow:hidden;flex-shrink:0;">
+          <!-- Top bar con hamburger -->
+          <div style="background:#0f1117;border-bottom:1px solid #1e2433;padding:8px 10px;display:flex;align-items:center;gap:8px;">
+            <div style="display:flex;flex-direction:column;gap:3px;cursor:pointer;">
+              <div style="width:14px;height:1.5px;background:#8c2535;border-radius:1px;"></div>
+              <div style="width:10px;height:1.5px;background:#8c2535;border-radius:1px;"></div>
+              <div style="width:14px;height:1.5px;background:#8c2535;border-radius:1px;"></div>
+            </div>
+            <div style="display:flex;align-items:center;gap:4px;">
+              <div style="width:14px;height:14px;background:#540e14;border-radius:2px;display:flex;align-items:center;justify-content:center;">
+                <span style="color:#ddd;font-size:5px;font-weight:700;">CB</span>
+              </div>
+              <span style="color:#dce3f0;font-size:9px;font-weight:600;">Bomberos</span>
+            </div>
+          </div>
+          <!-- Content area -->
+          <div style="padding:8px;">
+            <div style="color:#4a5570;font-size:7px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;">Dashboard</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:5px;">
+              <div style="background:#131720;border:1px solid #1e2433;border-radius:3px;padding:5px;">
+                <div style="color:#3d4a5c;font-size:5px;text-transform:uppercase;">Activo</div>
+                <div style="color:#dce3f0;font-size:13px;font-weight:700;">284</div>
+              </div>
+              <div style="background:#131720;border:1px solid #1e2433;border-radius:3px;padding:5px;">
+                <div style="color:#3d4a5c;font-size:5px;text-transform:uppercase;">Guardia</div>
+                <div style="color:#8c2535;font-size:13px;font-weight:700;">48</div>
+              </div>
+            </div>
+            <div style="background:#131720;border:1px solid #1e2433;border-radius:3px;padding:5px;">
+              <div style="color:#3d4a5c;font-size:5px;margin-bottom:3px;">Personal reciente</div>
+              <div style="display:flex;align-items:center;gap:3px;padding:2px 0;">
+                <div style="width:14px;height:14px;background:#1e2433;border-radius:2px;"></div>
+                <div style="color:#cdd5e0;font-size:6px;">Martínez, José</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:3px;padding:2px 0;">
+                <div style="width:14px;height:14px;background:#1e2433;border-radius:2px;"></div>
+                <div style="color:#cdd5e0;font-size:6px;">López, Ana</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Phone with drawer open -->
+        <div style="width:110px;background:#0f1117;border:2px solid #1e2433;border-radius:12px;overflow:hidden;flex-shrink:0;position:relative;">
+          <div style="color:#4a5570;font-size:7px;text-align:center;padding:3px;border-bottom:1px solid #1e2433;">menú abierto</div>
+          <!-- Drawer overlay -->
+          <div style="display:flex;height:145px;">
+            <div style="width:80px;background:#0f1117;border-right:1px solid #1e2433;padding:6px 0;flex-shrink:0;">
+              <div style="padding:3px 8px;color:#8c2535;font-size:7px;font-weight:600;background:#540e1415;border-radius:2px;margin:0 3px 2px;">● Dashboard</div>
+              <div style="padding:2px 8px;color:#6b7a90;font-size:7px;">Personal</div>
+              <div style="padding:2px 8px;color:#6b7a90;font-size:7px;">Guardias</div>
+              <div style="padding:2px 8px;color:#35404f;font-size:6px;margin-top:5px;text-transform:uppercase;letter-spacing:.05em;">Operativo</div>
+              <div style="padding:2px 8px;color:#6b7a90;font-size:7px;">Vacaciones</div>
+              <div style="padding:2px 8px;color:#6b7a90;font-size:7px;">Permisos</div>
+            </div>
+            <!-- Dimmed content behind -->
+            <div style="flex:1;background:#0c0f15;opacity:.35;"></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — Drawer lateral (hamburger)</h3>
+      <p>Barra superior con ícono ☰ que abre el mismo sidebar deslizando desde la izquierda. Overlay oscuro cierra el menú. <strong>Patrón más familiar en web apps de gestión.</strong></p>
+    </div>
+  </div>
+
+  <!-- OPCION B: Bottom nav -->
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:12px;background:#0c0f15;">
+      <div style="display:flex;gap:12px;align-items:flex-start;font-family:system-ui,sans-serif;">
+
+        <!-- Phone mockup -->
+        <div style="width:110px;background:#0f1117;border:2px solid #1e2433;border-radius:12px;overflow:hidden;flex-shrink:0;display:flex;flex-direction:column;">
+          <!-- Top bar simple -->
+          <div style="background:#0f1117;border-bottom:1px solid #1e2433;padding:6px 10px;display:flex;align-items:center;justify-content:space-between;">
+            <div style="display:flex;align-items:center;gap:4px;">
+              <div style="width:14px;height:14px;background:#540e14;border-radius:2px;display:flex;align-items:center;justify-content:center;">
+                <span style="color:#ddd;font-size:5px;font-weight:700;">CB</span>
+              </div>
+              <span style="color:#dce3f0;font-size:9px;font-weight:600;">Dashboard</span>
+            </div>
+            <div style="width:16px;height:16px;background:#1e2433;border-radius:50%;display:flex;align-items:center;justify-content:center;">
+              <span style="color:#6b7a90;font-size:7px;">JM</span>
+            </div>
+          </div>
+          <!-- Content -->
+          <div style="padding:8px;flex:1;">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:4px;">
+              <div style="background:#131720;border:1px solid #1e2433;border-radius:3px;padding:5px;">
+                <div style="color:#3d4a5c;font-size:5px;text-transform:uppercase;">Activo</div>
+                <div style="color:#dce3f0;font-size:13px;font-weight:700;">284</div>
+              </div>
+              <div style="background:#131720;border:1px solid #1e2433;border-radius:3px;padding:5px;">
+                <div style="color:#3d4a5c;font-size:5px;text-transform:uppercase;">Guardia</div>
+                <div style="color:#8c2535;font-size:13px;font-weight:700;">48</div>
+              </div>
+            </div>
+            <div style="background:#131720;border:1px solid #1e2433;border-radius:3px;padding:5px;height:50px;"></div>
+          </div>
+          <!-- Bottom nav bar -->
+          <div style="background:#0f1117;border-top:1px solid #1e2433;padding:5px 4px;display:flex;justify-content:space-around;">
+            <div style="display:flex;flex-direction:column;align-items:center;gap:1px;">
+              <div style="width:10px;height:10px;background:#8c2535;border-radius:2px;"></div>
+              <span style="color:#8c2535;font-size:5px;">Home</span>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:1px;">
+              <div style="width:10px;height:10px;background:#1e2433;border-radius:2px;"></div>
+              <span style="color:#4a5570;font-size:5px;">Personal</span>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:1px;">
+              <div style="width:10px;height:10px;background:#1e2433;border-radius:2px;"></div>
+              <span style="color:#4a5570;font-size:5px;">Ops</span>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:1px;">
+              <div style="width:10px;height:10px;background:#1e2433;border-radius:2px;"></div>
+              <span style="color:#4a5570;font-size:5px;">Más</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="padding-top:8px;">
+          <div style="color:#dce3f0;font-size:10px;font-weight:600;margin-bottom:6px;">4 tabs fijos:</div>
+          <div style="display:flex;flex-direction:column;gap:3px;">
+            <div style="display:flex;align-items:center;gap:5px;"><div style="width:8px;height:8px;background:#540e14;border-radius:2px;"></div><span style="color:#cdd5e0;font-size:9px;">Dashboard</span></div>
+            <div style="display:flex;align-items:center;gap:5px;"><div style="width:8px;height:8px;background:#1e2433;border-radius:2px;"></div><span style="color:#cdd5e0;font-size:9px;">Personal</span></div>
+            <div style="display:flex;align-items:center;gap:5px;"><div style="width:8px;height:8px;background:#1e2433;border-radius:2px;"></div><span style="color:#cdd5e0;font-size:9px;">Operativo</span></div>
+            <div style="display:flex;align-items:center;gap:5px;"><div style="width:8px;height:8px;background:#1e2433;border-radius:2px;"></div><span style="color:#cdd5e0;font-size:9px;">Más →</span></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — Barra inferior (mobile-app style)</h3>
+      <p>Nav fija en la parte baja con 4 tabs. El tab "Más" abre el resto de secciones. Más familiar para usuarios de smartphone, pero limita a 4 accesos directos.</p>
+    </div>
+  </div>
+
+</div>
+
+<p class="subtitle" style="margin-top:16px;">En tablet (768px+) el sidebar lateral vuelve a aparecer en ambas opciones. La diferencia solo aplica en móvil.</p>

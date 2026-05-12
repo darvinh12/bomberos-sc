@@ -39,15 +39,18 @@ async def _set_audit_context(db, usuario_id: int | None, ip: str | None) -> None
 
 async def _log_acceso(db, *, usuario_id: int | None, usuario: str, ip: str | None,
                        user_agent: str | None, tipo_evento: str, detalle: str | None = None):
-    await db.execute(
-        text(
-            """INSERT INTO aud.log_accesos
-               (usuario_id, usuario, ip, user_agent, tipo_evento, detalle)
-               VALUES (:uid, :u, CAST(:ip AS inet), :ua, CAST(:te AS core.tipo_evento_acceso), :d)"""
-        ).bindparams(
-            uid=usuario_id, u=usuario, ip=ip, ua=user_agent, te=tipo_evento, d=detalle
+    try:
+        await db.execute(
+            text(
+                """INSERT INTO aud.log_accesos
+                   (usuario_id, usuario, ip, user_agent, tipo_evento, detalle)
+                   VALUES (:uid, :u, CAST(:ip AS inet), :ua, CAST(:te AS core.tipo_evento_acceso), :d)"""
+            ).bindparams(
+                uid=usuario_id, u=usuario, ip=ip, ua=user_agent, te=tipo_evento, d=detalle
+            )
         )
-    )
+    except Exception as e:
+        log.warning("audit_log_failed", error=str(e), tipo_evento=tipo_evento, usuario=usuario)
 
 
 def _client_ip(request: Request) -> str | None:
