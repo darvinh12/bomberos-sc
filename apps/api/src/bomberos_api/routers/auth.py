@@ -30,11 +30,16 @@ MAX_INTENTOS_FALLIDOS = 5
 
 
 async def _set_audit_context(db, usuario_id: int | None, ip: str | None) -> None:
-    """Inyecta contexto de auditoría a la sesión PG (lo recoge el trigger aud.fn_audit)."""
+    """Inyecta contexto de auditoría a la sesión PG (lo recoge el trigger aud.fn_audit).
+    SET LOCAL no acepta parámetros bindeados — usamos set_config(name, value, is_local)."""
     if usuario_id is not None:
-        await db.execute(text("SET LOCAL app.usuario_id = :v").bindparams(v=str(usuario_id)))
+        await db.execute(
+            text("SELECT set_config('app.usuario_id', :v, true)").bindparams(v=str(usuario_id))
+        )
     if ip:
-        await db.execute(text("SET LOCAL app.usuario_ip = :v").bindparams(v=ip))
+        await db.execute(
+            text("SELECT set_config('app.usuario_ip', :v, true)").bindparams(v=ip)
+        )
 
 
 async def _log_acceso(db, *, usuario_id: int | None, usuario: str, ip: str | None,

@@ -16,9 +16,14 @@ def client_ip(request: Request) -> str | None:
 
 
 async def set_audit_ctx(db: AsyncSession, usuario_id: int, ip: str | None) -> None:
-    await db.execute(text("SET LOCAL app.usuario_id = :v").bindparams(v=str(usuario_id)))
+    # SET LOCAL no acepta parámetros bindeados — usamos set_config(name, value, is_local)
+    await db.execute(
+        text("SELECT set_config('app.usuario_id', :v, true)").bindparams(v=str(usuario_id))
+    )
     if ip:
-        await db.execute(text("SET LOCAL app.usuario_ip = :v").bindparams(v=ip))
+        await db.execute(
+            text("SELECT set_config('app.usuario_ip', :v, true)").bindparams(v=ip)
+        )
 
 
 async def paginate(
