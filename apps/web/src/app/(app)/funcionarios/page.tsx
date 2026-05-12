@@ -3,6 +3,7 @@ import { api } from "@/lib/api";
 import { requireAuth } from "@/lib/session";
 import { hasAnyRole } from "@/lib/roles";
 import { formatCedula, formatDate } from "@/lib/utils";
+import FuncionarioActions from "@/components/funcionarios/FuncionarioActions";
 
 interface FuncionarioListItem {
   id: number;
@@ -35,14 +36,14 @@ interface Catalogo {
 }
 
 const ESTATUS_COLORS: Record<string, string> = {
-  ACTIVO: "bg-green-100 text-green-800",
-  REPOSO: "bg-yellow-100 text-yellow-800",
-  COMISION: "bg-blue-100 text-blue-800",
-  PRE_JUBILADO: "bg-purple-100 text-purple-800",
-  JUBILADO: "bg-gray-200 text-gray-700",
-  EGRESADO: "bg-gray-100 text-gray-500",
-  FALLECIDO: "bg-black text-white",
-  SUSPENDIDO: "bg-red-100 text-red-800",
+  ACTIVO:       "bg-emerald-900/40 text-emerald-400 border border-emerald-700/50",
+  REPOSO:       "bg-amber-900/40 text-amber-400 border border-amber-700/50",
+  COMISION:     "bg-blue-900/40 text-blue-400 border border-blue-700/50",
+  PRE_JUBILADO: "bg-violet-900/40 text-violet-400 border border-violet-700/50",
+  JUBILADO:     "bg-muted text-muted-foreground border border-border",
+  EGRESADO:     "bg-muted/60 text-muted-foreground border border-border",
+  FALLECIDO:    "bg-muted/40 text-foreground border border-border",
+  SUSPENDIDO:   "bg-red-900/40 text-red-400 border border-red-700/50",
 };
 
 interface SearchProps {
@@ -228,53 +229,43 @@ export default async function FuncionariosPage({ searchParams }: SearchProps) {
             <table className="w-full text-sm">
               <thead className="bg-muted/50">
                 <tr>
-                  <th className="text-left p-3">Cédula</th>
+                  <th className="text-left p-3 hidden md:table-cell">Cédula</th>
                   <th className="text-left p-3">Nombre</th>
-                  <th className="text-left p-3">Jerarquía</th>
+                  <th className="text-left p-3 hidden sm:table-cell">Jerarquía</th>
                   <th className="text-left p-3">Estatus</th>
-                  <th className="text-left p-3">Ingreso</th>
+                  <th className="text-left p-3 hidden md:table-cell">Ingreso</th>
                   <th className="text-right p-3"></th>
                 </tr>
               </thead>
               <tbody>
                 {data.items.map((f) => (
                   <tr key={f.id} className="border-t hover:bg-muted/30 transition">
-                    <td className="p-3 font-mono text-xs">
+                    <td className="p-3 font-mono text-xs hidden md:table-cell">
                       {formatCedula(f.nacionalidad, f.cedula)}
                     </td>
                     <td className="p-3 font-medium">
-                      {f.nombre_completo ?? `${f.apellidos}, ${f.nombres}`}
+                      <div>{f.nombre_completo ?? `${f.apellidos}, ${f.nombres}`}</div>
+                      <div className="text-xs text-muted-foreground md:hidden font-mono mt-0.5">
+                        {formatCedula(f.nacionalidad, f.cedula)}
+                      </div>
                     </td>
-                    <td className="p-3 text-muted-foreground">
+                    <td className="p-3 text-muted-foreground hidden sm:table-cell">
                       {f.jerarquia_id ? jerMap.get(f.jerarquia_id) ?? "—" : "—"}
                     </td>
                     <td className="p-3">
                       <span
-                        className={`inline-block px-2 py-0.5 rounded-full text-xs ${
-                          ESTATUS_COLORS[f.estatus] ?? "bg-gray-100"
+                        className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${
+                          ESTATUS_COLORS[f.estatus] ?? "bg-muted text-muted-foreground border border-border"
                         }`}
                       >
                         {f.estatus}
                       </span>
                     </td>
-                    <td className="p-3 text-muted-foreground">
+                    <td className="p-3 text-muted-foreground hidden md:table-cell">
                       {formatDate(f.fecha_primer_ingreso)}
                     </td>
-                    <td className="p-3 text-right space-x-3">
-                      <Link
-                        href={`/funcionarios/${f.id}`}
-                        className="text-primary hover:underline text-xs"
-                      >
-                        Ver
-                      </Link>
-                      {puedeEditar && (
-                        <Link
-                          href={`/funcionarios/${f.id}/editar`}
-                          className="text-primary hover:underline text-xs font-medium"
-                        >
-                          Editar →
-                        </Link>
-                      )}
+                    <td className="p-3 text-right">
+                      <FuncionarioActions id={f.id} puedeEditar={puedeEditar} />
                     </td>
                   </tr>
                 ))}
