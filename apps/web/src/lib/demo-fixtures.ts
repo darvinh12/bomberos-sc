@@ -9,13 +9,10 @@
  * cambiar a false o leer process.env.NEXT_PUBLIC_DEMO_MODE.
  */
 export function isDemoMode(): boolean {
-  if (process.env.NEXT_PUBLIC_DEMO_MODE === "0") return false;
-  if (process.env.DEMO_MODE === "0") return false;
-  // Default: ON — eliminar antes de producción real.
-  return true;
+  return process.env.NEXT_PUBLIC_DEMO_MODE === "1";
 }
 
-export const DEMO_MODE = true;
+export const DEMO_MODE = false;
 
 const NOMBRES = [
   "José",
