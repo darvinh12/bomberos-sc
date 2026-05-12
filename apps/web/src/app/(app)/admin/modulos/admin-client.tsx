@@ -1,34 +1,19 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useFormState } from "react-dom";
 import {
   actualizarModulo,
   borrarModulo,
-  crearModulo,
   type ModuloFormState,
 } from "./actions";
 import type { Modulo } from "../permisos/actions";
 
 export default function ModulosAdmin({ modulos }: { modulos: Modulo[] }) {
-  const [creando, setCreando] = useState(false);
   const [editando, setEditando] = useState<number | null>(null);
   const [confirmandoBorrar, setConfirmandoBorrar] = useState<number | null>(null);
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
-        <button
-          type="button"
-          onClick={() => setCreando((v) => !v)}
-          className="rounded-md bg-primary text-primary-foreground px-3 py-2 text-sm font-medium"
-        >
-          {creando ? "Cancelar" : "+ Nuevo módulo"}
-        </button>
-      </div>
-
-      {creando && <FormularioCrear onDone={() => setCreando(false)} />}
-
       <div className="rounded-xl border bg-card overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="bg-muted/40">
@@ -93,88 +78,6 @@ export default function ModulosAdmin({ modulos }: { modulos: Modulo[] }) {
         />
       )}
     </div>
-  );
-}
-
-function FormularioCrear({ onDone }: { onDone: () => void }) {
-  const [state, action] = useFormState<ModuloFormState, FormData>(crearModulo, {});
-  if (state.ok) queueMicrotask(onDone);
-  return (
-    <form action={action} className="rounded-xl border bg-card p-4 space-y-3">
-      <h3 className="font-semibold">Nuevo módulo</h3>
-      {state.error && (
-        <div className="rounded-md bg-destructive/10 border border-destructive/30 p-2 text-xs text-destructive">
-          {state.error}
-        </div>
-      )}
-      <div className="grid sm:grid-cols-2 gap-3">
-        <label className="block">
-          <span className="text-xs text-muted-foreground">Código</span>
-          <input
-            name="codigo"
-            required
-            placeholder="capacitaciones"
-            className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm font-mono lowercase"
-          />
-          <span className="text-[10px] text-muted-foreground">
-            Minúsculas, dígitos o '_'. Empieza con letra.
-          </span>
-        </label>
-        <label className="block">
-          <span className="text-xs text-muted-foreground">Nombre</span>
-          <input
-            name="nombre"
-            required
-            placeholder="Capacitaciones"
-            className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm"
-          />
-        </label>
-        <label className="block sm:col-span-2">
-          <span className="text-xs text-muted-foreground">Descripción</span>
-          <input
-            name="descripcion"
-            placeholder="Cursos externos y certificaciones"
-            className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm"
-          />
-        </label>
-        <label className="block">
-          <span className="text-xs text-muted-foreground">Icono (opcional)</span>
-          <input
-            name="icono"
-            placeholder="book"
-            className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm"
-          />
-        </label>
-        <label className="block">
-          <span className="text-xs text-muted-foreground">Orden</span>
-          <input
-            type="number"
-            name="orden"
-            defaultValue={100}
-            className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm"
-          />
-        </label>
-        <label className="flex items-center gap-2 text-sm">
-          <input type="checkbox" name="activo" defaultChecked />
-          Activo
-        </label>
-      </div>
-      <div className="flex justify-end gap-2">
-        <button
-          type="button"
-          onClick={onDone}
-          className="rounded-md border px-3 py-2 text-sm"
-        >
-          Cancelar
-        </button>
-        <button
-          type="submit"
-          className="rounded-md bg-primary text-primary-foreground px-3 py-2 text-sm font-medium"
-        >
-          Crear
-        </button>
-      </div>
-    </form>
   );
 }
 
