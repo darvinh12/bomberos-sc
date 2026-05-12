@@ -1,7 +1,9 @@
 from fastapi import APIRouter
 from sqlalchemy import text
 
+from bomberos_api.config import get_settings
 from bomberos_api.core.deps import DbSession
+from bomberos_api.database import get_session_factory
 
 router = APIRouter(tags=["health"])
 
@@ -16,6 +18,35 @@ async def health_db(db: DbSession) -> dict[str, str]:
     res = await db.execute(text("SELECT 1"))
     res.scalar_one()
     return {"status": "ok", "db": "ok"}
+
+
+@router.get("/health/db-diag")
+async def health_db_diag() -> dict:
+    """Diagnóstico de conexión: no usa DbSession para que reporte el error en lugar de 500."""
+    s = get_settings()
+    # Mascara: muestra solo el host y los primeros caracteres del usuario
+    url = s.database_url
+    masked = url
+    if "@" in url:
+        prefix, suffix = url.split("@", 1)
+        if "://" in prefix:
+            proto, creds = prefix.split("://", 1)
+            user = creds.split(":")[0] if ":" in creds else creds
+            masked = f"{proto}://{user[:8]}***@{suffix}"
+    out: dict = {"db_url_masked": masked}
+    try:
+        factory = get_session_factory()
+        async with factory() as session:
+            res = await session.execute(text("SELECT current_database(), current_user, version()"))
+            row = res.first()
+            out["connect_ok"] = True
+            out["database"] = row[0]
+            out["user"] = row[1]
+            out["pg_version"] = row[2][:80]
+    except Exception as e:
+        out["connect_ok"] = False
+        out["error"] = f"{type(e).__name__}: {str(e)[:500]}"
+    return out
 
 
 @router.get("/health/schema")
