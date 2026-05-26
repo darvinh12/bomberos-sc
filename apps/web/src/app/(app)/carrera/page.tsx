@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Check, X } from "lucide-react";
 import { api } from "@/lib/api";
 import { requireAuth } from "@/lib/session";
 import { requireRoleOrRedirect, hasAnyRole } from "@/lib/roles";
@@ -195,9 +196,9 @@ function TableCursos({ rows }: { rows: Curso[] }) {
               {c.aprobado === null ? (
                 <span className="text-muted-foreground">—</span>
               ) : c.aprobado ? (
-                <span className="text-green-700">✓</span>
+                <Check className="w-4 h-4 text-emerald-400" aria-label="Aprobado" />
               ) : (
-                <span className="text-red-700">✗</span>
+                <X className="w-4 h-4 text-red-400" aria-label="No aprobado" />
               )}
             </td>
           </tr>

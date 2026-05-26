@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Check } from "lucide-react";
 import { useFormState, useFormStatus } from "react-dom";
 import { actualizarPermiso, type EditState } from "./actions";
 
@@ -62,8 +63,9 @@ export default function EditarForm({ permiso }: { permiso: Permiso }) {
           Cancelar
         </Link>
         {permiso.autorizado ? (
-          <span className="px-3 py-1 rounded-full text-xs bg-green-100 text-green-800">
-            ✓ Ya autorizado
+          <span className="inline-flex items-center gap-1 px-3 py-1 rounded text-xs badge badge-success">
+            <Check className="w-3.5 h-3.5" aria-hidden="true" />
+            Ya autorizado
           </span>
         ) : (
           <Submit label="Autorizar permiso" />

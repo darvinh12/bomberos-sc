@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ClipboardList, Plus } from "lucide-react";
 import { api } from "@/lib/api";
 import { requireAuth } from "@/lib/session";
 import { requireRoleOrRedirect, hasAnyRole } from "@/lib/roles";
@@ -68,16 +69,18 @@ export default async function ProteccionPage({ searchParams }: SearchProps) {
         <div className="flex gap-2">
           <Link
             href="/equipo/proteccion/asignaciones"
-            className="rounded-md border border-input px-4 py-2 text-sm font-medium hover:bg-accent"
+            className="inline-flex items-center gap-1.5 rounded-md border border-border px-4 py-2 text-sm font-medium hover:bg-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
-            📋 Asignaciones activas
+            <ClipboardList className="w-4 h-4" aria-hidden="true" />
+            Asignaciones activas
           </Link>
           {puedeCrear && (
             <Link
               href="/equipo/proteccion/nuevo"
-              className="rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-medium hover:opacity-90"
+              className="inline-flex items-center gap-1.5 rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-medium hover:opacity-90 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             >
-              + Nuevo ítem
+              <Plus className="w-4 h-4" aria-hidden="true" />
+              Nuevo ítem
             </Link>
           )}
         </div>

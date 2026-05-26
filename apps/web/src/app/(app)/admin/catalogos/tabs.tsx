@@ -3,6 +3,7 @@
 import { useEffect, useState, useTransition } from "react";
 import { createPortal } from "react-dom";
 import { useFormState } from "react-dom";
+import { Check, X } from "lucide-react";
 import {
   actualizarCat,
   borrarCat,
@@ -11,6 +12,14 @@ import {
   type CatItem,
   type EntidadCat,
 } from "./actions";
+
+function BoolIcon({ value }: { value: boolean }) {
+  return value ? (
+    <Check className="w-4 h-4 text-emerald-400 inline" aria-label="Sí" />
+  ) : (
+    <X className="w-4 h-4 text-muted-foreground inline" aria-label="No" />
+  );
+}
 
 type Tab = {
   key: EntidadCat;
@@ -197,15 +206,23 @@ function Fila({
     <tr className="border-t hover:bg-muted/20">
       <td className="p-3 font-mono text-xs">{item.codigo}</td>
       <td className="p-3 font-medium">{item.nombre}</td>
-      {camposExtra.map((c) => (
-        <td key={c.name} className="p-3 text-muted-foreground">
-          {c.tipo === "checkbox"
-            ? ((item as Record<string, unknown>)[c.name] ? "✓" : "—")
-            : (((item as Record<string, unknown>)[c.name] as string | number | null) ?? "—")}
-        </td>
-      ))}
+      {camposExtra.map((c) => {
+        const raw = (item as Record<string, unknown>)[c.name];
+        if (c.tipo === "checkbox") {
+          return (
+            <td key={c.name} className="p-3 text-muted-foreground">
+              {raw ? <BoolIcon value={true} /> : <span>—</span>}
+            </td>
+          );
+        }
+        return (
+          <td key={c.name} className="p-3 text-muted-foreground">
+            {(raw as string | number | null) ?? "—"}
+          </td>
+        );
+      })}
       {tieneActivo && (
-        <td className="p-3 text-center">{item.activo ? "✓" : "✗"}</td>
+        <td className="p-3 text-center"><BoolIcon value={item.activo} /></td>
       )}
       <BotonesFila id={item.id} entidad={entidad} onEditar={onEditar} />
     </tr>

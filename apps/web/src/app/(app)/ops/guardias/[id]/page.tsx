@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Check } from "lucide-react";
 import { api } from "@/lib/api";
 import { requireAuth } from "@/lib/session";
 import { requireRoleOrRedirect, hasAnyRole } from "@/lib/roles";
@@ -65,11 +66,12 @@ export default async function GuardiaDetallePage({ params }: { params: { id: str
             </span>
           )}
           {guardia.cerrada ? (
-            <span className="inline-block px-2 py-0.5 rounded-full text-xs bg-muted text-muted-foreground">
-              ✓ Cerrada
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-muted text-muted-foreground border border-border">
+              <Check className="w-3 h-3" aria-hidden="true" />
+              Cerrada
             </span>
           ) : (
-            <span className="inline-block px-2 py-0.5 rounded-full text-xs bg-emerald-900/40 text-emerald-400 border border-emerald-700/50">
+            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-emerald-900/40 text-emerald-300 border border-emerald-700/50">
               En curso
             </span>
           )}

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Wrench } from "lucide-react";
 
 const ENDPOINTS_API: Record<string, string> = {
   vacaciones: "PATCH /ops/vacaciones/{id}",
@@ -36,14 +37,14 @@ export default function EditarPendientePage({
         </h1>
       </div>
 
-      <div className="rounded-xl border bg-yellow-50 border-yellow-300 p-6 space-y-4">
+      <div className="rounded border border-amber-700/50 bg-amber-900/20 p-6 space-y-4">
         <div className="flex gap-3 items-start">
-          <span className="text-2xl">🛠️</span>
+          <Wrench className="w-5 h-5 text-amber-300 shrink-0 mt-0.5" aria-hidden="true" />
           <div>
-            <h2 className="font-semibold text-yellow-900">
+            <h2 className="font-semibold text-amber-200">
               Formulario de edición disponible próximamente
             </h2>
-            <p className="text-sm text-yellow-800 mt-1">
+            <p className="text-sm text-amber-100/80 mt-1">
               Esta entidad ya se puede modificar vía API. La pantalla de edición
               completa con campos personalizados llega en la siguiente iteración.
             </p>
@@ -51,22 +52,22 @@ export default function EditarPendientePage({
         </div>
 
         {apiHint && (
-          <div className="text-sm bg-white/60 rounded-md p-3 border border-yellow-200">
-            <div className="text-xs uppercase tracking-wider text-yellow-900 mb-1">
+          <div className="text-sm bg-card rounded p-3 border border-border">
+            <div className="text-xs uppercase tracking-wider text-muted-foreground mb-1">
               Mientras tanto, endpoint API
             </div>
-            <code className="font-mono text-xs">{apiHint}</code>
+            <code className="font-mono text-xs text-foreground">{apiHint}</code>
           </div>
         )}
 
-        <div className="text-xs text-yellow-900 space-y-1">
+        <div className="text-xs text-amber-100/80 space-y-1">
           <p>
-            <strong>Sí puedes editar ya:</strong> Funcionarios, Reposos, Beneficios
+            <strong className="text-amber-200">Sí puedes editar ya:</strong> Funcionarios, Reposos, Beneficios
             (ayudas económicas) y los Roles de cada usuario.
           </p>
           <p>
-            <strong>Admin:</strong> agrega campos personalizados desde{" "}
-            <Link href="/admin/campos-custom" className="underline font-medium">
+            <strong className="text-amber-200">Admin:</strong> agrega campos personalizados desde{" "}
+            <Link href="/admin/campos-custom" className="underline font-medium hover:text-amber-50">
               /admin/campos-custom
             </Link>{" "}
             — aparecerán automáticamente al editar funcionarios o reposos.

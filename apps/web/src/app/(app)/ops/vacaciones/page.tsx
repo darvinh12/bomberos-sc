@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Check } from "lucide-react";
 import { api } from "@/lib/api";
 import { requireAuth } from "@/lib/session";
 import { hasAnyRole } from "@/lib/roles";
@@ -98,7 +99,10 @@ export default async function VacacionesPage() {
                   </td>
                   <td className="p-3">
                     {r.bono_pagado ? (
-                      <span className="text-green-700">✓ pagado</span>
+                      <span className="inline-flex items-center gap-1 text-emerald-400">
+                        <Check className="w-3.5 h-3.5" aria-hidden="true" />
+                        pagado
+                      </span>
                     ) : (
                       <span className="text-muted-foreground">pendiente</span>
                     )}

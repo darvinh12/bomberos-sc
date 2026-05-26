@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useFormState } from "react-dom";
+import { Check, X } from "lucide-react";
 import {
   actualizarRol,
   borrarRol,
@@ -62,7 +63,11 @@ export default function RolesAdmin({ roles }: { roles: Rol[] }) {
                         {r.es_sistema ? "Sí" : "—"}
                       </td>
                       <td className="p-3 text-center">
-                        {r.activo ? "✓" : "✗"}
+                        {r.activo ? (
+                          <Check className="w-4 h-4 text-emerald-400 inline" aria-label="Activo" />
+                        ) : (
+                          <X className="w-4 h-4 text-muted-foreground inline" aria-label="Inactivo" />
+                        )}
                       </td>
                       <td className="p-3 text-right space-x-2">
                         <button
