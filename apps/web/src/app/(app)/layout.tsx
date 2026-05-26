@@ -114,8 +114,19 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <div className="min-h-screen flex bg-background">
 
+      {/* Skip link a11y */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[60] focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded focus:text-sm focus:font-medium"
+      >
+        Saltar al contenido principal
+      </a>
+
       {/* ── Sidebar — hidden on mobile ── */}
-      <aside className="w-56 bg-background hidden md:flex flex-col shrink-0 border-r border-border">
+      <aside
+        className="w-56 bg-background hidden md:flex flex-col shrink-0 border-r border-border"
+        aria-label="Navegación principal"
+      >
 
         {/* Logo */}
         <div className="h-14 flex items-center px-4 border-b border-border shrink-0">
@@ -201,7 +212,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           </div>
         )}
 
-        <main className="flex-1 overflow-auto">
+        <main id="main-content" tabIndex={-1} className="flex-1 overflow-auto focus:outline-none">
           <div className="p-4 md:p-6">{children}</div>
         </main>
       </div>

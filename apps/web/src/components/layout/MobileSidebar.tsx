@@ -58,6 +58,9 @@ export default function MobileSidebar({ me, children }: Props) {
         className={`fixed top-0 left-0 z-50 h-full w-56 bg-background border-r border-border flex flex-col transition-transform duration-200 ${
           open ? "translate-x-0" : "-translate-x-full"
         }`}
+        role="dialog"
+        aria-modal={open}
+        aria-label="Menú de navegación"
         aria-hidden={!open}
       >
         {/* Header */}
