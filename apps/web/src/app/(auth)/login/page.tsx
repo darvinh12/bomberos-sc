@@ -11,7 +11,7 @@ function SubmitButton() {
     <button
       type="submit"
       disabled={pending}
-      className="w-full rounded border border-transparent bg-primary text-primary-foreground py-2.5 text-sm font-semibold hover:opacity-90 disabled:opacity-60 transition-opacity"
+      className="btn-primary w-full py-2.5 font-semibold"
     >
       {pending ? "Verificando…" : "Ingresar al sistema"}
     </button>
@@ -22,34 +22,34 @@ export default function LoginPage() {
   const [state, action] = useFormState(loginAction, initial);
 
   return (
-    <div className="min-h-screen flex bg-slate-900">
+    <div className="min-h-[100dvh] flex bg-background">
       {/* Left panel — branding */}
-      <div className="hidden lg:flex lg:w-1/2 flex-col justify-between p-12 border-r border-slate-800">
+      <div className="hidden lg:flex lg:w-1/2 flex-col justify-between p-12 border-r border-border">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 bg-primary rounded flex items-center justify-center">
-            <span className="text-white text-xs font-bold tracking-wide">CB</span>
+            <span className="text-primary-foreground text-xs font-bold tracking-wide">CB</span>
           </div>
-          <span className="text-white text-sm font-semibold">
+          <span className="text-foreground text-sm font-semibold">
             Cuerpo de Bomberos del Distrito Capital
           </span>
         </div>
         <div>
-          <h1 className="text-3xl font-bold text-white leading-tight">
+          <h1 className="text-3xl font-bold text-foreground leading-tight">
             Sistema Integrado<br />de Gestión de Personal
           </h1>
-          <p className="mt-4 text-slate-400 text-sm leading-relaxed max-w-sm">
+          <p className="mt-4 text-muted-foreground text-sm leading-relaxed max-w-sm">
             Plataforma institucional para la administración del recurso humano,
             operaciones y carrera del cuerpo de bomberos.
           </p>
           <div className="mt-8 flex items-center gap-2">
             <div className="w-1 h-8 bg-primary rounded-full" />
-            <p className="text-slate-500 text-xs">
+            <p className="text-muted-foreground/80 text-xs">
               Acceso restringido a personal autorizado.<br />
               Las sesiones son auditadas.
             </p>
           </div>
         </div>
-        <div className="text-slate-700 text-xs">
+        <div className="text-muted-foreground/60 text-xs">
           Bomberos Caracas · Sistema SIGP v2
         </div>
       </div>
@@ -61,15 +61,15 @@ export default function LoginPage() {
           {/* Mobile logo */}
           <div className="lg:hidden flex items-center gap-3 mb-8">
             <div className="w-9 h-9 bg-primary rounded flex items-center justify-center">
-              <span className="text-white text-xs font-bold tracking-wide">CB</span>
+              <span className="text-primary-foreground text-xs font-bold tracking-wide">CB</span>
             </div>
             <div>
-              <div className="text-white text-sm font-semibold">Bomberos Caracas</div>
-              <div className="text-slate-500 text-xs">Cuerpo del Distrito Capital</div>
+              <div className="text-foreground text-sm font-semibold">Bomberos Caracas</div>
+              <div className="text-muted-foreground text-xs">Cuerpo del Distrito Capital</div>
             </div>
           </div>
 
-          <div className="bg-slate-800 rounded p-8 shadow-2xl border border-slate-700">
+          <div className="bg-card rounded p-8 border border-border">
             <div className="mb-6">
               <h2 className="text-lg font-semibold text-foreground">Iniciar sesión</h2>
               <p className="text-sm text-muted-foreground mt-0.5">
@@ -78,7 +78,10 @@ export default function LoginPage() {
             </div>
 
             {state.error && (
-              <div className="mb-5 px-4 py-3 rounded border border-destructive/30 bg-destructive/5 text-destructive text-sm">
+              <div
+                role="alert"
+                className="mb-5 px-4 py-3 rounded border border-destructive/30 bg-destructive/10 text-destructive text-sm"
+              >
                 {state.error}
               </div>
             )}
@@ -119,7 +122,7 @@ export default function LoginPage() {
             </form>
           </div>
 
-          <p className="mt-4 text-center text-xs text-slate-500">
+          <p className="mt-4 text-center text-xs text-muted-foreground/70">
             Acceso restringido · Sesiones auditadas
           </p>
         </div>

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Search } from "lucide-react";
 
 interface Hit {
   id: number;
@@ -17,22 +18,13 @@ interface Hit {
 const ESTATUS_DOT: Record<string, string> = {
   ACTIVO:       "bg-emerald-500",
   REPOSO:       "bg-amber-500",
-  COMISION:     "bg-blue-500",
+  COMISION:     "bg-sky-500",
   PRE_JUBILADO: "bg-violet-500",
-  JUBILADO:     "bg-slate-400",
-  EGRESADO:     "bg-slate-300",
-  FALLECIDO:    "bg-slate-900",
-  SUSPENDIDO:   "bg-red-600",
+  JUBILADO:     "bg-muted-foreground/70",
+  EGRESADO:     "bg-muted-foreground/40",
+  FALLECIDO:    "bg-foreground/30",
+  SUSPENDIDO:   "bg-red-500",
 };
-
-function SearchIcon({ className = "w-3.5 h-3.5" }: { className?: string }) {
-  return (
-    <svg className={`${className} shrink-0`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-        d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
-    </svg>
-  );
-}
 
 export default function GlobalSearch() {
   const router = useRouter();
@@ -112,16 +104,20 @@ export default function GlobalSearch() {
 
   return (
     <>
-      {/* Trigger — dark sidebar */}
+      {/* Trigger */}
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="w-full flex items-center gap-2 px-3 py-2 rounded text-[12px] bg-slate-800 hover:bg-slate-700 transition-colors text-slate-400"
+        className="w-full flex items-center gap-2 px-3 py-2 rounded text-[12px]
+                   bg-card hover:bg-accent border border-border
+                   text-muted-foreground transition-colors
+                   focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         title="Buscar (Ctrl+K)"
+        aria-label="Abrir búsqueda global"
       >
-        <SearchIcon />
+        <Search className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
         <span className="flex-1 text-left">Buscar funcionario…</span>
-        <kbd className="text-[10px] bg-slate-700 text-slate-500 px-1.5 py-0.5 rounded font-mono">
+        <kbd className="text-[10px] bg-muted text-muted-foreground px-1.5 py-0.5 rounded font-mono border border-border">
           ⌘K
         </kbd>
       </button>
@@ -129,27 +125,32 @@ export default function GlobalSearch() {
       {/* Modal */}
       {open && (
         <div
-          className="fixed inset-0 bg-black/50 z-50 flex items-start justify-center pt-20"
+          className="fixed inset-0 bg-black/60 z-50 flex items-start justify-center pt-20 px-4"
           onClick={() => setOpen(false)}
+          aria-hidden="true"
         >
           <div
-            className="w-full max-w-xl bg-slate-800 rounded shadow-2xl border border-slate-700 overflow-hidden"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Búsqueda global de funcionarios"
+            className="w-full max-w-xl bg-card rounded border border-border overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center gap-3 border-b px-4 py-3">
-              <SearchIcon className="w-4 h-4 text-muted-foreground" />
+            <div className="flex items-center gap-3 border-b border-border px-4 py-3">
+              <Search className="w-4 h-4 text-muted-foreground shrink-0" aria-hidden="true" />
               <input
                 ref={inputRef}
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
                 onKeyDown={onKey}
                 placeholder="Nombre, cédula o nº empleado…"
-                className="flex-1 bg-transparent outline-none text-sm"
+                aria-label="Texto de búsqueda"
+                className="flex-1 bg-transparent outline-none text-sm text-foreground placeholder:text-muted-foreground"
               />
               {loading && (
                 <span className="text-xs text-muted-foreground">Buscando…</span>
               )}
-              <kbd className="text-[10px] bg-muted text-muted-foreground px-1.5 py-0.5 rounded border font-mono">
+              <kbd className="text-[10px] bg-muted text-muted-foreground px-1.5 py-0.5 rounded border border-border font-mono">
                 Esc
               </kbd>
             </div>
@@ -171,16 +172,17 @@ export default function GlobalSearch() {
                   type="button"
                   onMouseEnter={() => setActive(i)}
                   onClick={() => go(h)}
-                  className={`w-full text-left px-4 py-2.5 flex items-center gap-3 border-b last:border-b-0 transition-colors ${
-                    i === active ? "bg-accent" : "hover:bg-muted/50"
+                  className={`w-full text-left px-4 py-2.5 flex items-center gap-3 border-b border-border last:border-b-0 transition-colors focus-visible:outline-none focus-visible:bg-accent ${
+                    i === active ? "bg-accent" : "hover:bg-muted/40"
                   }`}
                 >
                   <span
-                    className={`w-2 h-2 rounded-full shrink-0 ${ESTATUS_DOT[h.estatus] ?? "bg-slate-400"}`}
+                    className={`w-2 h-2 rounded-full shrink-0 ${ESTATUS_DOT[h.estatus] ?? "bg-muted-foreground"}`}
                     title={h.estatus}
+                    aria-hidden="true"
                   />
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium truncate">
+                    <div className="text-sm font-medium text-foreground truncate">
                       {h.nombre_completo ?? `${h.apellidos}, ${h.nombres}`}
                     </div>
                     <div className="text-xs text-muted-foreground font-mono">
@@ -194,7 +196,7 @@ export default function GlobalSearch() {
               ))}
             </div>
 
-            <div className="border-t px-4 py-2 text-[10px] text-muted-foreground flex justify-between">
+            <div className="border-t border-border px-4 py-2 text-[10px] text-muted-foreground flex justify-between">
               <span>↑↓ navegar</span>
               <span>↵ abrir ficha</span>
             </div>

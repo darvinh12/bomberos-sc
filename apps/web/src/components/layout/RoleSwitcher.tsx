@@ -14,15 +14,22 @@ export default function RoleSwitcher({ currentRoles }: { currentRoles: string[] 
         start(() => { void switchDemoRole(fd); });
       }}
     >
-      <label className="block text-[10px] font-semibold uppercase tracking-widest text-slate-600 mb-1 px-1">
-        Demo — rol
+      <label
+        htmlFor="demo-role-select"
+        className="block text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70 mb-1 px-1"
+      >
+        Demo — cambiar rol
       </label>
       <select
+        id="demo-role-select"
         name="rol"
         defaultValue={current}
         disabled={pending}
         onChange={(e) => e.currentTarget.form?.requestSubmit()}
-        className="w-full text-[12px] rounded bg-slate-800 border border-slate-700 text-slate-300 px-2 py-1.5 disabled:opacity-50 focus:outline-none focus:ring-1 focus:ring-slate-600"
+        className="w-full text-[12px] rounded bg-card border border-border text-foreground
+                   px-2 py-1.5 disabled:opacity-50
+                   focus:outline-none focus-visible:ring-2 focus-visible:ring-ring
+                   transition-colors"
       >
         {ROLES_DISPONIBLES.map((r) => (
           <option key={r.codigo} value={r.codigo} title={r.descripcion}>

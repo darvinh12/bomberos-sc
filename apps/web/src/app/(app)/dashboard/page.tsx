@@ -149,7 +149,7 @@ export default async function DashboardPage() {
               <Link
                 key={a.href}
                 href={a.href}
-                className="rounded border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-accent hover:border-slate-300 transition-colors"
+                className="rounded border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-accent hover:border-primary/50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 {a.label}
               </Link>
@@ -258,7 +258,7 @@ export default async function DashboardPage() {
                     <td className="px-4 py-3 text-muted-foreground">{row.jerarquia ?? "—"}</td>
                     <td className="px-4 py-3 text-right tabular-nums">{row.total}</td>
                     <td className="px-4 py-3 text-right tabular-nums">{row.activos}</td>
-                    <td className="px-4 py-3 text-right tabular-nums text-amber-700">{row.en_reposo}</td>
+                    <td className="px-4 py-3 text-right tabular-nums text-amber-300">{row.en_reposo}</td>
                     <td className="px-4 py-3 text-right tabular-nums">{row.en_comision}</td>
                   </tr>
                 ))}
