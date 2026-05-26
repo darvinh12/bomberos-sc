@@ -18,7 +18,7 @@
     --secondary-foreground: 213 20% 88%;
 
     --muted: 220 24% 14%;             /* #181d28 */
-    --muted-foreground: 220 18% 38%;  /* #4a5570 */
+    --muted-foreground: 220 18% 58%;  /* legible sobre navy oscuro */
 
     --accent: 220 26% 16%;            /* #1a2030 */
     --accent-foreground: 213 20% 88%;
@@ -26,15 +26,24 @@
     --destructive: 0 72% 52%;
     --destructive-foreground: 0 0% 100%;
 
+    /* Estados semánticos — calibrados para fondo navy oscuro */
+    --success:            152 50% 32%;
+    --success-foreground: 152 60% 75%;
+    --warning:             38 70% 42%;
+    --warning-foreground:  38 90% 75%;
+    --info:               215 55% 42%;
+    --info-foreground:    215 80% 80%;
+
     --border: 220 28% 17%;            /* #1e2433 */
     --input: 220 24% 12%;             /* #131720 */
-    --ring: 355 58% 35%;              /* #8c2535 — hover/focus */
+    --ring: 355 58% 35%;              /* #8c2535 — focus burdeos */
 
     --radius: 0.25rem;
   }
 
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     font-feature-settings: "rlig" 1, "calt" 1, "tnum" 1;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -43,13 +52,80 @@
   h1, h2, h3 {
     @apply tracking-tight;
   }
+
+  /* Focus visible deliberado y consistente */
+  *:focus { outline: none; }
+  *:focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
 }
 
 @layer components {
+  /* Input base */
   .input {
     @apply w-full rounded border border-border bg-input px-3 py-2 text-sm text-foreground
            placeholder:text-muted-foreground
-           focus:outline-none focus:ring-1 focus:ring-ring focus:border-ring
+           focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus:border-ring
            transition-colors;
+  }
+
+  /* Botones */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-1.5 rounded border border-transparent
+           bg-primary text-primary-foreground px-4 py-2 text-sm font-medium
+           hover:opacity-90 disabled:opacity-60 transition-opacity
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-1.5 rounded border border-border
+           bg-transparent text-foreground px-4 py-2 text-sm font-medium
+           hover:bg-accent disabled:opacity-60 transition-colors
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-1.5 rounded
+           text-muted-foreground hover:text-foreground hover:bg-accent
+           px-3 py-1.5 text-sm transition-colors
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring;
+  }
+
+  .btn-danger {
+    @apply inline-flex items-center justify-center gap-1.5 rounded border border-transparent
+           bg-destructive text-destructive-foreground px-4 py-2 text-sm font-medium
+           hover:opacity-90 disabled:opacity-60 transition-opacity
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+  }
+
+  /* Badges de estado — todos calibrados para fondo navy oscuro */
+  .badge {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium border whitespace-nowrap;
+  }
+  .badge-success {
+    @apply border-emerald-700/50 bg-emerald-900/40 text-emerald-300;
+  }
+  .badge-warning {
+    @apply border-amber-700/50 bg-amber-900/40 text-amber-300;
+  }
+  .badge-info {
+    @apply border-sky-700/50 bg-sky-900/40 text-sky-300;
+  }
+  .badge-danger {
+    @apply border-red-700/50 bg-red-900/40 text-red-300;
+  }
+  .badge-neutral {
+    @apply border-border bg-muted text-muted-foreground;
+  }
+  .badge-muted {
+    @apply border-border bg-muted/60 text-muted-foreground;
+  }
+  .badge-primary {
+    @apply border-primary/40 bg-primary/15 text-primary-foreground/85;
+  }
+  .badge-violet {
+    @apply border-violet-700/50 bg-violet-900/40 text-violet-300;
   }
 }
