@@ -1,8 +1,25 @@
 import Link from "next/link";
-import { api } from "@/lib/api";
+import { notFound } from "next/navigation";
+import { api, ApiError } from "@/lib/api";
 import { requireAuth } from "@/lib/session";
 import { requireRoleOrRedirect } from "@/lib/roles";
+import { isDemoMode, demoAyuda } from "@/lib/demo-fixtures";
 import EditarForm from "./form";
+
+interface Ayuda {
+  id: number;
+  funcionario_id: number;
+  monto_solicitado: number | null;
+  monto_aprobado: number | null;
+  monto_pagado: number | null;
+  fecha_solicitud: string;
+  fecha_aprobacion: string | null;
+  fecha_pago: string | null;
+  referencia_pago: string | null;
+  motivo: string;
+  estatus: string;
+  observaciones: string | null;
+}
 
 export default async function EditarAyudaPage({
   params,
@@ -13,25 +30,22 @@ export default async function EditarAyudaPage({
   const me = await api
     .get<{ roles: string[] }>("/auth/me", token)
     .catch(() => ({ roles: [] as string[] }));
-  requireRoleOrRedirect(me.roles, ["ADMIN", "RRHH"]);
+  requireRoleOrRedirect(me.roles, ["ADMIN", "RRHH", "SUPERVISOR"]);
 
   const id = Number(params.id);
+  if (!Number.isFinite(id)) notFound();
 
-  // Mock para demo
-  const ayuda = {
-    id,
-    funcionario_id: 1,
-    monto_solicitado: 2500,
-    monto_aprobado: null as number | null,
-    monto_pagado: null as number | null,
-    fecha_solicitud: "2026-04-10",
-    fecha_aprobacion: null as string | null,
-    fecha_pago: null as string | null,
-    referencia_pago: null as string | null,
-    motivo: "Apoyo económico por gastos médicos imprevistos del funcionario.",
-    estatus: "SOLICITADO",
-    observaciones: null as string | null,
-  };
+  let ayuda: Ayuda;
+  if (isDemoMode()) {
+    ayuda = demoAyuda(id);
+  } else {
+    try {
+      ayuda = await api.get<Ayuda>(`/beneficios/ayudas/${id}`, token);
+    } catch (e) {
+      if (e instanceof ApiError && e.status === 404) notFound();
+      throw e;
+    }
+  }
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">

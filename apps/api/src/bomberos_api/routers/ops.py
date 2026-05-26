@@ -128,10 +128,10 @@ async def marcar_asistencia(
     request: Request,
     guardia_id: int,
     gf_id: int,
+    db: DbSession,
+    user: CurrentUser,
     asistio: bool,
     motivo_inasistencia: str | None = None,
-    db: DbSession = ...,
-    user: CurrentUser = ...,
 ):
     await set_audit_ctx(db, user.id, client_ip(request))
     gf = await db.scalar(

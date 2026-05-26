@@ -136,10 +136,10 @@ async def asignar_proteccion(
 async def devolver_proteccion(
     request: Request,
     asignacion_id: int,
+    db: DbSession,
+    user: CurrentUser,
     estado_devolucion: str | None = None,
     fecha_devolucion: date | None = None,
-    db: DbSession = ...,
-    user: CurrentUser = ...,
 ):
     from datetime import date as _d
     await set_audit_ctx(db, user.id, client_ip(request))
