@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 import {
-  HeartPulse, Briefcase, AlertTriangle, ClipboardList, LogOut, Minus,
+  HeartPulse, Briefcase, AlertTriangle, ClipboardList, LogOut, Minus, X,
   type LucideIcon,
 } from "lucide-react";
 import {
@@ -128,9 +128,10 @@ function FormWrapper({
         <button
           type="button"
           onClick={onClose}
-          className="text-xs text-muted-foreground hover:text-foreground"
+          aria-label="Cerrar formulario"
+          className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
-          ✕
+          <X className="w-3.5 h-3.5" aria-hidden="true" />
         </button>
       </div>
       {state.error && (
