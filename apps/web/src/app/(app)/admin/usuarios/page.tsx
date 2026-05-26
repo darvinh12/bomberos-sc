@@ -99,40 +99,32 @@ export default async function UsuariosAdminPage({ searchParams }: SearchProps) {
                     <td className="p-3 text-muted-foreground">{u.correo ?? "—"}</td>
                     <td className="p-3 space-x-1">
                       {u.bloqueado && (
-                        <span className="inline-block px-2 py-0.5 rounded-full text-xs bg-red-100 text-red-800">
-                          Bloqueado
-                        </span>
+                        <span className="badge badge-danger">Bloqueado</span>
                       )}
                       {!u.activo && (
-                        <span className="inline-block px-2 py-0.5 rounded-full text-xs bg-gray-200 text-gray-700">
-                          Inactivo
-                        </span>
+                        <span className="badge badge-neutral">Inactivo</span>
                       )}
                       {u.activo && !u.bloqueado && (
-                        <span className="inline-block px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-800">
-                          Activo
-                        </span>
+                        <span className="badge badge-success">Activo</span>
                       )}
                       {u.debe_cambiar_password && (
-                        <span className="inline-block px-2 py-0.5 rounded-full text-xs bg-yellow-100 text-yellow-800">
-                          Cambio pwd
-                        </span>
+                        <span className="badge badge-warning">Cambio pwd</span>
                       )}
                     </td>
                     <td className="p-3">
                       <span
                         className={
                           u.mfa_activo
-                            ? "text-green-700"
+                            ? "text-emerald-400"
                             : "text-muted-foreground"
                         }
                       >
                         {u.mfa_activo ? "Sí" : "No"}
                       </span>
                     </td>
-                    <td className="p-3 font-mono text-xs">
+                    <td className="p-3 font-mono text-xs tabular-nums">
                       {u.intentos_fallidos > 0 ? (
-                        <span className="text-red-700">{u.intentos_fallidos}</span>
+                        <span className="text-red-400">{u.intentos_fallidos}</span>
                       ) : (
                         <span className="text-muted-foreground">0</span>
                       )}

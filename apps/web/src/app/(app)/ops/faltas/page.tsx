@@ -27,9 +27,9 @@ interface Page<T> {
 }
 
 const TIPO_COLORS: Record<string, string> = {
-  LEVE: "bg-yellow-100 text-yellow-800",
-  MEDIA: "bg-orange-100 text-orange-800",
-  GRAVE: "bg-red-100 text-red-800",
+  LEVE:  "badge badge-warning",
+  MEDIA: "badge badge-warning",
+  GRAVE: "badge badge-danger",
 };
 
 interface SearchProps {
@@ -98,11 +98,7 @@ export default async function FaltasPage({ searchParams }: SearchProps) {
                   <tr key={f.id} className="border-t hover:bg-muted/30">
                     <td className="p-3 font-mono text-xs">#{f.funcionario_id}</td>
                     <td className="p-3">
-                      <span
-                        className={`inline-block px-2 py-0.5 rounded-full text-xs ${
-                          TIPO_COLORS[f.tipo_falta] ?? "bg-gray-100"
-                        }`}
-                      >
+                      <span className={TIPO_COLORS[f.tipo_falta] ?? "badge badge-neutral"}>
                         {f.tipo_falta}
                       </span>
                     </td>
@@ -116,7 +112,7 @@ export default async function FaltasPage({ searchParams }: SearchProps) {
                     <td className="p-3 text-right">{f.dias_suspension ?? "—"}</td>
                     <td className="p-3">
                       {f.apelada ? (
-                        <span className="text-blue-700">Sí</span>
+                        <span className="text-sky-400">Sí</span>
                       ) : (
                         <span className="text-muted-foreground">No</span>
                       )}

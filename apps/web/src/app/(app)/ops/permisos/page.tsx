@@ -115,13 +115,9 @@ export default async function PermisosPage({ searchParams }: SearchProps) {
                     </td>
                     <td className="p-3">
                       {p.autorizado ? (
-                        <span className="inline-block px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-800">
-                          Autorizado
-                        </span>
+                        <span className="badge badge-success">Autorizado</span>
                       ) : (
-                        <span className="inline-block px-2 py-0.5 rounded-full text-xs bg-yellow-100 text-yellow-800">
-                          Pendiente
-                        </span>
+                        <span className="badge badge-warning">Pendiente</span>
                       )}
                     </td>
                     <td className="p-3 text-right">

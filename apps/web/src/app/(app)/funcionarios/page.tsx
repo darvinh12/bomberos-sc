@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Download, Plus } from "lucide-react";
 import { api } from "@/lib/api";
 import { requireAuth } from "@/lib/session";
 import { hasAnyRole } from "@/lib/roles";
@@ -36,14 +37,14 @@ interface Catalogo {
 }
 
 const ESTATUS_COLORS: Record<string, string> = {
-  ACTIVO:       "bg-emerald-900/40 text-emerald-400 border border-emerald-700/50",
-  REPOSO:       "bg-amber-900/40 text-amber-400 border border-amber-700/50",
-  COMISION:     "bg-blue-900/40 text-blue-400 border border-blue-700/50",
-  PRE_JUBILADO: "bg-violet-900/40 text-violet-400 border border-violet-700/50",
-  JUBILADO:     "bg-muted text-muted-foreground border border-border",
-  EGRESADO:     "bg-muted/60 text-muted-foreground border border-border",
-  FALLECIDO:    "bg-muted/40 text-foreground border border-border",
-  SUSPENDIDO:   "bg-red-900/40 text-red-400 border border-red-700/50",
+  ACTIVO:       "badge badge-success",
+  REPOSO:       "badge badge-warning",
+  COMISION:     "badge badge-info",
+  PRE_JUBILADO: "badge badge-violet",
+  JUBILADO:     "badge badge-neutral",
+  EGRESADO:     "badge badge-muted",
+  FALLECIDO:    "badge badge-muted",
+  SUSPENDIDO:   "badge badge-danger",
 };
 
 interface SearchProps {
@@ -107,16 +108,18 @@ export default async function FuncionariosPage({ searchParams }: SearchProps) {
         <div className="flex gap-2">
           <a
             href={`/api/export/funcionarios?${params.toString()}`}
-            className="rounded-md border border-input px-4 py-2 text-sm font-medium hover:bg-accent"
+            className="inline-flex items-center gap-1.5 rounded-md border border-border px-4 py-2 text-sm font-medium hover:bg-accent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             title="Exportar resultado actual a CSV"
           >
-            ⬇ Exportar CSV
+            <Download className="w-4 h-4" aria-hidden="true" />
+            Exportar CSV
           </a>
           <Link
             href="/funcionarios/nuevo"
-            className="rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-medium hover:opacity-90"
+            className="inline-flex items-center gap-1.5 rounded-md bg-primary text-primary-foreground px-4 py-2 text-sm font-medium hover:opacity-90 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           >
-            + Nuevo funcionario
+            <Plus className="w-4 h-4" aria-hidden="true" />
+            Nuevo funcionario
           </Link>
         </div>
       </div>
@@ -253,11 +256,7 @@ export default async function FuncionariosPage({ searchParams }: SearchProps) {
                       {f.jerarquia_id ? jerMap.get(f.jerarquia_id) ?? "—" : "—"}
                     </td>
                     <td className="p-3">
-                      <span
-                        className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${
-                          ESTATUS_COLORS[f.estatus] ?? "bg-muted text-muted-foreground border border-border"
-                        }`}
-                      >
+                      <span className={ESTATUS_COLORS[f.estatus] ?? "badge badge-neutral"}>
                         {f.estatus}
                       </span>
                     </td>

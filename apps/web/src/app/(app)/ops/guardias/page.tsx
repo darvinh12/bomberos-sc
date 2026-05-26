@@ -88,13 +88,7 @@ export default async function GuardiasPage() {
                       {g.hora_inicio}–{g.hora_fin}
                     </td>
                     <td className="p-3">
-                      <span
-                        className={`inline-block px-2 py-0.5 rounded-full text-xs ${
-                          g.cerrada
-                            ? "bg-gray-100 text-gray-600"
-                            : "bg-green-100 text-green-800"
-                        }`}
-                      >
+                      <span className={g.cerrada ? "badge badge-neutral" : "badge badge-success"}>
                         {g.cerrada ? "CERRADA" : "ABIERTA"}
                       </span>
                     </td>

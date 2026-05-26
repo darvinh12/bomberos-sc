@@ -28,12 +28,12 @@ interface Page<T> {
 }
 
 const ESTATUS_COLORS: Record<string, string> = {
-  SOLICITADO: "bg-yellow-100 text-yellow-800",
-  EN_REVISION: "bg-blue-100 text-blue-800",
-  APROBADO: "bg-green-100 text-green-800",
-  PAGADO: "bg-emerald-100 text-emerald-800",
-  RECHAZADO: "bg-red-100 text-red-800",
-  CANCELADO: "bg-gray-200 text-gray-700",
+  SOLICITADO:  "badge badge-warning",
+  EN_REVISION: "badge badge-info",
+  APROBADO:    "badge badge-success",
+  PAGADO:      "badge badge-success",
+  RECHAZADO:   "badge badge-danger",
+  CANCELADO:   "badge badge-neutral",
 };
 
 interface SearchProps {
@@ -146,11 +146,7 @@ export default async function BeneficiosPage({ searchParams }: SearchProps) {
                       {formatDate(a.fecha_solicitud)}
                     </td>
                     <td className="p-3">
-                      <span
-                        className={`inline-block px-2 py-0.5 rounded-full text-xs ${
-                          ESTATUS_COLORS[a.estatus] ?? "bg-gray-100"
-                        }`}
-                      >
+                      <span className={ESTATUS_COLORS[a.estatus] ?? "badge badge-neutral"}>
                         {a.estatus}
                       </span>
                     </td>

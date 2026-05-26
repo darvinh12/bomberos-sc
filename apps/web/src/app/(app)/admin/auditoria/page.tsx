@@ -25,9 +25,9 @@ interface Page<T> {
 }
 
 const OP_COLORS: Record<string, string> = {
-  INSERT: "bg-green-100 text-green-800",
-  UPDATE: "bg-blue-100 text-blue-800",
-  DELETE: "bg-red-100 text-red-800",
+  INSERT: "badge badge-success",
+  UPDATE: "badge badge-info",
+  DELETE: "badge badge-danger",
 };
 
 interface SearchProps {
@@ -146,11 +146,7 @@ export default async function AuditoriaPage({ searchParams }: SearchProps) {
                       )}
                     </td>
                     <td className="p-3">
-                      <span
-                        className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${
-                          OP_COLORS[e.operacion] ?? "bg-gray-100"
-                        }`}
-                      >
+                      <span className={OP_COLORS[e.operacion] ?? "badge badge-neutral"}>
                         {e.operacion}
                       </span>
                     </td>

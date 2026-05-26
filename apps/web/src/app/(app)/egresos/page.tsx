@@ -43,11 +43,11 @@ const TABS: { key: Tab; label: string; path: string }[] = [
 ];
 
 const ESTATUS_SOL: Record<string, string> = {
-  SOLICITADA: "bg-yellow-100 text-yellow-800",
-  EN_TRAMITE: "bg-blue-100 text-blue-800",
-  APROBADA: "bg-green-100 text-green-800",
-  RECHAZADA: "bg-red-100 text-red-800",
-  EJECUTADA: "bg-emerald-100 text-emerald-800",
+  SOLICITADA: "badge badge-warning",
+  EN_TRAMITE: "badge badge-info",
+  APROBADA:   "badge badge-success",
+  RECHAZADA:  "badge badge-danger",
+  EJECUTADA:  "badge badge-success",
 };
 
 interface SearchProps {
@@ -148,13 +148,9 @@ export default async function EgresosPage({ searchParams }: SearchProps) {
                       </td>
                       <td className="p-3">
                         {j.activo ? (
-                          <span className="inline-block px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-800">
-                            Activo
-                          </span>
+                          <span className="badge badge-success">Activo</span>
                         ) : (
-                          <span className="inline-block px-2 py-0.5 rounded-full text-xs bg-gray-200 text-gray-700">
-                            Cerrado
-                          </span>
+                          <span className="badge badge-neutral">Cerrado</span>
                         )}
                       </td>
                     </tr>
@@ -191,11 +187,7 @@ export default async function EgresosPage({ searchParams }: SearchProps) {
                         {s.años_servicio?.toFixed(1) ?? "—"}
                       </td>
                       <td className="p-3">
-                        <span
-                          className={`inline-block px-2 py-0.5 rounded-full text-xs ${
-                            ESTATUS_SOL[s.estatus] ?? "bg-gray-100"
-                          }`}
-                        >
+                        <span className={ESTATUS_SOL[s.estatus] ?? "badge badge-neutral"}>
                           {s.estatus}
                         </span>
                       </td>

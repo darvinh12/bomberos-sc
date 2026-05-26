@@ -293,7 +293,7 @@ function TableMeritos({ rows }: { rows: Merito[] }) {
             </td>
             <td className="p-3 text-right">
               {m.puntaje_faltas !== null ? (
-                <span className={m.puntaje_faltas < 0 ? "text-red-700" : ""}>
+                <span className={m.puntaje_faltas < 0 ? "text-red-400" : ""}>
                   {m.puntaje_faltas.toFixed(1)}
                 </span>
               ) : (

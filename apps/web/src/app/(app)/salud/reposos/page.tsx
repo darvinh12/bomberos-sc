@@ -86,13 +86,7 @@ export default async function RepososPage() {
                   <td className="p-3">{r.tipo_reposo ?? "—"}</td>
                   <td className="p-3 text-xs">{r.diagnostico ?? "—"}</td>
                   <td className="p-3">
-                    <span
-                      className={`inline-block px-2 py-0.5 rounded-full text-xs ${
-                        r.estado_vigencia === "VIGENTE"
-                          ? "bg-yellow-100 text-yellow-800"
-                          : "bg-gray-100 text-gray-700"
-                      }`}
-                    >
+                    <span className={r.estado_vigencia === "VIGENTE" ? "badge badge-warning" : "badge badge-neutral"}>
                       {r.estado_vigencia}
                     </span>
                   </td>

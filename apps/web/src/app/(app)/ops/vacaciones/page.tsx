@@ -86,13 +86,13 @@ export default async function VacacionesPage() {
                   <td className="p-3 text-right">{r.dias_calendario ?? "—"}</td>
                   <td className="p-3">
                     <span
-                      className={`inline-block px-2 py-0.5 rounded-full text-xs ${
+                      className={
                         r.estado === "EN_CURSO"
-                          ? "bg-blue-100 text-blue-800"
+                          ? "badge badge-info"
                           : r.estado === "PROGRAMADA"
-                          ? "bg-yellow-100 text-yellow-800"
-                          : "bg-gray-100 text-gray-700"
-                      }`}
+                          ? "badge badge-warning"
+                          : "badge badge-neutral"
+                      }
                     >
                       {r.estado}
                     </span>

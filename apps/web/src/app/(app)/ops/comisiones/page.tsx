@@ -124,13 +124,9 @@ export default async function ComisionesPage({ searchParams }: SearchProps) {
                     </td>
                     <td className="p-3">
                       {c.activo ? (
-                        <span className="inline-block px-2 py-0.5 rounded-full text-xs bg-blue-100 text-blue-800">
-                          Activa
-                        </span>
+                        <span className="badge badge-info">Activa</span>
                       ) : (
-                        <span className="inline-block px-2 py-0.5 rounded-full text-xs bg-gray-200 text-gray-700">
-                          Cerrada
-                        </span>
+                        <span className="badge badge-neutral">Cerrada</span>
                       )}
                     </td>
                     <td className="p-3 text-right">

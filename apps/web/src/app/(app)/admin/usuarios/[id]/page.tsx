@@ -76,17 +76,11 @@ export default async function UsuarioDetallePage({
               label="Estado"
               value={
                 u.bloqueado ? (
-                  <span className="inline-block px-2 py-0.5 rounded-full text-xs bg-red-100 text-red-800">
-                    Bloqueado
-                  </span>
+                  <span className="badge badge-danger">Bloqueado</span>
                 ) : u.activo ? (
-                  <span className="inline-block px-2 py-0.5 rounded-full text-xs bg-green-100 text-green-800">
-                    Activo
-                  </span>
+                  <span className="badge badge-success">Activo</span>
                 ) : (
-                  <span className="inline-block px-2 py-0.5 rounded-full text-xs bg-gray-200 text-gray-700">
-                    Inactivo
-                  </span>
+                  <span className="badge badge-neutral">Inactivo</span>
                 )
               }
             />
