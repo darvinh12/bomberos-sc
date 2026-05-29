@@ -1758,47 +1758,47 @@ export function demoResolve(path: string, rolActivo: string = "ADMIN"): unknown 
 
     case /^\/funcionarios\/\d+\/carga-familiar$/.test(base): {
       const fid = Number(base.split("/")[2]);
-      return generarCargaFamiliarPara(fid);
+      return paginate(generarCargaFamiliarPara(fid), page, page_size);
     }
 
     case /^\/funcionarios\/\d+\/historico-jerarquias$/.test(base): {
       const fid = Number(base.split("/")[2]);
-      return generarHistJerarquiasPara(fid);
+      return paginate(generarHistJerarquiasPara(fid), page, page_size);
     }
 
     case /^\/funcionarios\/\d+\/historico-ubicaciones$/.test(base): {
       const fid = Number(base.split("/")[2]);
-      return generarHistUbicacionesPara(fid);
+      return paginate(generarHistUbicacionesPara(fid), page, page_size);
     }
 
     case /^\/funcionarios\/\d+\/tiempo-admpublica$/.test(base): {
       const fid = Number(base.split("/")[2]);
-      return generarTiempoAdmPublicaPara(fid);
+      return paginate(generarTiempoAdmPublicaPara(fid), page, page_size);
     }
 
     case /^\/funcionarios\/\d+\/habilidades$/.test(base): {
       const fid = Number(base.split("/")[2]);
-      return generarHabilidadesPara(fid);
+      return paginate(generarHabilidadesPara(fid), page, page_size);
     }
 
     case /^\/funcionarios\/\d+\/actividades$/.test(base): {
       const fid = Number(base.split("/")[2]);
-      return generarActividadesPara(fid);
+      return paginate(generarActividadesPara(fid), page, page_size);
     }
 
     case /^\/funcionarios\/\d+\/carnets$/.test(base): {
       const fid = Number(base.split("/")[2]);
-      return generarCarnetsPara(fid);
+      return paginate(generarCarnetsPara(fid), page, page_size);
     }
 
     case /^\/funcionarios\/\d+\/historico-carnets$/.test(base): {
       const fid = Number(base.split("/")[2]);
-      return generarHistCarnetsPara(fid);
+      return paginate(generarHistCarnetsPara(fid), page, page_size);
     }
 
     case /^\/funcionarios\/\d+\/direcciones$/.test(base): {
       const fid = Number(base.split("/")[2]);
-      return generarDireccionesPara(fid);
+      return paginate(generarDireccionesPara(fid), page, page_size);
     }
 
     case /^\/funcionarios\/\d+\/direccion-actual$/.test(base): {
