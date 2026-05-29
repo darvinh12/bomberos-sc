@@ -44,14 +44,28 @@ class Funcionario(Base):
         SmallInteger, ForeignKey("core.grupos_sanguineos.id")
     )
     lugar_nacimiento: Mapped[str | None] = mapped_column(String)
-    pais_nacimiento: Mapped[str | None] = mapped_column(String)
+    pais_nacimiento: Mapped[str | None] = mapped_column(String)  # legacy
+    pais_nacimiento_id: Mapped[int | None] = mapped_column(
+        SmallInteger, ForeignKey("core.paises.id")
+    )
 
     # Nacionalización (para nacidos en el extranjero)
-    tipo_nacionalizacion: Mapped[str | None] = mapped_column(String(40))
+    # NOTA: las columnas string son legacy. Se mantienen por compatibilidad con
+    # datos importados; los formularios nuevos deben usar las columnas *_id.
+    tipo_nacionalizacion: Mapped[str | None] = mapped_column(String(40))  # legacy
     fecha_nacionalizacion: Mapped[date | None] = mapped_column(Date)
     numero_gaceta_nacionalizacion: Mapped[str | None] = mapped_column(String(50))
-    pais_origen: Mapped[str | None] = mapped_column(String(80))
-    idiomas: Mapped[str | None] = mapped_column(String(200))
+    pais_origen: Mapped[str | None] = mapped_column(String(80))  # legacy
+    idiomas: Mapped[str | None] = mapped_column(String(200))  # legacy (string CSV)
+
+    # FK al catálogo (mini-sprint). pais_nacimiento_id está más abajo junto a
+    # pais_nacimiento legacy.
+    tipo_nacionalizacion_id: Mapped[int | None] = mapped_column(
+        SmallInteger, ForeignKey("core.tipos_nacionalizacion.id")
+    )
+    pais_origen_id: Mapped[int | None] = mapped_column(
+        SmallInteger, ForeignKey("core.paises.id")
+    )
 
     # Empleo
     tipo_personal: Mapped[str] = mapped_column(String, default="BOMBERO")
@@ -87,7 +101,10 @@ class Funcionario(Base):
     division_id: Mapped[int | None] = mapped_column(
         SmallInteger, ForeignKey("org.divisiones.id")
     )
-    seccion: Mapped[str | None] = mapped_column(CHAR(1))
+    seccion: Mapped[str | None] = mapped_column(CHAR(1))  # legacy
+    seccion_id: Mapped[int | None] = mapped_column(
+        SmallInteger, ForeignKey("core.secciones_funcionario.id")
+    )
     horario: Mapped[str | None] = mapped_column(String)
 
     # Domicilio del funcionario: NO se modela aquí. Es 1:N en
@@ -103,7 +120,10 @@ class Funcionario(Base):
     correo: Mapped[str | None] = mapped_column(CITEXT, unique=True)
     persona_contacto: Mapped[str | None] = mapped_column(String)
     telefono_contacto: Mapped[str | None] = mapped_column(String)
-    parentesco_contacto: Mapped[str | None] = mapped_column(String)
+    parentesco_contacto: Mapped[str | None] = mapped_column(String)  # legacy
+    parentesco_contacto_id: Mapped[int | None] = mapped_column(
+        SmallInteger, ForeignKey("core.parentescos.id")
+    )
 
     # Educación / habilidades
     nivel_educativo_id: Mapped[int | None] = mapped_column(
@@ -115,7 +135,10 @@ class Funcionario(Base):
     )
     iutb: Mapped[bool] = mapped_column(Boolean, default=False)
     egresado_unes: Mapped[bool] = mapped_column(Boolean, default=False)
-    licencia_conducir: Mapped[str | None] = mapped_column(String(20))
+    licencia_conducir: Mapped[str | None] = mapped_column(String(20))  # legacy
+    licencia_conducir_id: Mapped[int | None] = mapped_column(
+        SmallInteger, ForeignKey("core.tipos_licencia.id")
+    )
     factor_sanguineo: Mapped[str | None] = mapped_column(String(15))
 
     # Misceláneos
@@ -172,4 +195,22 @@ class PeriodoServicio(Base):
 
     funcionario: Mapped[Funcionario] = relationship(
         "Funcionario", back_populates="periodos", lazy="raise"
+    )
+
+
+class FuncionarioIdioma(Base):
+    """Pivote N:M para idiomas (multi-select del form)."""
+
+    __tablename__ = "funcionario_idiomas"
+    __table_args__ = {"schema": "personal"}
+
+    funcionario_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey("personal.funcionarios.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
+    idioma_id: Mapped[int] = mapped_column(
+        SmallInteger,
+        ForeignKey("core.idiomas.id", ondelete="RESTRICT"),
+        primary_key=True,
     )

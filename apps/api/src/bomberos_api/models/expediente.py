@@ -30,6 +30,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column
 
 from bomberos_api.models.base import Base
+from bomberos_api.models.mixins import SoftDeleteMixin
 
 
 # =============================================================================
@@ -37,7 +38,7 @@ from bomberos_api.models.base import Base
 # =============================================================================
 
 
-class CargaFamiliar(Base):
+class CargaFamiliar(SoftDeleteMixin, Base):
     """personal.carga_familiar — dependientes del funcionario."""
 
     __tablename__ = "carga_familiar"
@@ -93,7 +94,7 @@ class CargaFamiliar(Base):
 # =============================================================================
 
 
-class HistoricoJerarquia(Base):
+class HistoricoJerarquia(SoftDeleteMixin, Base):
     """personal.historico_jerarquias — línea de tiempo de jerarquías."""
 
     __tablename__ = "historico_jerarquias"
@@ -116,7 +117,7 @@ class HistoricoJerarquia(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
 
-class HistoricoUbicacion(Base):
+class HistoricoUbicacion(SoftDeleteMixin, Base):
     """personal.historico_ubicaciones — línea de tiempo de ubicaciones administrativas."""
 
     __tablename__ = "historico_ubicaciones"
@@ -148,7 +149,7 @@ class HistoricoUbicacion(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
 
-class TiempoAdmPublica(Base):
+class TiempoAdmPublica(SoftDeleteMixin, Base):
     """personal.tiempo_admpublica — tiempo previo en otras administraciones públicas."""
 
     __tablename__ = "tiempo_admpublica"
@@ -173,7 +174,7 @@ class TiempoAdmPublica(Base):
 # =============================================================================
 
 
-class Habilidad(Base):
+class Habilidad(SoftDeleteMixin, Base):
     """personal.habilidades — idiomas, software u otras destrezas."""
 
     __tablename__ = "habilidades"
@@ -194,7 +195,7 @@ class Habilidad(Base):
     documento_url: Mapped[str | None] = mapped_column(String)
 
 
-class Actividad(Base):
+class Actividad(SoftDeleteMixin, Base):
     """personal.actividades — actividades culturales, deportivas, etc."""
 
     __tablename__ = "actividades"
@@ -225,7 +226,7 @@ class Actividad(Base):
 # =============================================================================
 
 
-class Carnet(Base):
+class Carnet(SoftDeleteMixin, Base):
     """personal.carnets — carnets emitidos al funcionario (cívico, militar, etc.)."""
 
     __tablename__ = "carnets"

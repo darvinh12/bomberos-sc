@@ -1,5 +1,6 @@
 "use client";
 
+import { Eye } from "lucide-react";
 import { ReactNode } from "react";
 
 export function SectionShell({
@@ -7,11 +8,17 @@ export function SectionShell({
   description,
   children,
   actions,
+  soloLectura = false,
 }: {
   title: string;
   description?: string;
   children: ReactNode;
   actions?: ReactNode;
+  /**
+   * Si es true, muestra un indicador discreto debajo del título y suprime el
+   * área de `actions` (que típicamente contiene botones de creación).
+   */
+  soloLectura?: boolean;
 }) {
   return (
     <div className="space-y-4">
@@ -21,8 +28,16 @@ export function SectionShell({
           {description && (
             <p className="text-sm text-muted-foreground mt-0.5">{description}</p>
           )}
+          {soloLectura && (
+            <p className="mt-1 inline-flex items-center gap-1.5 text-[11px] text-muted-foreground italic">
+              <Eye className="w-3 h-3" aria-hidden="true" />
+              Solo lectura — no puedes modificar esta sección con tu rol actual.
+            </p>
+          )}
         </div>
-        {actions && <div className="flex items-center gap-2">{actions}</div>}
+        {actions && !soloLectura && (
+          <div className="flex items-center gap-2">{actions}</div>
+        )}
       </div>
       {children}
     </div>

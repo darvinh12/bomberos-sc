@@ -39,6 +39,12 @@ export default async function NuevoFuncionarioPage() {
     parroquias: [],
     tiposVivienda: [],
     tenenciasVivienda: [],
+    parentescos: [],
+    tiposLicencia: [],
+    tiposNacionalizacion: [],
+    idiomas: [],
+    paises: [],
+    seccionesFuncionario: [],
   };
   try {
     catalogos = await cargarCatalogosFuncionario(token);

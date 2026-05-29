@@ -64,11 +64,15 @@ export interface FuncionarioFormData {
   pais_nacimiento: string;
 
   // Identidad - nacionalización (si aplica)
-  tipo_nacionalizacion: string;
+  tipo_nacionalizacion: string; // legacy string (no se muestra en form, queda por retrocompat)
+  tipo_nacionalizacion_id: string;
   fecha_nacionalizacion: string;
   numero_gaceta_nacionalizacion: string;
-  pais_origen: string;
-  idiomas: string;
+  pais_origen: string; // legacy
+  pais_origen_id: string;
+  pais_nacimiento_id: string;
+  idiomas: string; // legacy CSV
+  idiomas_ids: number[];
 
   // Empleo
   tipo_personal: string;
@@ -83,7 +87,8 @@ export interface FuncionarioFormData {
   pre_jubilado: boolean;
   es_voluntario: boolean;
   institucion_formadora_id: string;
-  licencia_conducir: string;
+  licencia_conducir: string; // legacy string
+  licencia_conducir_id: string;
   fecha_egreso: string;
   fecha_reintegro: string;
   fecha_este: string;
@@ -99,7 +104,8 @@ export interface FuncionarioFormData {
   area_id: string;
   dependencia_id: string;
   division_id: string;
-  seccion: string;
+  seccion: string; // legacy CHAR(1)
+  seccion_id: string;
   horario: string;
 
   // Contacto
@@ -109,7 +115,8 @@ export interface FuncionarioFormData {
   correo: string;
   persona_contacto: string;
   telefono_contacto: string;
-  parentesco_contacto: string;
+  parentesco_contacto: string; // legacy
+  parentesco_contacto_id: string;
 
   // Educación
   nivel_educativo_id: string;
@@ -135,10 +142,14 @@ export const VALORES_INICIALES: FuncionarioFormData = {
   pais_nacimiento: "",
 
   tipo_nacionalizacion: "",
+  tipo_nacionalizacion_id: "",
   fecha_nacionalizacion: "",
   numero_gaceta_nacionalizacion: "",
   pais_origen: "",
+  pais_origen_id: "",
+  pais_nacimiento_id: "",
   idiomas: "",
+  idiomas_ids: [],
 
   tipo_personal: "",
   numero_empleado: "",
@@ -153,6 +164,7 @@ export const VALORES_INICIALES: FuncionarioFormData = {
   es_voluntario: false,
   institucion_formadora_id: "",
   licencia_conducir: "",
+  licencia_conducir_id: "",
   fecha_egreso: "",
   fecha_reintegro: "",
   fecha_este: "",
@@ -166,6 +178,7 @@ export const VALORES_INICIALES: FuncionarioFormData = {
   dependencia_id: "",
   division_id: "",
   seccion: "",
+  seccion_id: "",
   horario: "",
 
   telefono_habitacion: "",
@@ -175,6 +188,7 @@ export const VALORES_INICIALES: FuncionarioFormData = {
   persona_contacto: "",
   telefono_contacto: "",
   parentesco_contacto: "",
+  parentesco_contacto_id: "",
 
   nivel_educativo_id: "",
   profesion: "",
@@ -213,12 +227,12 @@ const CAMPOS_POR_SECCION: Record<SeccionId, (keyof FuncionarioFormData)[]> = {
     "grupo_sanguineo_id",
     "factor_sanguineo",
     "lugar_nacimiento",
-    "pais_nacimiento",
-    "tipo_nacionalizacion",
+    "pais_nacimiento_id",
+    "tipo_nacionalizacion_id",
     "fecha_nacionalizacion",
     "numero_gaceta_nacionalizacion",
-    "pais_origen",
-    "idiomas",
+    "pais_origen_id",
+    "idiomas_ids",
   ],
   empleo: [
     "tipo_personal",
@@ -233,7 +247,7 @@ const CAMPOS_POR_SECCION: Record<SeccionId, (keyof FuncionarioFormData)[]> = {
     "pre_jubilado",
     "es_voluntario",
     "institucion_formadora_id",
-    "licencia_conducir",
+    "licencia_conducir_id",
     "fecha_egreso",
     "fecha_reintegro",
     "fecha_este",
@@ -245,7 +259,7 @@ const CAMPOS_POR_SECCION: Record<SeccionId, (keyof FuncionarioFormData)[]> = {
     "area_id",
     "dependencia_id",
     "division_id",
-    "seccion",
+    "seccion_id",
     "horario",
   ],
   contacto: [
@@ -255,7 +269,7 @@ const CAMPOS_POR_SECCION: Record<SeccionId, (keyof FuncionarioFormData)[]> = {
     "correo",
     "persona_contacto",
     "telefono_contacto",
-    "parentesco_contacto",
+    "parentesco_contacto_id",
   ],
   educacion: [
     "nivel_educativo_id",
@@ -277,6 +291,7 @@ const REQUERIDOS_POR_SECCION: Record<SeccionId, (keyof FuncionarioFormData)[]> =
 function tieneValor(data: FuncionarioFormData, k: keyof FuncionarioFormData): boolean {
   const v = data[k];
   if (typeof v === "boolean") return v === true;
+  if (Array.isArray(v)) return v.length > 0;
   return typeof v === "string" && v.trim().length > 0;
 }
 

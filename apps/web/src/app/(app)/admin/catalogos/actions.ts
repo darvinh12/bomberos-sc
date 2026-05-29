@@ -22,7 +22,13 @@ export type EntidadCat =
   | "tenencias-vivienda"
   | "estados"
   | "municipios"
-  | "parroquias";
+  | "parroquias"
+  | "parentescos"
+  | "tipos-licencia"
+  | "tipos-nacionalizacion"
+  | "idiomas"
+  | "paises"
+  | "secciones-funcionario";
 
 export type CatItem = {
   id: number;
@@ -61,6 +67,12 @@ const COOKIES: Record<EntidadCat, string> = {
   estados: "bcd_demo_cat_est",
   municipios: "bcd_demo_cat_mun",
   parroquias: "bcd_demo_cat_par",
+  parentescos: "bcd_demo_cat_pnt",
+  "tipos-licencia": "bcd_demo_cat_tl",
+  "tipos-nacionalizacion": "bcd_demo_cat_tn",
+  idiomas: "bcd_demo_cat_idi",
+  paises: "bcd_demo_cat_pai",
+  "secciones-funcionario": "bcd_demo_cat_sec",
 };
 
 function readDemo(entidad: EntidadCat): CatItem[] {

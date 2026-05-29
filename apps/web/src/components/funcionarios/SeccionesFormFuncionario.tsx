@@ -93,7 +93,12 @@ export default function SeccionesFormFuncionario({
       </Panel>
 
       <Panel id="contacto" activa={seccion}>
-        <SeccionContacto data={data} setField={setField} errores={errores} />
+        <SeccionContacto
+          data={data}
+          setField={setField}
+          errores={errores}
+          catalogos={catalogos}
+        />
       </Panel>
 
       <Panel id="educacion" activa={seccion}>
@@ -428,14 +433,16 @@ function SeccionIdentidad({
           />
         </Field>
 
-        <Field label="País de nacimiento" htmlFor="pais_nacimiento">
-          <input
-            id="pais_nacimiento"
-            maxLength={80}
-            value={data.pais_nacimiento}
-            onChange={(e) => setField("pais_nacimiento", e.target.value)}
+        <Field label="País de nacimiento" htmlFor="pais_nacimiento_id">
+          <select
+            id="pais_nacimiento_id"
+            value={data.pais_nacimiento_id}
+            onChange={(e) => setField("pais_nacimiento_id", e.target.value)}
             className="input"
-          />
+          >
+            <option value="">—</option>
+            {opcionesCatalogo(catalogos.paises)}
+          </select>
         </Field>
       </div>
 
@@ -449,15 +456,16 @@ function SeccionIdentidad({
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Field label="Tipo de nacionalización" htmlFor="tipo_nacionalizacion">
-            <input
-              id="tipo_nacionalizacion"
-              maxLength={60}
-              value={data.tipo_nacionalizacion}
-              onChange={(e) => setField("tipo_nacionalizacion", e.target.value)}
+          <Field label="Tipo de nacionalización" htmlFor="tipo_nacionalizacion_id">
+            <select
+              id="tipo_nacionalizacion_id"
+              value={data.tipo_nacionalizacion_id}
+              onChange={(e) => setField("tipo_nacionalizacion_id", e.target.value)}
               className="input"
-              placeholder="Ej: Por matrimonio, residencia…"
-            />
+            >
+              <option value="">—</option>
+              {opcionesCatalogo(catalogos.tiposNacionalizacion)}
+            </select>
           </Field>
 
           <Field label="Fecha de nacionalización" htmlFor="fecha_nacionalizacion">
@@ -487,31 +495,92 @@ function SeccionIdentidad({
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Field label="País de origen" htmlFor="pais_origen">
-            <input
-              id="pais_origen"
-              maxLength={80}
-              value={data.pais_origen}
-              onChange={(e) => setField("pais_origen", e.target.value)}
+          <Field label="País de origen" htmlFor="pais_origen_id">
+            <select
+              id="pais_origen_id"
+              value={data.pais_origen_id}
+              onChange={(e) => setField("pais_origen_id", e.target.value)}
               className="input"
-            />
+            >
+              <option value="">—</option>
+              {opcionesCatalogo(catalogos.paises)}
+            </select>
           </Field>
 
           <Field
             label="Idiomas"
-            htmlFor="idiomas"
-            hint="Separa varios con coma (ej: español, inglés)"
+            htmlFor="idiomas_ids"
+            hint="Marca todos los que aplican"
           >
-            <input
-              id="idiomas"
-              maxLength={160}
-              value={data.idiomas}
-              onChange={(e) => setField("idiomas", e.target.value)}
-              className="input"
+            <IdiomasMultiSelect
+              idiomas={catalogos.idiomas}
+              seleccionados={data.idiomas_ids}
+              onChange={(ids) => setField("idiomas_ids", ids)}
             />
           </Field>
         </div>
       </fieldset>
+    </div>
+  );
+}
+
+/* ── Multi-select de idiomas (checkbox grid) ── */
+
+function IdiomasMultiSelect({
+  idiomas,
+  seleccionados,
+  onChange,
+}: {
+  idiomas: Catalogo[];
+  seleccionados: number[];
+  onChange: (ids: number[]) => void;
+}) {
+  const set = new Set(seleccionados);
+  const toggle = (id: number) => {
+    const next = new Set(set);
+    if (next.has(id)) next.delete(id);
+    else next.add(id);
+    onChange(Array.from(next).sort((a, b) => a - b));
+  };
+  if (idiomas.length === 0) {
+    return (
+      <p className="text-xs text-muted-foreground italic mt-1">
+        No hay idiomas configurados en el catálogo.
+      </p>
+    );
+  }
+  return (
+    <div
+      id="idiomas_ids"
+      role="group"
+      aria-label="Idiomas que habla el funcionario"
+      className="mt-1 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2"
+    >
+      {idiomas.map((i) => {
+        const inputId = `idioma-${i.id}`;
+        const checked = set.has(i.id);
+        return (
+          <label
+            key={i.id}
+            htmlFor={inputId}
+            className={[
+              "flex items-center gap-2 rounded-md border px-3 py-2 text-sm cursor-pointer transition-colors",
+              checked
+                ? "border-primary bg-primary/5"
+                : "border-border hover:bg-accent/40",
+            ].join(" ")}
+          >
+            <input
+              id={inputId}
+              type="checkbox"
+              checked={checked}
+              onChange={() => toggle(i.id)}
+              className="h-4 w-4 rounded border-border accent-primary"
+            />
+            <span>{i.nombre}</span>
+          </label>
+        );
+      })}
     </div>
   );
 }
@@ -681,16 +750,22 @@ function SeccionEmpleo({
 
         <Field
           label="Licencia de conducir"
-          htmlFor="licencia_conducir"
-          hint="Ej: B+, C, D"
+          htmlFor="licencia_conducir_id"
+          hint="Tipo principal de licencia"
         >
-          <input
-            id="licencia_conducir"
-            maxLength={10}
-            value={data.licencia_conducir}
-            onChange={(e) => setField("licencia_conducir", e.target.value)}
-            className="input uppercase"
-          />
+          <select
+            id="licencia_conducir_id"
+            value={data.licencia_conducir_id}
+            onChange={(e) => setField("licencia_conducir_id", e.target.value)}
+            className="input"
+          >
+            <option value="">—</option>
+            {catalogos.tiposLicencia.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.codigo} · {c.nombre}
+              </option>
+            ))}
+          </select>
         </Field>
       </div>
 
@@ -879,18 +954,20 @@ function SeccionUbicacion({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Field label="Sección" htmlFor="seccion" hint="Una letra A-Z">
-          <input
-            id="seccion"
-            maxLength={1}
-            value={data.seccion}
-            onChange={(e) => {
-              const v = e.target.value.toUpperCase();
-              if (v === "" || /^[A-Z]$/.test(v)) setField("seccion", v);
-            }}
-            pattern="[A-Z]"
-            className="input uppercase"
-          />
+        <Field label="Sección" htmlFor="seccion_id" hint="División interna A-D">
+          <select
+            id="seccion_id"
+            value={data.seccion_id}
+            onChange={(e) => setField("seccion_id", e.target.value)}
+            className="input"
+          >
+            <option value="">—</option>
+            {catalogos.seccionesFuncionario.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.nombre}
+              </option>
+            ))}
+          </select>
         </Field>
 
         <Field label="Horario" htmlFor="horario" className="md:col-span-2">
@@ -914,10 +991,12 @@ function SeccionContacto({
   data,
   setField,
   errores,
+  catalogos,
 }: {
   data: FuncionarioFormData;
   setField: SetField;
   errores: Partial<Record<keyof FuncionarioFormData, string>>;
+  catalogos: CatalogosFuncionario;
 }) {
   return (
     <div className="space-y-5">
@@ -991,15 +1070,16 @@ function SeccionContacto({
             />
           </Field>
 
-          <Field label="Parentesco" htmlFor="parentesco_contacto">
-            <input
-              id="parentesco_contacto"
-              maxLength={40}
-              value={data.parentesco_contacto}
-              onChange={(e) => setField("parentesco_contacto", e.target.value)}
+          <Field label="Parentesco" htmlFor="parentesco_contacto_id">
+            <select
+              id="parentesco_contacto_id"
+              value={data.parentesco_contacto_id}
+              onChange={(e) => setField("parentesco_contacto_id", e.target.value)}
               className="input"
-              placeholder="Madre, esposo/a…"
-            />
+            >
+              <option value="">—</option>
+              {opcionesCatalogo(catalogos.parentescos)}
+            </select>
           </Field>
         </div>
       </div>

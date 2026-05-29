@@ -88,3 +88,40 @@ class TipoVivienda(_CatalogoMixin, Base):
 class TenenciaVivienda(_CatalogoMixin, Base):
     __tablename__ = "tenencias_vivienda"
     __table_args__ = {"schema": "core"}
+
+
+# ---------------------------------------------------------------------------
+# Mini-sprint catálogos (sql/10_catalogos_mini_sprint.sql)
+# ---------------------------------------------------------------------------
+
+
+class Parentesco(_CatalogoMixin, Base):
+    __tablename__ = "parentescos"
+    __table_args__ = {"schema": "core"}
+
+
+class TipoLicencia(_CatalogoMixin, Base):
+    """core.tipos_licencia preexistente (sql/01_base.sql) ampliada con `activo`."""
+
+    __tablename__ = "tipos_licencia"
+    __table_args__ = {"schema": "core"}
+
+
+class TipoNacionalizacion(_CatalogoMixin, Base):
+    __tablename__ = "tipos_nacionalizacion"
+    __table_args__ = {"schema": "core"}
+
+
+class Idioma(_CatalogoMixin, Base):
+    __tablename__ = "idiomas"
+    __table_args__ = {"schema": "core"}
+
+
+class Pais(_CatalogoMixin, Base):
+    __tablename__ = "paises"
+    __table_args__ = {"schema": "core"}
+
+
+class SeccionFuncionario(_CatalogoMixin, Base):
+    __tablename__ = "secciones_funcionario"
+    __table_args__ = {"schema": "core"}

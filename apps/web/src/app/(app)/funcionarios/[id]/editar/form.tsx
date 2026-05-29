@@ -49,11 +49,17 @@ function inicializarDesde(
     factor_sanguineo: aValorForm(f.factor_sanguineo),
     lugar_nacimiento: aValorForm(f.lugar_nacimiento),
     pais_nacimiento: aValorForm(f.pais_nacimiento),
+    pais_nacimiento_id: aValorForm(f.pais_nacimiento_id),
     tipo_nacionalizacion: aValorForm(f.tipo_nacionalizacion),
+    tipo_nacionalizacion_id: aValorForm(f.tipo_nacionalizacion_id),
     fecha_nacionalizacion: aValorForm(f.fecha_nacionalizacion),
     numero_gaceta_nacionalizacion: aValorForm(f.numero_gaceta_nacionalizacion),
     pais_origen: aValorForm(f.pais_origen),
+    pais_origen_id: aValorForm(f.pais_origen_id),
     idiomas: aValorForm(f.idiomas),
+    idiomas_ids: Array.isArray(f.idiomas_ids)
+      ? (f.idiomas_ids as number[])
+      : [],
 
     // Empleo
     tipo_personal: aValorForm(f.tipo_personal),
@@ -69,6 +75,7 @@ function inicializarDesde(
     es_voluntario: aValorBool(f.es_voluntario),
     institucion_formadora_id: aValorForm(f.institucion_formadora_id),
     licencia_conducir: aValorForm(f.licencia_conducir),
+    licencia_conducir_id: aValorForm(f.licencia_conducir_id),
     fecha_egreso: aValorForm(f.fecha_egreso),
     fecha_reintegro: aValorForm(f.fecha_reintegro),
     fecha_este: aValorForm(f.fecha_este),
@@ -83,6 +90,7 @@ function inicializarDesde(
     dependencia_id: aValorForm(f.dependencia_id),
     division_id: aValorForm(f.division_id),
     seccion: aValorForm(f.seccion),
+    seccion_id: aValorForm(f.seccion_id),
     horario: aValorForm(f.horario),
 
     // Contacto
@@ -93,6 +101,7 @@ function inicializarDesde(
     persona_contacto: aValorForm(f.persona_contacto),
     telefono_contacto: aValorForm(f.telefono_contacto),
     parentesco_contacto: aValorForm(f.parentesco_contacto),
+    parentesco_contacto_id: aValorForm(f.parentesco_contacto_id),
 
     // Domicilio: ya no vive en personal.funcionarios — se gestiona aparte
     // vía /funcionarios/{id}/direcciones (tabla personal.direcciones, 1:N).
@@ -215,11 +224,15 @@ export default function EditarForm({
         factor_sanguineo: data.factor_sanguineo,
         lugar_nacimiento: data.lugar_nacimiento,
         pais_nacimiento: data.pais_nacimiento,
+        pais_nacimiento_id: data.pais_nacimiento_id,
         tipo_nacionalizacion: data.tipo_nacionalizacion,
+        tipo_nacionalizacion_id: data.tipo_nacionalizacion_id,
         fecha_nacionalizacion: data.fecha_nacionalizacion,
         numero_gaceta_nacionalizacion: data.numero_gaceta_nacionalizacion,
         pais_origen: data.pais_origen,
+        pais_origen_id: data.pais_origen_id,
         idiomas: data.idiomas,
+        idiomas_ids: data.idiomas_ids,
 
         // Empleo
         tipo_personal: data.tipo_personal,
@@ -235,6 +248,7 @@ export default function EditarForm({
         es_voluntario: data.es_voluntario,
         institucion_formadora_id: data.institucion_formadora_id,
         licencia_conducir: data.licencia_conducir,
+        licencia_conducir_id: data.licencia_conducir_id,
         fecha_egreso: data.fecha_egreso,
         fecha_reintegro: data.fecha_reintegro,
         fecha_este: data.fecha_este,
@@ -247,6 +261,7 @@ export default function EditarForm({
         dependencia_id: data.dependencia_id,
         division_id: data.division_id,
         seccion: data.seccion,
+        seccion_id: data.seccion_id,
         horario: data.horario,
 
         // Contacto
@@ -257,6 +272,7 @@ export default function EditarForm({
         persona_contacto: data.persona_contacto,
         telefono_contacto: data.telefono_contacto,
         parentesco_contacto: data.parentesco_contacto,
+        parentesco_contacto_id: data.parentesco_contacto_id,
 
         // Domicilio: se gestiona aparte vía /funcionarios/{id}/direcciones.
 

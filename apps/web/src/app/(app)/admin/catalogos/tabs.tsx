@@ -44,6 +44,12 @@ const TABS: Tab[] = [
   { key: "estados", label: "Estados (Venezuela)", tieneActivo: true },
   { key: "municipios", label: "Municipios", tieneActivo: true },
   { key: "parroquias", label: "Parroquias", tieneActivo: true },
+  { key: "parentescos", label: "Parentescos", tieneActivo: true },
+  { key: "tipos-licencia", label: "Tipos de licencia", tieneActivo: true },
+  { key: "tipos-nacionalizacion", label: "Tipos de nacionalización", tieneActivo: true },
+  { key: "idiomas", label: "Idiomas", tieneActivo: true },
+  { key: "paises", label: "Países", tieneActivo: true },
+  { key: "secciones-funcionario", label: "Secciones (A/B/C/D)", tieneActivo: true },
 ];
 
 export default function CatalogosTabs({

@@ -3,9 +3,9 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { api } from "@/lib/api";
-import { hasAnyRole } from "@/lib/roles";
 import { formatDate } from "@/lib/utils";
 import { SectionShell, Card, EmptyState } from "./_shared";
+import type { NivelAcceso } from "@/lib/permisos-funcionario";
 
 interface Page<T> {
   items: T[];
@@ -48,6 +48,7 @@ interface Datos {
 interface Props {
   funcionarioId: number;
   userRoles: string[];
+  nivelAcceso: NivelAcceso;
 }
 
 const ESTATUS_BADGE: Record<string, string> = {
@@ -68,10 +69,11 @@ const fmtMoney = (v: number | null) =>
         maximumFractionDigits: 2,
       }).format(v);
 
-export default function SeccionBeneficios({ funcionarioId, userRoles }: Props) {
+export default function SeccionBeneficios({ funcionarioId, nivelAcceso }: Props) {
   const [data, setData] = useState<Datos | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const puedeCrear = hasAnyRole(userRoles, ["ADMIN", "RRHH"]);
+  const puedeCrear = nivelAcceso === "edit";
+  const soloLectura = nivelAcceso === "view";
 
   useEffect(() => {
     let alive = true;
@@ -102,7 +104,7 @@ export default function SeccionBeneficios({ funcionarioId, userRoles }: Props) {
 
   if (error) {
     return (
-      <SectionShell title="Beneficios">
+      <SectionShell title="Beneficios" soloLectura={soloLectura}>
         <div className="rounded-md bg-destructive/10 border border-destructive/30 p-4 text-sm text-destructive">
           {error}
         </div>
@@ -112,7 +114,7 @@ export default function SeccionBeneficios({ funcionarioId, userRoles }: Props) {
 
   if (!data) {
     return (
-      <SectionShell title="Beneficios">
+      <SectionShell title="Beneficios" soloLectura={soloLectura}>
         <p className="text-sm text-muted-foreground">Cargando…</p>
       </SectionShell>
     );
@@ -122,6 +124,7 @@ export default function SeccionBeneficios({ funcionarioId, userRoles }: Props) {
     <SectionShell
       title="Beneficios"
       description="Ayudas económicas y entregas recibidas por el funcionario."
+      soloLectura={soloLectura}
       actions={
         puedeCrear ? (
           <Link

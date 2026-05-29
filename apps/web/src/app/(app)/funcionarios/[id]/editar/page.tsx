@@ -33,6 +33,14 @@ export default async function EditarFuncionarioPage({
     throw e;
   }
 
+  // Idiomas (multi-select N:M) — endpoint independiente. Si falla, queda [].
+  try {
+    const idiomas_ids = await api.get<unknown>(`/funcionarios/${id}/idiomas`, token);
+    funcionario.idiomas_ids = Array.isArray(idiomas_ids) ? idiomas_ids : [];
+  } catch {
+    funcionario.idiomas_ids = [];
+  }
+
   let catalogos: CatalogosFuncionario = {
     jerarquias: [],
     cargos: [],
@@ -54,6 +62,12 @@ export default async function EditarFuncionarioPage({
     parroquias: [],
     tiposVivienda: [],
     tenenciasVivienda: [],
+    parentescos: [],
+    tiposLicencia: [],
+    tiposNacionalizacion: [],
+    idiomas: [],
+    paises: [],
+    seccionesFuncionario: [],
   };
   let camposCustom: Awaited<ReturnType<typeof listarCamposCustom>> = [];
   try {

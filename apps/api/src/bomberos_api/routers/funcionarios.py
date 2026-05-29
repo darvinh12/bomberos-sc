@@ -1,4 +1,5 @@
-from datetime import date
+from datetime import UTC, date, datetime
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, UploadFile, status
 from fastapi.responses import Response
@@ -394,6 +395,107 @@ async def _funcionario_o_404(db, funcionario_id: int) -> Funcionario:
 
 
 # =============================================================================
+# SOFT-DELETE — helpers compartidos por las 8 entidades del expediente
+# =============================================================================
+# Patrón único para no repetir 8 veces el mismo cuerpo de DELETE/restaurar.
+# El router decide la entidad y el nombre amigable; el helper aplica la lógica
+# (404, marca/limpia campos de auditoría, flush).
+
+
+async def _es_admin(db, user) -> bool:
+    """True si el usuario tiene el rol ADMIN. Necesario porque `?incluir_borrados`
+    y los endpoints de restaurar son operaciones reservadas a administradores."""
+    n = await db.scalar(
+        select(func.count())
+        .select_from(UsuarioRol)
+        .join(Rol, Rol.id == UsuarioRol.rol_id)
+        .where(UsuarioRol.usuario_id == user.id, Rol.codigo == "ADMIN")
+    )
+    return bool(n)
+
+
+async def _soft_delete(
+    db,
+    model: type[Any],
+    *,
+    rec_id: int,
+    funcionario_id: int,
+    user_id: int,
+    motivo: str,
+    nombre_entidad: str,
+) -> None:
+    """Marca un registro como borrado lógico.
+
+    Solo encuentra el registro si NO está ya borrado (idempotencia segura: un
+    DELETE sobre algo ya borrado devuelve 404 en vez de doble-marcar el motivo).
+    """
+    rec = await db.scalar(
+        select(model).where(
+            model.id == rec_id,
+            model.funcionario_id == funcionario_id,
+            model.deleted_at.is_(None),
+        )
+    )
+    if rec is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"{nombre_entidad} no encontrado",
+        )
+
+    rec.deleted_at = datetime.now(UTC)
+    rec.deleted_by = user_id
+    rec.delete_reason = motivo
+    await db.flush()
+
+
+async def _restaurar(
+    db,
+    model: type[Any],
+    *,
+    rec_id: int,
+    funcionario_id: int,
+    nombre_entidad: str,
+) -> Any:
+    """Restaura un registro soft-deleted limpiando los tres campos de auditoría.
+
+    Devuelve la instancia ORM refrescada para que el endpoint la serialice.
+    Solo encuentra registros efectivamente borrados; si está activo o no existe,
+    devuelve 404.
+    """
+    rec = await db.scalar(
+        select(model).where(
+            model.id == rec_id,
+            model.funcionario_id == funcionario_id,
+            model.deleted_at.is_not(None),
+        )
+    )
+    if rec is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"{nombre_entidad} borrado no encontrado",
+        )
+
+    rec.deleted_at = None
+    rec.deleted_by = None
+    rec.delete_reason = None
+    await db.flush()
+    await db.refresh(rec)
+    return rec
+
+
+def _aplicar_filtro_borrados(stmt, model: type[Any], es_admin: bool, incluir_borrados: bool):
+    """Aplica el filtro estándar por `deleted_at IS NULL`.
+
+    Regla: solo ADMIN puede ver borrados. Si el flag llega de un rol no-admin
+    se ignora silenciosamente (no levantamos 403 — devolvemos data válida pero
+    filtrada).
+    """
+    if incluir_borrados and es_admin:
+        return stmt
+    return stmt.where(model.deleted_at.is_(None))
+
+
+# =============================================================================
 # DIRECCIONES (1:N) — historial de domicilios del funcionario
 # =============================================================================
 
@@ -406,16 +508,16 @@ async def listar_direcciones(
     funcionario_id: int,
     db: DbSession,
     user: CurrentUser,
+    incluir_borrados: bool = Query(
+        default=False, description="Incluir direcciones soft-deleted (solo ADMIN)"
+    ),
 ) -> list[DireccionOut]:
     funcionario = await _funcionario_o_404(db, funcionario_id)
     await assert_scope_funcionario(db, user, funcionario)
-    rows = (
-        await db.execute(
-            select(Direccion)
-            .where(Direccion.funcionario_id == funcionario_id)
-            .order_by(Direccion.es_actual.desc(), Direccion.fecha_registro.desc())
-        )
-    ).scalars().all()
+    stmt = select(Direccion).where(Direccion.funcionario_id == funcionario_id)
+    stmt = _aplicar_filtro_borrados(stmt, Direccion, await _es_admin(db, user), incluir_borrados)
+    stmt = stmt.order_by(Direccion.es_actual.desc(), Direccion.fecha_registro.desc())
+    rows = (await db.execute(stmt)).scalars().all()
     return [DireccionOut.model_validate(r) for r in rows]
 
 
@@ -434,6 +536,7 @@ async def direccion_actual(
         select(Direccion).where(
             Direccion.funcionario_id == funcionario_id,
             Direccion.es_actual.is_(True),
+            Direccion.deleted_at.is_(None),
         )
     )
     return DireccionOut.model_validate(row) if row is not None else None
@@ -464,12 +567,15 @@ async def crear_direccion(
 
     # Si esta dirección será la actual, desmarcar todas las otras del mismo
     # funcionario para no romper el índice UNIQUE parcial ux_direcciones_actual.
+    # Filtramos por `deleted_at IS NULL` para no tocar registros borrados (no
+    # afectan el unique pero igual evitamos updates innecesarios).
     if es_actual:
         await db.execute(
             sql_update(Direccion)
             .where(
                 Direccion.funcionario_id == funcionario_id,
                 Direccion.es_actual.is_(True),
+                Direccion.deleted_at.is_(None),
             )
             .values(es_actual=False)
         )
@@ -510,6 +616,7 @@ async def actualizar_direccion(
         select(Direccion).where(
             Direccion.id == direccion_id,
             Direccion.funcionario_id == funcionario_id,
+            Direccion.deleted_at.is_(None),
         )
     )
     if direccion is None:
@@ -534,6 +641,7 @@ async def actualizar_direccion(
                 Direccion.funcionario_id == funcionario_id,
                 Direccion.es_actual.is_(True),
                 Direccion.id != direccion_id,
+                Direccion.deleted_at.is_(None),
             )
             .values(es_actual=False)
         )
@@ -563,24 +671,45 @@ async def borrar_direccion(
     direccion_id: int,
     db: DbSession,
     user: CurrentUser,
+    motivo: str = Query(..., min_length=3, description="Motivo del borrado lógico"),
 ) -> None:
     funcionario = await _funcionario_o_404(db, funcionario_id)
     await assert_scope_funcionario(db, user, funcionario)
     await _set_audit_ctx(db, user.id, _client_ip(request))
-
-    direccion = await db.scalar(
-        select(Direccion).where(
-            Direccion.id == direccion_id,
-            Direccion.funcionario_id == funcionario_id,
-        )
+    await _soft_delete(
+        db,
+        Direccion,
+        rec_id=direccion_id,
+        funcionario_id=funcionario_id,
+        user_id=user.id,
+        motivo=motivo,
+        nombre_entidad="Dirección",
     )
-    if direccion is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Dirección no encontrada"
-        )
 
-    await db.delete(direccion)
-    await db.flush()
+
+@router.post(
+    "/{funcionario_id}/direcciones/{direccion_id}/restaurar",
+    response_model=DireccionOut,
+    dependencies=[Depends(require_role("ADMIN"))],
+)
+async def restaurar_direccion(
+    request: Request,
+    funcionario_id: int,
+    direccion_id: int,
+    db: DbSession,
+    user: CurrentUser,
+) -> DireccionOut:
+    funcionario = await _funcionario_o_404(db, funcionario_id)
+    await assert_scope_funcionario(db, user, funcionario)
+    await _set_audit_ctx(db, user.id, _client_ip(request))
+    rec = await _restaurar(
+        db,
+        Direccion,
+        rec_id=direccion_id,
+        funcionario_id=funcionario_id,
+        nombre_entidad="Dirección",
+    )
+    return DireccionOut.model_validate(rec)
 
 
 @router.get("/{funcionario_id}/foto")
@@ -631,16 +760,18 @@ async def listar_carga_familiar(
     funcionario_id: int,
     db: DbSession,
     user: CurrentUser,
+    incluir_borrados: bool = Query(
+        default=False, description="Incluir registros soft-deleted (solo ADMIN)"
+    ),
 ) -> list[CargaFamiliarOut]:
     funcionario = await _funcionario_o_404(db, funcionario_id)
     await assert_scope_funcionario(db, user, funcionario)
-    rows = (
-        await db.execute(
-            select(CargaFamiliar)
-            .where(CargaFamiliar.funcionario_id == funcionario_id)
-            .order_by(CargaFamiliar.activo.desc(), CargaFamiliar.created_at.desc())
-        )
-    ).scalars().all()
+    stmt = select(CargaFamiliar).where(CargaFamiliar.funcionario_id == funcionario_id)
+    stmt = _aplicar_filtro_borrados(
+        stmt, CargaFamiliar, await _es_admin(db, user), incluir_borrados
+    )
+    stmt = stmt.order_by(CargaFamiliar.activo.desc(), CargaFamiliar.created_at.desc())
+    rows = (await db.execute(stmt)).scalars().all()
     return [CargaFamiliarOut.model_validate(r) for r in rows]
 
 
@@ -696,6 +827,7 @@ async def actualizar_carga_familiar(
         select(CargaFamiliar).where(
             CargaFamiliar.id == cf_id,
             CargaFamiliar.funcionario_id == funcionario_id,
+            CargaFamiliar.deleted_at.is_(None),
         )
     )
     if rec is None:
@@ -727,23 +859,45 @@ async def borrar_carga_familiar(
     cf_id: int,
     db: DbSession,
     user: CurrentUser,
+    motivo: str = Query(..., min_length=3, description="Motivo del borrado lógico"),
 ) -> None:
     funcionario = await _funcionario_o_404(db, funcionario_id)
     await assert_scope_funcionario(db, user, funcionario)
     await _set_audit_ctx(db, user.id, _client_ip(request))
-
-    rec = await db.scalar(
-        select(CargaFamiliar).where(
-            CargaFamiliar.id == cf_id,
-            CargaFamiliar.funcionario_id == funcionario_id,
-        )
+    await _soft_delete(
+        db,
+        CargaFamiliar,
+        rec_id=cf_id,
+        funcionario_id=funcionario_id,
+        user_id=user.id,
+        motivo=motivo,
+        nombre_entidad="Carga familiar",
     )
-    if rec is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Carga familiar no encontrada"
-        )
-    await db.delete(rec)
-    await db.flush()
+
+
+@router.post(
+    "/{funcionario_id}/carga-familiar/{cf_id}/restaurar",
+    response_model=CargaFamiliarOut,
+    dependencies=[Depends(require_role("ADMIN"))],
+)
+async def restaurar_carga_familiar(
+    request: Request,
+    funcionario_id: int,
+    cf_id: int,
+    db: DbSession,
+    user: CurrentUser,
+) -> CargaFamiliarOut:
+    funcionario = await _funcionario_o_404(db, funcionario_id)
+    await assert_scope_funcionario(db, user, funcionario)
+    await _set_audit_ctx(db, user.id, _client_ip(request))
+    rec = await _restaurar(
+        db,
+        CargaFamiliar,
+        rec_id=cf_id,
+        funcionario_id=funcionario_id,
+        nombre_entidad="Carga familiar",
+    )
+    return CargaFamiliarOut.model_validate(rec)
 
 
 # =============================================================================
@@ -759,16 +913,20 @@ async def listar_historico_jerarquias(
     funcionario_id: int,
     db: DbSession,
     user: CurrentUser,
+    incluir_borrados: bool = Query(
+        default=False, description="Incluir registros soft-deleted (solo ADMIN)"
+    ),
 ) -> list[HistoricoJerarquiaOut]:
     funcionario = await _funcionario_o_404(db, funcionario_id)
     await assert_scope_funcionario(db, user, funcionario)
-    rows = (
-        await db.execute(
-            select(HistoricoJerarquia)
-            .where(HistoricoJerarquia.funcionario_id == funcionario_id)
-            .order_by(HistoricoJerarquia.fecha_inicio.desc())
-        )
-    ).scalars().all()
+    stmt = select(HistoricoJerarquia).where(
+        HistoricoJerarquia.funcionario_id == funcionario_id
+    )
+    stmt = _aplicar_filtro_borrados(
+        stmt, HistoricoJerarquia, await _es_admin(db, user), incluir_borrados
+    )
+    stmt = stmt.order_by(HistoricoJerarquia.fecha_inicio.desc())
+    rows = (await db.execute(stmt)).scalars().all()
     return [HistoricoJerarquiaOut.model_validate(r) for r in rows]
 
 
@@ -825,6 +983,7 @@ async def actualizar_historico_jerarquia(
         select(HistoricoJerarquia).where(
             HistoricoJerarquia.id == hist_id,
             HistoricoJerarquia.funcionario_id == funcionario_id,
+            HistoricoJerarquia.deleted_at.is_(None),
         )
     )
     if rec is None:
@@ -856,24 +1015,45 @@ async def borrar_historico_jerarquia(
     hist_id: int,
     db: DbSession,
     user: CurrentUser,
+    motivo: str = Query(..., min_length=3, description="Motivo del borrado lógico"),
 ) -> None:
     funcionario = await _funcionario_o_404(db, funcionario_id)
     await assert_scope_funcionario(db, user, funcionario)
     await _set_audit_ctx(db, user.id, _client_ip(request))
-
-    rec = await db.scalar(
-        select(HistoricoJerarquia).where(
-            HistoricoJerarquia.id == hist_id,
-            HistoricoJerarquia.funcionario_id == funcionario_id,
-        )
+    await _soft_delete(
+        db,
+        HistoricoJerarquia,
+        rec_id=hist_id,
+        funcionario_id=funcionario_id,
+        user_id=user.id,
+        motivo=motivo,
+        nombre_entidad="Registro histórico",
     )
-    if rec is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Registro histórico no encontrado",
-        )
-    await db.delete(rec)
-    await db.flush()
+
+
+@router.post(
+    "/{funcionario_id}/historico-jerarquias/{hist_id}/restaurar",
+    response_model=HistoricoJerarquiaOut,
+    dependencies=[Depends(require_role("ADMIN"))],
+)
+async def restaurar_historico_jerarquia(
+    request: Request,
+    funcionario_id: int,
+    hist_id: int,
+    db: DbSession,
+    user: CurrentUser,
+) -> HistoricoJerarquiaOut:
+    funcionario = await _funcionario_o_404(db, funcionario_id)
+    await assert_scope_funcionario(db, user, funcionario)
+    await _set_audit_ctx(db, user.id, _client_ip(request))
+    rec = await _restaurar(
+        db,
+        HistoricoJerarquia,
+        rec_id=hist_id,
+        funcionario_id=funcionario_id,
+        nombre_entidad="Registro histórico",
+    )
+    return HistoricoJerarquiaOut.model_validate(rec)
 
 
 # =============================================================================
@@ -889,16 +1069,20 @@ async def listar_historico_ubicaciones(
     funcionario_id: int,
     db: DbSession,
     user: CurrentUser,
+    incluir_borrados: bool = Query(
+        default=False, description="Incluir registros soft-deleted (solo ADMIN)"
+    ),
 ) -> list[HistoricoUbicacionOut]:
     funcionario = await _funcionario_o_404(db, funcionario_id)
     await assert_scope_funcionario(db, user, funcionario)
-    rows = (
-        await db.execute(
-            select(HistoricoUbicacion)
-            .where(HistoricoUbicacion.funcionario_id == funcionario_id)
-            .order_by(HistoricoUbicacion.fecha_inicio.desc())
-        )
-    ).scalars().all()
+    stmt = select(HistoricoUbicacion).where(
+        HistoricoUbicacion.funcionario_id == funcionario_id
+    )
+    stmt = _aplicar_filtro_borrados(
+        stmt, HistoricoUbicacion, await _es_admin(db, user), incluir_borrados
+    )
+    stmt = stmt.order_by(HistoricoUbicacion.fecha_inicio.desc())
+    rows = (await db.execute(stmt)).scalars().all()
     return [HistoricoUbicacionOut.model_validate(r) for r in rows]
 
 
@@ -955,6 +1139,7 @@ async def actualizar_historico_ubicacion(
         select(HistoricoUbicacion).where(
             HistoricoUbicacion.id == hist_id,
             HistoricoUbicacion.funcionario_id == funcionario_id,
+            HistoricoUbicacion.deleted_at.is_(None),
         )
     )
     if rec is None:
@@ -986,24 +1171,45 @@ async def borrar_historico_ubicacion(
     hist_id: int,
     db: DbSession,
     user: CurrentUser,
+    motivo: str = Query(..., min_length=3, description="Motivo del borrado lógico"),
 ) -> None:
     funcionario = await _funcionario_o_404(db, funcionario_id)
     await assert_scope_funcionario(db, user, funcionario)
     await _set_audit_ctx(db, user.id, _client_ip(request))
-
-    rec = await db.scalar(
-        select(HistoricoUbicacion).where(
-            HistoricoUbicacion.id == hist_id,
-            HistoricoUbicacion.funcionario_id == funcionario_id,
-        )
+    await _soft_delete(
+        db,
+        HistoricoUbicacion,
+        rec_id=hist_id,
+        funcionario_id=funcionario_id,
+        user_id=user.id,
+        motivo=motivo,
+        nombre_entidad="Registro histórico",
     )
-    if rec is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Registro histórico no encontrado",
-        )
-    await db.delete(rec)
-    await db.flush()
+
+
+@router.post(
+    "/{funcionario_id}/historico-ubicaciones/{hist_id}/restaurar",
+    response_model=HistoricoUbicacionOut,
+    dependencies=[Depends(require_role("ADMIN"))],
+)
+async def restaurar_historico_ubicacion(
+    request: Request,
+    funcionario_id: int,
+    hist_id: int,
+    db: DbSession,
+    user: CurrentUser,
+) -> HistoricoUbicacionOut:
+    funcionario = await _funcionario_o_404(db, funcionario_id)
+    await assert_scope_funcionario(db, user, funcionario)
+    await _set_audit_ctx(db, user.id, _client_ip(request))
+    rec = await _restaurar(
+        db,
+        HistoricoUbicacion,
+        rec_id=hist_id,
+        funcionario_id=funcionario_id,
+        nombre_entidad="Registro histórico",
+    )
+    return HistoricoUbicacionOut.model_validate(rec)
 
 
 # =============================================================================
@@ -1019,16 +1225,20 @@ async def listar_tiempo_admpublica(
     funcionario_id: int,
     db: DbSession,
     user: CurrentUser,
+    incluir_borrados: bool = Query(
+        default=False, description="Incluir registros soft-deleted (solo ADMIN)"
+    ),
 ) -> list[TiempoAdmPublicaOut]:
     funcionario = await _funcionario_o_404(db, funcionario_id)
     await assert_scope_funcionario(db, user, funcionario)
-    rows = (
-        await db.execute(
-            select(TiempoAdmPublica)
-            .where(TiempoAdmPublica.funcionario_id == funcionario_id)
-            .order_by(TiempoAdmPublica.fecha_inicio.desc())
-        )
-    ).scalars().all()
+    stmt = select(TiempoAdmPublica).where(
+        TiempoAdmPublica.funcionario_id == funcionario_id
+    )
+    stmt = _aplicar_filtro_borrados(
+        stmt, TiempoAdmPublica, await _es_admin(db, user), incluir_borrados
+    )
+    stmt = stmt.order_by(TiempoAdmPublica.fecha_inicio.desc())
+    rows = (await db.execute(stmt)).scalars().all()
     return [TiempoAdmPublicaOut.model_validate(r) for r in rows]
 
 
@@ -1085,6 +1295,7 @@ async def actualizar_tiempo_admpublica(
         select(TiempoAdmPublica).where(
             TiempoAdmPublica.id == tap_id,
             TiempoAdmPublica.funcionario_id == funcionario_id,
+            TiempoAdmPublica.deleted_at.is_(None),
         )
     )
     if rec is None:
@@ -1115,23 +1326,45 @@ async def borrar_tiempo_admpublica(
     tap_id: int,
     db: DbSession,
     user: CurrentUser,
+    motivo: str = Query(..., min_length=3, description="Motivo del borrado lógico"),
 ) -> None:
     funcionario = await _funcionario_o_404(db, funcionario_id)
     await assert_scope_funcionario(db, user, funcionario)
     await _set_audit_ctx(db, user.id, _client_ip(request))
-
-    rec = await db.scalar(
-        select(TiempoAdmPublica).where(
-            TiempoAdmPublica.id == tap_id,
-            TiempoAdmPublica.funcionario_id == funcionario_id,
-        )
+    await _soft_delete(
+        db,
+        TiempoAdmPublica,
+        rec_id=tap_id,
+        funcionario_id=funcionario_id,
+        user_id=user.id,
+        motivo=motivo,
+        nombre_entidad="Registro",
     )
-    if rec is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Registro no encontrado"
-        )
-    await db.delete(rec)
-    await db.flush()
+
+
+@router.post(
+    "/{funcionario_id}/tiempo-admpublica/{tap_id}/restaurar",
+    response_model=TiempoAdmPublicaOut,
+    dependencies=[Depends(require_role("ADMIN"))],
+)
+async def restaurar_tiempo_admpublica(
+    request: Request,
+    funcionario_id: int,
+    tap_id: int,
+    db: DbSession,
+    user: CurrentUser,
+) -> TiempoAdmPublicaOut:
+    funcionario = await _funcionario_o_404(db, funcionario_id)
+    await assert_scope_funcionario(db, user, funcionario)
+    await _set_audit_ctx(db, user.id, _client_ip(request))
+    rec = await _restaurar(
+        db,
+        TiempoAdmPublica,
+        rec_id=tap_id,
+        funcionario_id=funcionario_id,
+        nombre_entidad="Registro",
+    )
+    return TiempoAdmPublicaOut.model_validate(rec)
 
 
 # =============================================================================
@@ -1147,16 +1380,18 @@ async def listar_habilidades(
     funcionario_id: int,
     db: DbSession,
     user: CurrentUser,
+    incluir_borrados: bool = Query(
+        default=False, description="Incluir registros soft-deleted (solo ADMIN)"
+    ),
 ) -> list[HabilidadOut]:
     funcionario = await _funcionario_o_404(db, funcionario_id)
     await assert_scope_funcionario(db, user, funcionario)
-    rows = (
-        await db.execute(
-            select(Habilidad)
-            .where(Habilidad.funcionario_id == funcionario_id)
-            .order_by(Habilidad.grupo, Habilidad.nombre)
-        )
-    ).scalars().all()
+    stmt = select(Habilidad).where(Habilidad.funcionario_id == funcionario_id)
+    stmt = _aplicar_filtro_borrados(
+        stmt, Habilidad, await _es_admin(db, user), incluir_borrados
+    )
+    stmt = stmt.order_by(Habilidad.grupo, Habilidad.nombre)
+    rows = (await db.execute(stmt)).scalars().all()
     return [HabilidadOut.model_validate(r) for r in rows]
 
 
@@ -1211,6 +1446,7 @@ async def actualizar_habilidad(
         select(Habilidad).where(
             Habilidad.id == hab_id,
             Habilidad.funcionario_id == funcionario_id,
+            Habilidad.deleted_at.is_(None),
         )
     )
     if rec is None:
@@ -1241,23 +1477,45 @@ async def borrar_habilidad(
     hab_id: int,
     db: DbSession,
     user: CurrentUser,
+    motivo: str = Query(..., min_length=3, description="Motivo del borrado lógico"),
 ) -> None:
     funcionario = await _funcionario_o_404(db, funcionario_id)
     await assert_scope_funcionario(db, user, funcionario)
     await _set_audit_ctx(db, user.id, _client_ip(request))
-
-    rec = await db.scalar(
-        select(Habilidad).where(
-            Habilidad.id == hab_id,
-            Habilidad.funcionario_id == funcionario_id,
-        )
+    await _soft_delete(
+        db,
+        Habilidad,
+        rec_id=hab_id,
+        funcionario_id=funcionario_id,
+        user_id=user.id,
+        motivo=motivo,
+        nombre_entidad="Habilidad",
     )
-    if rec is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Habilidad no encontrada"
-        )
-    await db.delete(rec)
-    await db.flush()
+
+
+@router.post(
+    "/{funcionario_id}/habilidades/{hab_id}/restaurar",
+    response_model=HabilidadOut,
+    dependencies=[Depends(require_role("ADMIN"))],
+)
+async def restaurar_habilidad(
+    request: Request,
+    funcionario_id: int,
+    hab_id: int,
+    db: DbSession,
+    user: CurrentUser,
+) -> HabilidadOut:
+    funcionario = await _funcionario_o_404(db, funcionario_id)
+    await assert_scope_funcionario(db, user, funcionario)
+    await _set_audit_ctx(db, user.id, _client_ip(request))
+    rec = await _restaurar(
+        db,
+        Habilidad,
+        rec_id=hab_id,
+        funcionario_id=funcionario_id,
+        nombre_entidad="Habilidad",
+    )
+    return HabilidadOut.model_validate(rec)
 
 
 # =============================================================================
@@ -1273,16 +1531,20 @@ async def listar_actividades(
     funcionario_id: int,
     db: DbSession,
     user: CurrentUser,
+    incluir_borrados: bool = Query(
+        default=False, description="Incluir registros soft-deleted (solo ADMIN)"
+    ),
 ) -> list[ActividadOut]:
     funcionario = await _funcionario_o_404(db, funcionario_id)
     await assert_scope_funcionario(db, user, funcionario)
-    rows = (
-        await db.execute(
-            select(Actividad)
-            .where(Actividad.funcionario_id == funcionario_id)
-            .order_by(Actividad.activo.desc(), Actividad.fecha_inicio.desc().nullslast())
-        )
-    ).scalars().all()
+    stmt = select(Actividad).where(Actividad.funcionario_id == funcionario_id)
+    stmt = _aplicar_filtro_borrados(
+        stmt, Actividad, await _es_admin(db, user), incluir_borrados
+    )
+    stmt = stmt.order_by(
+        Actividad.activo.desc(), Actividad.fecha_inicio.desc().nullslast()
+    )
+    rows = (await db.execute(stmt)).scalars().all()
     return [ActividadOut.model_validate(r) for r in rows]
 
 
@@ -1337,6 +1599,7 @@ async def actualizar_actividad(
         select(Actividad).where(
             Actividad.id == act_id,
             Actividad.funcionario_id == funcionario_id,
+            Actividad.deleted_at.is_(None),
         )
     )
     if rec is None:
@@ -1367,23 +1630,45 @@ async def borrar_actividad(
     act_id: int,
     db: DbSession,
     user: CurrentUser,
+    motivo: str = Query(..., min_length=3, description="Motivo del borrado lógico"),
 ) -> None:
     funcionario = await _funcionario_o_404(db, funcionario_id)
     await assert_scope_funcionario(db, user, funcionario)
     await _set_audit_ctx(db, user.id, _client_ip(request))
-
-    rec = await db.scalar(
-        select(Actividad).where(
-            Actividad.id == act_id,
-            Actividad.funcionario_id == funcionario_id,
-        )
+    await _soft_delete(
+        db,
+        Actividad,
+        rec_id=act_id,
+        funcionario_id=funcionario_id,
+        user_id=user.id,
+        motivo=motivo,
+        nombre_entidad="Actividad",
     )
-    if rec is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Actividad no encontrada"
-        )
-    await db.delete(rec)
-    await db.flush()
+
+
+@router.post(
+    "/{funcionario_id}/actividades/{act_id}/restaurar",
+    response_model=ActividadOut,
+    dependencies=[Depends(require_role("ADMIN"))],
+)
+async def restaurar_actividad(
+    request: Request,
+    funcionario_id: int,
+    act_id: int,
+    db: DbSession,
+    user: CurrentUser,
+) -> ActividadOut:
+    funcionario = await _funcionario_o_404(db, funcionario_id)
+    await assert_scope_funcionario(db, user, funcionario)
+    await _set_audit_ctx(db, user.id, _client_ip(request))
+    rec = await _restaurar(
+        db,
+        Actividad,
+        rec_id=act_id,
+        funcionario_id=funcionario_id,
+        nombre_entidad="Actividad",
+    )
+    return ActividadOut.model_validate(rec)
 
 
 # =============================================================================
@@ -1410,12 +1695,18 @@ async def listar_carnets(
     db: DbSession,
     user: CurrentUser,
     incluir_inactivos: bool = Query(default=False),
+    incluir_borrados: bool = Query(
+        default=False, description="Incluir registros soft-deleted (solo ADMIN)"
+    ),
 ) -> list[CarnetOut]:
     funcionario = await _funcionario_o_404(db, funcionario_id)
     await assert_scope_funcionario(db, user, funcionario)
     stmt = select(Carnet).where(Carnet.funcionario_id == funcionario_id)
     if not incluir_inactivos:
         stmt = stmt.where(Carnet.activo.is_(True))
+    stmt = _aplicar_filtro_borrados(
+        stmt, Carnet, await _es_admin(db, user), incluir_borrados
+    )
     stmt = stmt.order_by(Carnet.activo.desc(), Carnet.created_at.desc())
     rows = (await db.execute(stmt)).scalars().all()
     return [CarnetOut.model_validate(r) for r in rows]
@@ -1489,6 +1780,7 @@ async def actualizar_carnet(
         select(Carnet).where(
             Carnet.id == cn_id,
             Carnet.funcionario_id == funcionario_id,
+            Carnet.deleted_at.is_(None),
         )
     )
     if rec is None:
@@ -1542,23 +1834,45 @@ async def borrar_carnet(
     cn_id: int,
     db: DbSession,
     user: CurrentUser,
+    motivo: str = Query(..., min_length=3, description="Motivo del borrado lógico"),
 ) -> None:
     funcionario = await _funcionario_o_404(db, funcionario_id)
     await assert_scope_funcionario(db, user, funcionario)
     await _set_audit_ctx(db, user.id, _client_ip(request))
-
-    rec = await db.scalar(
-        select(Carnet).where(
-            Carnet.id == cn_id,
-            Carnet.funcionario_id == funcionario_id,
-        )
+    await _soft_delete(
+        db,
+        Carnet,
+        rec_id=cn_id,
+        funcionario_id=funcionario_id,
+        user_id=user.id,
+        motivo=motivo,
+        nombre_entidad="Carnet",
     )
-    if rec is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Carnet no encontrado"
-        )
-    await db.delete(rec)
-    await db.flush()
+
+
+@router.post(
+    "/{funcionario_id}/carnets/{cn_id}/restaurar",
+    response_model=CarnetOut,
+    dependencies=[Depends(require_role("ADMIN"))],
+)
+async def restaurar_carnet(
+    request: Request,
+    funcionario_id: int,
+    cn_id: int,
+    db: DbSession,
+    user: CurrentUser,
+) -> CarnetOut:
+    funcionario = await _funcionario_o_404(db, funcionario_id)
+    await assert_scope_funcionario(db, user, funcionario)
+    await _set_audit_ctx(db, user.id, _client_ip(request))
+    rec = await _restaurar(
+        db,
+        Carnet,
+        rec_id=cn_id,
+        funcionario_id=funcionario_id,
+        nombre_entidad="Carnet",
+    )
+    return CarnetOut.model_validate(rec)
 
 
 @router.get(
@@ -1577,11 +1891,17 @@ async def listar_historico_carnets(
     """
     funcionario = await _funcionario_o_404(db, funcionario_id)
     await assert_scope_funcionario(db, user, funcionario)
+    # Excluimos historicos cuyo carnet padre fue soft-deleted: el registro no
+    # se borra (append-only), pero el frontend no debería listarlos cuando el
+    # carnet asociado está en papelera.
     rows = (
         await db.execute(
             select(HistoricoCarnet)
             .join(Carnet, Carnet.id == HistoricoCarnet.carnet_id)
-            .where(Carnet.funcionario_id == funcionario_id)
+            .where(
+                Carnet.funcionario_id == funcionario_id,
+                Carnet.deleted_at.is_(None),
+            )
             .order_by(HistoricoCarnet.fecha.desc(), HistoricoCarnet.id.desc())
         )
     ).scalars().all()
@@ -1770,3 +2090,65 @@ async def obtener_firma(
         ) from e
 
     return Response(content=data, media_type=content_type)
+
+
+# =============================================================================
+# Idiomas (relación N:M vía personal.funcionario_idiomas)
+# =============================================================================
+
+
+@router.get("/{funcionario_id}/idiomas", response_model=list[int])
+async def listar_idiomas_funcionario(
+    funcionario_id: int, db: DbSession, user: CurrentUser
+) -> list[int]:
+    """Devuelve los IDs de idioma asignados al funcionario."""
+    funcionario = await db.scalar(
+        select(Funcionario).where(Funcionario.id == funcionario_id)
+    )
+    if funcionario is None:
+        raise HTTPException(status_code=404, detail="Funcionario no encontrado")
+    await assert_scope_funcionario(db, user, funcionario)
+    rows = await db.execute(
+        text(
+            "SELECT idioma_id FROM personal.funcionario_idiomas "
+            "WHERE funcionario_id = :fid ORDER BY idioma_id"
+        ).bindparams(fid=funcionario_id)
+    )
+    return [r[0] for r in rows.all()]
+
+
+@router.put("/{funcionario_id}/idiomas", response_model=list[int])
+async def reemplazar_idiomas_funcionario(
+    funcionario_id: int,
+    payload: list[int],
+    db: DbSession,
+    user: CurrentUser,
+) -> list[int]:
+    """Reemplaza el set completo de idiomas del funcionario."""
+    funcionario = await db.scalar(
+        select(Funcionario).where(Funcionario.id == funcionario_id)
+    )
+    if funcionario is None:
+        raise HTTPException(status_code=404, detail="Funcionario no encontrado")
+    await assert_scope_funcionario(db, user, funcionario)
+    await db.execute(
+        text("DELETE FROM personal.funcionario_idiomas WHERE funcionario_id = :fid")
+        .bindparams(fid=funcionario_id)
+    )
+    seen: set[int] = set()
+    for idioma_id in payload:
+        if idioma_id in seen:
+            continue
+        seen.add(idioma_id)
+        try:
+            await db.execute(
+                text(
+                    "INSERT INTO personal.funcionario_idiomas (funcionario_id, idioma_id) "
+                    "VALUES (:fid, :iid) ON CONFLICT DO NOTHING"
+                ).bindparams(fid=funcionario_id, iid=idioma_id)
+            )
+        except IntegrityError as e:
+            raise HTTPException(
+                status_code=400, detail=f"Idioma {idioma_id} inválido"
+            ) from e
+    return sorted(seen)

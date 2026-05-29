@@ -69,7 +69,12 @@ class DireccionUpdate(_DireccionBase):
 
 
 class DireccionOut(_DireccionBase):
-    """Salida completa de una dirección."""
+    """Salida completa de una dirección.
+
+    Incluye los campos de soft-delete (siempre nulos en items activos). Cuando
+    el cliente pide `?incluir_borrados=true` (solo ADMIN) pueden venir poblados
+    para que la UI de papelera muestre quién y por qué eliminó la dirección.
+    """
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -79,3 +84,6 @@ class DireccionOut(_DireccionBase):
     fecha_registro: date
     created_at: datetime
     updated_at: datetime
+    deleted_at: datetime | None = None
+    deleted_by: int | None = None
+    delete_reason: str | None = None

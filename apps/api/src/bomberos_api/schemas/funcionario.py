@@ -36,11 +36,14 @@ class FuncionarioDetail(FuncionarioListItem):
     pais_nacimiento: str | None = None
 
     # Nacionalización
-    tipo_nacionalizacion: str | None = None
+    tipo_nacionalizacion: str | None = None  # legacy string
+    tipo_nacionalizacion_id: int | None = None
     fecha_nacionalizacion: date | None = None
     numero_gaceta_nacionalizacion: str | None = None
-    pais_origen: str | None = None
-    idiomas: str | None = None
+    pais_origen: str | None = None  # legacy string
+    pais_origen_id: int | None = None
+    pais_nacimiento_id: int | None = None
+    idiomas: str | None = None  # legacy CSV (los nuevos van por pivote)
 
     # Empleo
     tipo_personal: str
@@ -53,12 +56,14 @@ class FuncionarioDetail(FuncionarioListItem):
     fecha_reintegro: date | None = None
     fecha_este: date | None = None
     fecha_ingreso_gdf: date | None = None
+    licencia_conducir_id: int | None = None
 
     # Ubicación administrativa
     area_id: int | None
     dependencia_id: int | None
     division_id: int | None
-    seccion: str | None
+    seccion: str | None  # legacy CHAR(1)
+    seccion_id: int | None = None
     horario: str | None
 
     # Domicilio: NO se expone aquí. Se consulta vía
@@ -72,7 +77,8 @@ class FuncionarioDetail(FuncionarioListItem):
     correo: EmailStr | None = None
     persona_contacto: str | None = None
     telefono_contacto: str | None = None
-    parentesco_contacto: str | None = None
+    parentesco_contacto: str | None = None  # legacy string
+    parentesco_contacto_id: int | None = None
 
     # Educación
     nivel_educativo_id: int | None
@@ -80,7 +86,7 @@ class FuncionarioDetail(FuncionarioListItem):
     especialidad_id: int | None
     iutb: bool
     egresado_unes: bool
-    licencia_conducir: str | None = None
+    licencia_conducir: str | None = None  # legacy string
     factor_sanguineo: str | None = None
 
     # Misceláneos
@@ -115,11 +121,14 @@ class _FuncionarioBase(BaseModel):
     pais_nacimiento: str | None = Field(default=None, max_length=80)
 
     # Nacionalización
-    tipo_nacionalizacion: str | None = Field(default=None, max_length=40)
+    tipo_nacionalizacion: str | None = Field(default=None, max_length=40)  # legacy
+    tipo_nacionalizacion_id: int | None = None
     fecha_nacionalizacion: date | None = None
     numero_gaceta_nacionalizacion: str | None = Field(default=None, max_length=50)
-    pais_origen: str | None = Field(default=None, max_length=80)
-    idiomas: str | None = Field(default=None, max_length=200)
+    pais_origen: str | None = Field(default=None, max_length=80)  # legacy
+    pais_origen_id: int | None = None
+    pais_nacimiento_id: int | None = None
+    idiomas: str | None = Field(default=None, max_length=200)  # legacy CSV
 
     # Empleo
     tipo_personal: str | None = Field(default=None, max_length=40)
@@ -144,7 +153,8 @@ class _FuncionarioBase(BaseModel):
     area_id: int | None = None
     dependencia_id: int | None = None
     division_id: int | None = None
-    seccion: str | None = Field(default=None, max_length=1)
+    seccion: str | None = Field(default=None, max_length=1)  # legacy
+    seccion_id: int | None = None
     horario: str | None = Field(default=None, max_length=80)
 
     # Domicilio: NO va en este schema. Se gestiona vía
@@ -157,7 +167,8 @@ class _FuncionarioBase(BaseModel):
     correo: EmailStr | None = None
     persona_contacto: str | None = Field(default=None, max_length=120)
     telefono_contacto: str | None = Field(default=None, max_length=30)
-    parentesco_contacto: str | None = Field(default=None, max_length=40)
+    parentesco_contacto: str | None = Field(default=None, max_length=40)  # legacy
+    parentesco_contacto_id: int | None = None
 
     # Educación
     nivel_educativo_id: int | None = None
@@ -166,7 +177,8 @@ class _FuncionarioBase(BaseModel):
     iutb: bool | None = None
     egresado_unes: bool | None = None
     merito: float | None = Field(default=None, ge=0, le=100)
-    licencia_conducir: str | None = Field(default=None, max_length=20)
+    licencia_conducir: str | None = Field(default=None, max_length=20)  # legacy
+    licencia_conducir_id: int | None = None
     factor_sanguineo: str | None = Field(default=None, max_length=15)
 
     # Observaciones

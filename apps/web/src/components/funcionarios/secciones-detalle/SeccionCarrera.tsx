@@ -2,11 +2,22 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Check, X } from "lucide-react";
+import { Check, Trash2, X } from "lucide-react";
 import { api } from "@/lib/api";
-import { hasAnyRole } from "@/lib/roles";
 import { formatDate } from "@/lib/utils";
+import ConfirmarBorrado from "../ConfirmarBorrado";
+import {
+  borrarHistoricoJerarquia,
+  borrarHistoricoUbicacion,
+  borrarTiempoAdmPublica,
+} from "./actions";
 import { SectionShell, Card, EmptyState } from "./_shared";
+import type { NivelAcceso } from "@/lib/permisos-funcionario";
+
+type ObjetivoBorrado =
+  | { tipo: "hjerarquia"; id: number; etiqueta: string }
+  | { tipo: "hubicacion"; id: number; etiqueta: string }
+  | { tipo: "tap"; id: number; etiqueta: string };
 
 interface Page<T> {
   items: T[];
@@ -122,13 +133,55 @@ interface Datos {
 interface Props {
   funcionarioId: number;
   userRoles: string[];
+  nivelAcceso: NivelAcceso;
 }
 
-export default function SeccionCarrera({ funcionarioId, userRoles }: Props) {
+export default function SeccionCarrera({ funcionarioId, nivelAcceso }: Props) {
   const [data, setData] = useState<Datos | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const puedeCrearAscenso = hasAnyRole(userRoles, ["ADMIN", "RRHH"]);
-  const puedeCrearCurso = hasAnyRole(userRoles, ["ADMIN", "RRHH", "SUPERVISOR"]);
+  const [borrando, setBorrando] = useState<ObjetivoBorrado | null>(null);
+  const puedeEditar = nivelAcceso === "edit";
+  const soloLectura = nivelAcceso === "view";
+
+  async function ejecutarBorrado(
+    objetivo: ObjetivoBorrado,
+    motivo: string,
+  ): Promise<void> {
+    let res;
+    if (objetivo.tipo === "hjerarquia") {
+      res = await borrarHistoricoJerarquia(funcionarioId, objetivo.id, motivo);
+    } else if (objetivo.tipo === "hubicacion") {
+      res = await borrarHistoricoUbicacion(funcionarioId, objetivo.id, motivo);
+    } else {
+      res = await borrarTiempoAdmPublica(funcionarioId, objetivo.id, motivo);
+    }
+    if (!res.ok) throw new Error(res.error);
+    setData((prev) => {
+      if (prev === null) return prev;
+      if (objetivo.tipo === "hjerarquia") {
+        return {
+          ...prev,
+          historicoJerarquias: prev.historicoJerarquias.filter(
+            (h) => h.id !== objetivo.id,
+          ),
+        };
+      }
+      if (objetivo.tipo === "hubicacion") {
+        return {
+          ...prev,
+          historicoUbicaciones: prev.historicoUbicaciones.filter(
+            (u) => u.id !== objetivo.id,
+          ),
+        };
+      }
+      return {
+        ...prev,
+        tiempoAdmPublica: prev.tiempoAdmPublica.filter(
+          (t) => t.id !== objetivo.id,
+        ),
+      };
+    });
+  }
 
   useEffect(() => {
     let alive = true;
@@ -199,7 +252,7 @@ export default function SeccionCarrera({ funcionarioId, userRoles }: Props) {
 
   if (error) {
     return (
-      <SectionShell title="Carrera">
+      <SectionShell title="Carrera" soloLectura={soloLectura}>
         <div
           role="alert"
           className="rounded-md bg-destructive/10 border border-destructive/30 p-4 text-sm text-destructive"
@@ -212,7 +265,7 @@ export default function SeccionCarrera({ funcionarioId, userRoles }: Props) {
 
   if (!data) {
     return (
-      <SectionShell title="Carrera">
+      <SectionShell title="Carrera" soloLectura={soloLectura}>
         <p className="text-sm text-muted-foreground">Cargando…</p>
       </SectionShell>
     );
@@ -225,6 +278,7 @@ export default function SeccionCarrera({ funcionarioId, userRoles }: Props) {
     <SectionShell
       title="Carrera"
       description="Ascensos, cursos, evaluaciones, reconocimientos y méritos del funcionario."
+      soloLectura={soloLectura}
     >
       <Card title="Ascensos">
         {data.ascensos.length === 0 ? (
@@ -253,7 +307,7 @@ export default function SeccionCarrera({ funcionarioId, userRoles }: Props) {
             </table>
           </div>
         )}
-        {puedeCrearAscenso && data.ascensos.length > 0 && (
+        {puedeEditar && data.ascensos.length > 0 && (
           <div className="mt-3 text-right">
             <Link
               href={`/carrera/ascensos/nuevo?funcionario_id=${funcionarioId}`}
@@ -306,7 +360,7 @@ export default function SeccionCarrera({ funcionarioId, userRoles }: Props) {
             </table>
           </div>
         )}
-        {puedeCrearCurso && data.cursos.length > 0 && (
+        {puedeEditar && data.cursos.length > 0 && (
           <div className="mt-3 text-right">
             <Link
               href={`/carrera/cursos/nuevo?funcionario_id=${funcionarioId}`}
@@ -442,6 +496,9 @@ export default function SeccionCarrera({ funcionarioId, userRoles }: Props) {
                   <th scope="col" className="text-left p-2 font-medium">Decreto / Oficio</th>
                   <th scope="col" className="text-left p-2 font-medium">Efectiva nómina</th>
                   <th scope="col" className="text-left p-2 font-medium">Observaciones</th>
+                  {puedeEditar && (
+                    <th scope="col" className="text-right p-2 font-medium w-1" aria-label="Acciones" />
+                  )}
                 </tr>
               </thead>
               <tbody>
@@ -458,6 +515,27 @@ export default function SeccionCarrera({ funcionarioId, userRoles }: Props) {
                     <td className="p-2 text-muted-foreground">
                       {h.observaciones ?? "—"}
                     </td>
+                    {puedeEditar && (
+                      <td className="p-2 text-right whitespace-nowrap">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setBorrando({
+                              tipo: "hjerarquia",
+                              id: h.id,
+                              etiqueta:
+                                h.jerarquia_nueva_nombre ??
+                                jerName(h.jerarquia_nueva_id),
+                            })
+                          }
+                          className="inline-flex items-center gap-1 rounded border border-destructive/30 bg-destructive/5 px-2 py-1 text-xs font-medium text-destructive hover:bg-destructive/10"
+                          title="Eliminar"
+                        >
+                          <Trash2 className="w-3 h-3" aria-hidden="true" />
+                          Eliminar
+                        </button>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
@@ -482,6 +560,9 @@ export default function SeccionCarrera({ funcionarioId, userRoles }: Props) {
                   <th scope="col" className="text-left p-2 font-medium">Agrupación</th>
                   <th scope="col" className="text-left p-2 font-medium">Sección</th>
                   <th scope="col" className="text-left p-2 font-medium">Horario</th>
+                  {puedeEditar && (
+                    <th scope="col" className="text-right p-2 font-medium w-1" aria-label="Acciones" />
+                  )}
                 </tr>
               </thead>
               <tbody>
@@ -495,6 +576,25 @@ export default function SeccionCarrera({ funcionarioId, userRoles }: Props) {
                     <td className="p-2 text-muted-foreground">{u.agrupacion ?? "—"}</td>
                     <td className="p-2 text-muted-foreground">{u.seccion ?? "—"}</td>
                     <td className="p-2 text-muted-foreground">{u.horario ?? "—"}</td>
+                    {puedeEditar && (
+                      <td className="p-2 text-right whitespace-nowrap">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setBorrando({
+                              tipo: "hubicacion",
+                              id: u.id,
+                              etiqueta: u.estacion ?? `Ubicación ${u.id}`,
+                            })
+                          }
+                          className="inline-flex items-center gap-1 rounded border border-destructive/30 bg-destructive/5 px-2 py-1 text-xs font-medium text-destructive hover:bg-destructive/10"
+                          title="Eliminar"
+                        >
+                          <Trash2 className="w-3 h-3" aria-hidden="true" />
+                          Eliminar
+                        </button>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
@@ -516,6 +616,9 @@ export default function SeccionCarrera({ funcionarioId, userRoles }: Props) {
                   <th scope="col" className="text-left p-2 font-medium">Egreso</th>
                   <th scope="col" className="text-right p-2 font-medium">Años aprox.</th>
                   <th scope="col" className="text-left p-2 font-medium">Observaciones</th>
+                  {puedeEditar && (
+                    <th scope="col" className="text-right p-2 font-medium w-1" aria-label="Acciones" />
+                  )}
                 </tr>
               </thead>
               <tbody>
@@ -530,6 +633,25 @@ export default function SeccionCarrera({ funcionarioId, userRoles }: Props) {
                     <td className="p-2 text-muted-foreground">
                       {t.observaciones ?? "—"}
                     </td>
+                    {puedeEditar && (
+                      <td className="p-2 text-right whitespace-nowrap">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setBorrando({
+                              tipo: "tap",
+                              id: t.id,
+                              etiqueta: t.dependencia,
+                            })
+                          }
+                          className="inline-flex items-center gap-1 rounded border border-destructive/30 bg-destructive/5 px-2 py-1 text-xs font-medium text-destructive hover:bg-destructive/10"
+                          title="Eliminar"
+                        >
+                          <Trash2 className="w-3 h-3" aria-hidden="true" />
+                          Eliminar
+                        </button>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
@@ -537,6 +659,21 @@ export default function SeccionCarrera({ funcionarioId, userRoles }: Props) {
           </div>
         )}
       </Card>
+
+      {borrando && (
+        <ConfirmarBorrado
+          titulo={
+            borrando.tipo === "hjerarquia"
+              ? "Eliminar registro de jerarquía"
+              : borrando.tipo === "hubicacion"
+                ? "Eliminar registro de ubicación"
+                : "Eliminar tiempo en adm. pública"
+          }
+          descripcion={`Vas a marcar como eliminado el registro "${borrando.etiqueta}".`}
+          onConfirm={(motivo) => ejecutarBorrado(borrando, motivo)}
+          onClose={() => setBorrando(null)}
+        />
+      )}
     </SectionShell>
   );
 }

@@ -17,10 +17,16 @@ from bomberos_api.models.catalogos import (
     EstadoCivil,
     EstatusFuncionario,
     GrupoSanguineo,
+    Idioma,
     InstitucionFormadora,
     Jerarquia,
     NivelEducativo,
+    Pais,
+    Parentesco,
+    SeccionFuncionario,
     TenenciaVivienda,
+    TipoLicencia,
+    TipoNacionalizacion,
     TipoPersonal,
     TipoVivienda,
 )
@@ -44,7 +50,7 @@ from bomberos_api.models.expediente import (
     HistoricoUbicacion,
     TiempoAdmPublica,
 )
-from bomberos_api.models.funcionario import Funcionario, PeriodoServicio
+from bomberos_api.models.funcionario import Funcionario, FuncionarioIdioma, PeriodoServicio
 from bomberos_api.models.ops import (
     ComisionServicio,
     Falta,
@@ -71,6 +77,7 @@ __all__ = [
     # personal
     "Direccion",
     "Funcionario",
+    "FuncionarioIdioma",
     "PeriodoServicio",
     # expediente
     "CargaFamiliar",
@@ -89,10 +96,16 @@ __all__ = [
     "EstadoCivil",
     "EstatusFuncionario",
     "GrupoSanguineo",
+    "Idioma",
     "InstitucionFormadora",
     "Jerarquia",
     "NivelEducativo",
+    "Pais",
+    "Parentesco",
+    "SeccionFuncionario",
     "TenenciaVivienda",
+    "TipoLicencia",
+    "TipoNacionalizacion",
     "TipoPersonal",
     "TipoVivienda",
     # geografia

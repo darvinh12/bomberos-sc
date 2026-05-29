@@ -24,5 +24,11 @@
 \echo '=== 08_catalogos_ola1.sql ==='
 \i 08_catalogos_ola1.sql
 
+\echo '=== 10_catalogos_mini_sprint.sql ==='
+\i 10_catalogos_mini_sprint.sql
+
+\echo '=== 11_soft_delete_expediente.sql ==='
+\i 11_soft_delete_expediente.sql
+
 \echo ''
 \echo 'Instalación completa.'

@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { api, ApiError } from "@/lib/api";
 import { requireAuth } from "@/lib/session";
-import { requireRoleOrRedirect } from "@/lib/roles";
+import { puedeEditarSeccion } from "@/lib/permisos-funcionario";
 import NuevoFamiliarForm from "./form";
 
 interface FuncionarioMin {
@@ -25,10 +25,10 @@ export default async function NuevoFamiliarPage({
   const me = await api
     .get<Me>("/auth/me", token)
     .catch(() => ({ roles: [] as string[] }));
-  requireRoleOrRedirect(me.roles, ["ADMIN", "RRHH"]);
 
   const fid = Number(params.id);
   if (!Number.isFinite(fid) || fid <= 0) notFound();
+  if (!puedeEditarSeccion("familia", me.roles)) redirect(`/funcionarios/${fid}`);
 
   let funcionario: FuncionarioMin;
   try {

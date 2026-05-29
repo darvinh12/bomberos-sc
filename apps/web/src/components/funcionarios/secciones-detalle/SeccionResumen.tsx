@@ -15,6 +15,7 @@ import {
 import { api } from "@/lib/api";
 import { formatDate } from "@/lib/utils";
 import { SectionShell, Card, EmptyState } from "./_shared";
+import type { NivelAcceso } from "@/lib/permisos-funcionario";
 
 interface Page<T> {
   items: T[];
@@ -91,6 +92,7 @@ interface Props {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   funcionario: any;
   userRoles: string[];
+  nivelAcceso: NivelAcceso;
 }
 
 type IconCmp = typeof Activity;
@@ -118,7 +120,8 @@ function diffYears(iso: string | null | undefined): number | null {
   return ms / (1000 * 60 * 60 * 24 * 365.25);
 }
 
-export default function SeccionResumen({ funcionario: f }: Props) {
+export default function SeccionResumen({ funcionario: f, nivelAcceso }: Props) {
+  const soloLectura = nivelAcceso === "view";
   const [data, setData] = useState<Datos | null>(null);
   const [error, setError] = useState<string | null>(null);
   const fid = f.id;
@@ -278,7 +281,7 @@ export default function SeccionResumen({ funcionario: f }: Props) {
 
   if (error) {
     return (
-      <SectionShell title="Resumen">
+      <SectionShell title="Resumen" soloLectura={soloLectura}>
         <div className="rounded-md bg-destructive/10 border border-destructive/30 p-4 text-sm text-destructive">
           {error}
         </div>
@@ -288,7 +291,7 @@ export default function SeccionResumen({ funcionario: f }: Props) {
 
   if (!data || !kpis) {
     return (
-      <SectionShell title="Resumen">
+      <SectionShell title="Resumen" soloLectura={soloLectura}>
         <p className="text-sm text-muted-foreground">Cargando…</p>
       </SectionShell>
     );
@@ -298,6 +301,7 @@ export default function SeccionResumen({ funcionario: f }: Props) {
     <SectionShell
       title="Resumen"
       description="Indicadores clave, actividad reciente y próximos vencimientos."
+      soloLectura={soloLectura}
     >
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <KpiCard

@@ -28,10 +28,14 @@ export interface NuevoFuncionarioPayload {
 
   // Identidad - nacionalización
   tipo_nacionalizacion?: string;
+  tipo_nacionalizacion_id?: string | number;
   fecha_nacionalizacion?: string;
   numero_gaceta_nacionalizacion?: string;
   pais_origen?: string;
+  pais_origen_id?: string | number;
+  pais_nacimiento_id?: string | number;
   idiomas?: string;
+  idiomas_ids?: number[];
 
   // Empleo
   tipo_personal?: string;
@@ -46,6 +50,7 @@ export interface NuevoFuncionarioPayload {
   es_voluntario?: boolean;
   institucion_formadora_id?: string | number;
   licencia_conducir?: string;
+  licencia_conducir_id?: string | number;
   fecha_egreso?: string;
   fecha_reintegro?: string;
   fecha_este?: string;
@@ -58,6 +63,7 @@ export interface NuevoFuncionarioPayload {
   dependencia_id?: string | number;
   division_id?: string | number;
   seccion?: string;
+  seccion_id?: string | number;
   horario?: string;
 
   // Contacto
@@ -68,6 +74,7 @@ export interface NuevoFuncionarioPayload {
   persona_contacto?: string;
   telefono_contacto?: string;
   parentesco_contacto?: string;
+  parentesco_contacto_id?: string | number;
 
   // Educación
   nivel_educativo_id?: string | number;
@@ -96,7 +103,16 @@ const CAMPOS_ID = new Set([
   "nivel_educativo_id",
   "especialidad_id",
   "institucion_formadora_id",
+  // Mini-sprint
+  "parentesco_contacto_id",
+  "licencia_conducir_id",
+  "tipo_nacionalizacion_id",
+  "pais_origen_id",
+  "pais_nacimiento_id",
+  "seccion_id",
 ]);
+
+const CAMPOS_ARRAY_ID = new Set(["idiomas_ids"]);
 
 const CAMPOS_BOOL = new Set([
   "pre_jubilado",
@@ -143,12 +159,22 @@ export async function crearFuncionario(
     fecha_primer_ingreso: raw.fecha_primer_ingreso,
   };
 
+  // Idiomas (multi-select) — se manda aparte vía /funcionarios/{id}/idiomas
+  // tras crear, NO va en el payload de Create.
+  let idiomasIds: number[] = Array.isArray(raw.idiomas_ids) ? raw.idiomas_ids : [];
+
   for (const [k, v] of Object.entries(raw)) {
     if (k in payload) continue; // ya seteado arriba
+    if (k === "idiomas_ids") continue; // se procesa aparte
     if (v === undefined || v === null) continue;
 
     if (CAMPOS_BOOL.has(k)) {
       payload[k] = Boolean(v);
+      continue;
+    }
+
+    if (CAMPOS_ARRAY_ID.has(k)) {
+      // Manejo defensivo para arrays no esperados aquí
       continue;
     }
 
@@ -170,6 +196,15 @@ export async function crearFuncionario(
   } catch (e: unknown) {
     if (e instanceof ApiError) return { ok: false, error: e.message };
     return { ok: false, error: e instanceof Error ? e.message : "Error al crear" };
+  }
+
+  // Idiomas (multi-select N:M): best-effort tras crear.
+  if (idiomasIds.length > 0) {
+    try {
+      await api.put(`/funcionarios/${created.id}/idiomas`, idiomasIds, token);
+    } catch (e) {
+      console.warn(`[crearFuncionario] idiomas falló id=${created.id}:`, e);
+    }
   }
 
   // Subida opcional de foto (best-effort: no revertir si falla)

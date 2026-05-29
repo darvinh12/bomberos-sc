@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { formatDate } from "@/lib/utils";
 import { SectionShell, Card, EmptyState } from "./_shared";
+import type { NivelAcceso } from "@/lib/permisos-funcionario";
 
 interface Page<T> {
   items: T[];
@@ -51,11 +52,13 @@ interface Datos {
 interface Props {
   funcionarioId: number;
   userRoles: string[];
+  nivelAcceso: NivelAcceso;
 }
 
-export default function SeccionEquipos({ funcionarioId }: Props) {
+export default function SeccionEquipos({ funcionarioId, nivelAcceso }: Props) {
   const [data, setData] = useState<Datos | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const soloLectura = nivelAcceso === "view";
 
   useEffect(() => {
     let alive = true;
@@ -99,7 +102,7 @@ export default function SeccionEquipos({ funcionarioId }: Props) {
 
   if (error) {
     return (
-      <SectionShell title="Equipos">
+      <SectionShell title="Equipos" soloLectura={soloLectura}>
         <div className="rounded-md bg-destructive/10 border border-destructive/30 p-4 text-sm text-destructive">
           {error}
         </div>
@@ -109,7 +112,7 @@ export default function SeccionEquipos({ funcionarioId }: Props) {
 
   if (!data) {
     return (
-      <SectionShell title="Equipos">
+      <SectionShell title="Equipos" soloLectura={soloLectura}>
         <p className="text-sm text-muted-foreground">Cargando…</p>
       </SectionShell>
     );
@@ -119,6 +122,7 @@ export default function SeccionEquipos({ funcionarioId }: Props) {
     <SectionShell
       title="Equipos"
       description="Equipos de protección personal y radios asignadas al funcionario."
+      soloLectura={soloLectura}
     >
       <Card title="Equipo de protección asignado">
         {data.proteccion.length === 0 ? (

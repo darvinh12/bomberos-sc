@@ -3,9 +3,14 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { api } from "@/lib/api";
-import { hasAnyRole } from "@/lib/roles";
 import { formatDate } from "@/lib/utils";
 import { SectionShell, Card, EmptyState } from "./_shared";
+import {
+  accesoSeccion,
+  puedeEditarSeccion,
+  puedeVerSeccion,
+  type NivelAcceso,
+} from "@/lib/permisos-funcionario";
 
 interface Page<T> {
   items: T[];
@@ -85,6 +90,7 @@ interface Datos {
 interface Props {
   funcionarioId: number;
   userRoles: string[];
+  nivelAcceso: NivelAcceso;
 }
 
 const TIPO_FALTA_BADGE: Record<string, string> = {
@@ -93,12 +99,33 @@ const TIPO_FALTA_BADGE: Record<string, string> = {
   GRAVE: "badge badge-danger",
 };
 
-export default function SeccionOperativo({ funcionarioId, userRoles }: Props) {
+export default function SeccionOperativo({ funcionarioId, userRoles, nivelAcceso }: Props) {
   const [data, setData] = useState<Datos | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const puedeEditarRRHH = hasAnyRole(userRoles, ["ADMIN", "RRHH"]);
-  const puedeEditarOps = hasAnyRole(userRoles, ["ADMIN", "OPERADOR", "RRHH"]);
-  const puedeEditarFaltas = hasAnyRole(userRoles, ["ADMIN", "SUPERVISOR", "INSPECTOR"]);
+
+  // Sub-secciones: cada card se rige por su propia matriz granular.
+  const verGuardias = puedeVerSeccion("operativo:guardias", userRoles);
+  const verVacaciones = puedeVerSeccion("operativo:vacaciones", userRoles);
+  const verPermisos = puedeVerSeccion("operativo:permisos", userRoles);
+  const verComisiones = puedeVerSeccion("operativo:comisiones", userRoles);
+  const verFaltas = puedeVerSeccion("operativo:faltas", userRoles);
+
+  const editVacaciones = puedeEditarSeccion("operativo:vacaciones", userRoles);
+  const editPermisos = puedeEditarSeccion("operativo:permisos", userRoles);
+  const editFaltas = puedeEditarSeccion("operativo:faltas", userRoles);
+
+  // Sólo lectura del header: sólo si la sección padre es "view" Y ninguna
+  // sub-sección visible tiene "edit". Así un INSPECTOR (parent view, faltas
+  // edit) no ve la etiqueta "Solo lectura" engañosa.
+  const subAcciones: Array<NivelAcceso> = [
+    verGuardias ? accesoSeccion("operativo:guardias", userRoles) : "none",
+    verVacaciones ? accesoSeccion("operativo:vacaciones", userRoles) : "none",
+    verPermisos ? accesoSeccion("operativo:permisos", userRoles) : "none",
+    verComisiones ? accesoSeccion("operativo:comisiones", userRoles) : "none",
+    verFaltas ? accesoSeccion("operativo:faltas", userRoles) : "none",
+  ];
+  const algunaSubEditable = subAcciones.some((n) => n === "edit");
+  const soloLectura = nivelAcceso === "view" && !algunaSubEditable;
 
   useEffect(() => {
     let alive = true;
@@ -141,7 +168,7 @@ export default function SeccionOperativo({ funcionarioId, userRoles }: Props) {
 
   if (error) {
     return (
-      <SectionShell title="Operativo">
+      <SectionShell title="Operativo" soloLectura={soloLectura}>
         <div className="rounded-md bg-destructive/10 border border-destructive/30 p-4 text-sm text-destructive">
           {error}
         </div>
@@ -151,7 +178,7 @@ export default function SeccionOperativo({ funcionarioId, userRoles }: Props) {
 
   if (!data) {
     return (
-      <SectionShell title="Operativo">
+      <SectionShell title="Operativo" soloLectura={soloLectura}>
         <p className="text-sm text-muted-foreground">Cargando…</p>
       </SectionShell>
     );
@@ -163,7 +190,9 @@ export default function SeccionOperativo({ funcionarioId, userRoles }: Props) {
     <SectionShell
       title="Operativo"
       description="Guardias, vacaciones, permisos, comisiones y faltas del funcionario."
+      soloLectura={soloLectura}
     >
+      {verGuardias && (
       <Card title="Guardias">
         {data.guardias.length === 0 ? (
           <EmptyState title="Sin guardias asignadas" />
@@ -204,7 +233,9 @@ export default function SeccionOperativo({ funcionarioId, userRoles }: Props) {
           </div>
         )}
       </Card>
+      )}
 
+      {verVacaciones && (
       <Card title="Vacaciones">
         {data.vacaciones.length === 0 ? (
           <EmptyState title="Sin vacaciones registradas" />
@@ -244,7 +275,7 @@ export default function SeccionOperativo({ funcionarioId, userRoles }: Props) {
             </table>
           </div>
         )}
-        {puedeEditarRRHH && (
+        {editVacaciones && (
           <div className="mt-3 text-right">
             <Link
               href={`/ops/vacaciones/nuevo?funcionario_id=${funcionarioId}`}
@@ -255,7 +286,9 @@ export default function SeccionOperativo({ funcionarioId, userRoles }: Props) {
           </div>
         )}
       </Card>
+      )}
 
+      {verPermisos && (
       <Card title="Permisos">
         {data.permisos.length === 0 ? (
           <EmptyState title="Sin permisos registrados" />
@@ -293,7 +326,7 @@ export default function SeccionOperativo({ funcionarioId, userRoles }: Props) {
             </table>
           </div>
         )}
-        {puedeEditarOps && (
+        {editPermisos && (
           <div className="mt-3 text-right">
             <Link
               href={`/ops/permisos/nuevo?funcionario_id=${funcionarioId}`}
@@ -304,7 +337,9 @@ export default function SeccionOperativo({ funcionarioId, userRoles }: Props) {
           </div>
         )}
       </Card>
+      )}
 
+      {verComisiones && (
       <Card title="Comisiones de servicio">
         {data.comisiones.length === 0 ? (
           <EmptyState title="Sin comisiones registradas" />
@@ -341,7 +376,9 @@ export default function SeccionOperativo({ funcionarioId, userRoles }: Props) {
           </div>
         )}
       </Card>
+      )}
 
+      {verFaltas && (
       <Card title="Faltas">
         {data.faltas.length === 0 ? (
           <EmptyState title="Sin faltas registradas" hint="El funcionario no tiene faltas registradas." />
@@ -377,7 +414,7 @@ export default function SeccionOperativo({ funcionarioId, userRoles }: Props) {
             </table>
           </div>
         )}
-        {puedeEditarFaltas && (
+        {editFaltas && (
           <div className="mt-3 text-right">
             <Link
               href={`/ops/faltas/nuevo?funcionario_id=${funcionarioId}`}
@@ -388,6 +425,7 @@ export default function SeccionOperativo({ funcionarioId, userRoles }: Props) {
           </div>
         )}
       </Card>
+      )}
     </SectionShell>
   );
 }

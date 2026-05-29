@@ -10,10 +10,16 @@ from bomberos_api.models.catalogos import (
     Especialidad,
     EstatusFuncionario,
     GrupoSanguineo,
+    Idioma,
     InstitucionFormadora,
     Jerarquia,
     NivelEducativo,
+    Pais,
+    Parentesco,
+    SeccionFuncionario,
     TenenciaVivienda,
+    TipoLicencia,
+    TipoNacionalizacion,
     TipoPersonal,
     TipoVivienda,
 )
@@ -252,3 +258,58 @@ async def parroquias(db: DbSession, _: CurrentUser, municipio_id: int | None = N
         )
         for x in res.scalars().all()
     ]
+
+
+# ---------------------------------------------------------------------------
+# Mini-sprint catálogos (sql/10_catalogos_mini_sprint.sql)
+# ---------------------------------------------------------------------------
+
+
+@router.get("/parentescos", response_model=list[_CatalogoOut])
+async def parentescos(db: DbSession, _: CurrentUser):
+    res = await db.execute(
+        select(Parentesco).where(Parentesco.activo).order_by(Parentesco.nombre)
+    )
+    return [_CatalogoOut.model_validate(x) for x in res.scalars().all()]
+
+
+@router.get("/tipos-licencia", response_model=list[_CatalogoOut])
+async def tipos_licencia(db: DbSession, _: CurrentUser):
+    res = await db.execute(
+        select(TipoLicencia).where(TipoLicencia.activo).order_by(TipoLicencia.codigo)
+    )
+    return [_CatalogoOut.model_validate(x) for x in res.scalars().all()]
+
+
+@router.get("/tipos-nacionalizacion", response_model=list[_CatalogoOut])
+async def tipos_nacionalizacion(db: DbSession, _: CurrentUser):
+    res = await db.execute(
+        select(TipoNacionalizacion)
+        .where(TipoNacionalizacion.activo)
+        .order_by(TipoNacionalizacion.nombre)
+    )
+    return [_CatalogoOut.model_validate(x) for x in res.scalars().all()]
+
+
+@router.get("/idiomas", response_model=list[_CatalogoOut])
+async def idiomas(db: DbSession, _: CurrentUser):
+    res = await db.execute(
+        select(Idioma).where(Idioma.activo).order_by(Idioma.nombre)
+    )
+    return [_CatalogoOut.model_validate(x) for x in res.scalars().all()]
+
+
+@router.get("/paises", response_model=list[_CatalogoOut])
+async def paises(db: DbSession, _: CurrentUser):
+    res = await db.execute(select(Pais).where(Pais.activo).order_by(Pais.nombre))
+    return [_CatalogoOut.model_validate(x) for x in res.scalars().all()]
+
+
+@router.get("/secciones-funcionario", response_model=list[_CatalogoOut])
+async def secciones_funcionario(db: DbSession, _: CurrentUser):
+    res = await db.execute(
+        select(SeccionFuncionario)
+        .where(SeccionFuncionario.activo)
+        .order_by(SeccionFuncionario.codigo)
+    )
+    return [_CatalogoOut.model_validate(x) for x in res.scalars().all()]

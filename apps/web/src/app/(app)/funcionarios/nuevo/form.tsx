@@ -114,11 +114,15 @@ export default function NuevoForm({ catalogos, userRoles }: Props) {
           factor_sanguineo: data.factor_sanguineo,
           lugar_nacimiento: data.lugar_nacimiento,
           pais_nacimiento: data.pais_nacimiento,
+          pais_nacimiento_id: data.pais_nacimiento_id,
           tipo_nacionalizacion: data.tipo_nacionalizacion,
+          tipo_nacionalizacion_id: data.tipo_nacionalizacion_id,
           fecha_nacionalizacion: data.fecha_nacionalizacion,
           numero_gaceta_nacionalizacion: data.numero_gaceta_nacionalizacion,
           pais_origen: data.pais_origen,
+          pais_origen_id: data.pais_origen_id,
           idiomas: data.idiomas,
+          idiomas_ids: data.idiomas_ids,
           // Empleo
           tipo_personal: data.tipo_personal,
           numero_empleado: data.numero_empleado,
@@ -132,6 +136,7 @@ export default function NuevoForm({ catalogos, userRoles }: Props) {
           es_voluntario: data.es_voluntario,
           institucion_formadora_id: data.institucion_formadora_id,
           licencia_conducir: data.licencia_conducir,
+          licencia_conducir_id: data.licencia_conducir_id,
           fecha_egreso: data.fecha_egreso,
           fecha_reintegro: data.fecha_reintegro,
           fecha_este: data.fecha_este,
@@ -143,6 +148,7 @@ export default function NuevoForm({ catalogos, userRoles }: Props) {
           dependencia_id: data.dependencia_id,
           division_id: data.division_id,
           seccion: data.seccion,
+          seccion_id: data.seccion_id,
           horario: data.horario,
           // Contacto
           telefono_habitacion: data.telefono_habitacion,
@@ -152,6 +158,7 @@ export default function NuevoForm({ catalogos, userRoles }: Props) {
           persona_contacto: data.persona_contacto,
           telefono_contacto: data.telefono_contacto,
           parentesco_contacto: data.parentesco_contacto,
+          parentesco_contacto_id: data.parentesco_contacto_id,
           // Domicilio: no se incluye aquí — se gestiona aparte vía
           // /funcionarios/{id}/direcciones tras crear el funcionario.
           // Educación

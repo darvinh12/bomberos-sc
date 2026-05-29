@@ -51,6 +51,13 @@ export interface CatalogosFuncionario {
   parroquias: CatalogoParroquia[];
   tiposVivienda: Catalogo[];
   tenenciasVivienda: Catalogo[];
+  // Mini-sprint
+  parentescos: Catalogo[];
+  tiposLicencia: Catalogo[];
+  tiposNacionalizacion: Catalogo[];
+  idiomas: Catalogo[];
+  paises: Catalogo[];
+  seccionesFuncionario: Catalogo[];
 }
 
 export async function cargarCatalogosFuncionario(
@@ -77,6 +84,12 @@ export async function cargarCatalogosFuncionario(
     parroquias,
     tiposVivienda,
     tenenciasVivienda,
+    parentescos,
+    tiposLicencia,
+    tiposNacionalizacion,
+    idiomas,
+    paises,
+    seccionesFuncionario,
   ] = await Promise.all([
     api.get<Catalogo[]>("/catalogos/jerarquias", token).catch(() => [] as Catalogo[]),
     api.get<Catalogo[]>("/catalogos/cargos", token).catch(() => [] as Catalogo[]),
@@ -122,6 +135,20 @@ export async function cargarCatalogosFuncionario(
     api
       .get<Catalogo[]>("/catalogos/tenencias-vivienda", token)
       .catch(() => [] as Catalogo[]),
+    api
+      .get<Catalogo[]>("/catalogos/parentescos", token)
+      .catch(() => [] as Catalogo[]),
+    api
+      .get<Catalogo[]>("/catalogos/tipos-licencia", token)
+      .catch(() => [] as Catalogo[]),
+    api
+      .get<Catalogo[]>("/catalogos/tipos-nacionalizacion", token)
+      .catch(() => [] as Catalogo[]),
+    api.get<Catalogo[]>("/catalogos/idiomas", token).catch(() => [] as Catalogo[]),
+    api.get<Catalogo[]>("/catalogos/paises", token).catch(() => [] as Catalogo[]),
+    api
+      .get<Catalogo[]>("/catalogos/secciones-funcionario", token)
+      .catch(() => [] as Catalogo[]),
   ]);
 
   return {
@@ -145,5 +172,11 @@ export async function cargarCatalogosFuncionario(
     parroquias,
     tiposVivienda,
     tenenciasVivienda,
+    parentescos,
+    tiposLicencia,
+    tiposNacionalizacion,
+    idiomas,
+    paises,
+    seccionesFuncionario,
   };
 }

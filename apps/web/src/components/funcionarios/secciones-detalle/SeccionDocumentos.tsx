@@ -1,12 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { User } from "lucide-react";
+import { Trash2, User } from "lucide-react";
 import { api } from "@/lib/api";
 import { isDemoMode } from "@/lib/demo-fixtures";
 import { formatDate } from "@/lib/utils";
+import ConfirmarBorrado from "../ConfirmarBorrado";
 import DocumentoUpload from "../DocumentoUpload";
+import { borrarCarnet } from "./actions";
 import { SectionShell, Card, EmptyState } from "./_shared";
+import type { NivelAcceso } from "@/lib/permisos-funcionario";
 
 interface Page<T> {
   items: T[];
@@ -46,6 +49,7 @@ interface Props {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   funcionario: any;
   userRoles: string[];
+  nivelAcceso: NivelAcceso;
 }
 
 type EstadoVigencia = "VIGENTE" | "POR_VENCER" | "VENCIDO" | "SIN_FECHA";
@@ -105,7 +109,7 @@ async function subirDocumento(
   return body[`${tipo}_url`] ?? "";
 }
 
-export default function SeccionDocumentos({ funcionario: f, userRoles }: Props) {
+export default function SeccionDocumentos({ funcionario: f, nivelAcceso }: Props) {
   const fotoSrc =
     f.foto_url && (f.foto_url.startsWith("/") || f.foto_url.startsWith("http"))
       ? f.foto_url
@@ -113,12 +117,12 @@ export default function SeccionDocumentos({ funcionario: f, userRoles }: Props) 
         ? `/api/funcionarios/${f.id}/foto`
         : null;
 
-  const puedeEditar =
-    Array.isArray(userRoles) &&
-    userRoles.some((r) => r === "RRHH" || r === "ADMIN");
+  const puedeEditar = nivelAcceso === "edit";
+  const soloLectura = nivelAcceso === "view";
 
   const [data, setData] = useState<Datos | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [borrandoCarnet, setBorrandoCarnet] = useState<Carnet | null>(null);
 
   const [huellaUrl, setHuellaUrl] = useState<string | null>(f.huella_url ?? null);
   const [firmaUrl, setFirmaUrl] = useState<string | null>(f.firma_url ?? null);
@@ -126,6 +130,19 @@ export default function SeccionDocumentos({ funcionario: f, userRoles }: Props) 
   const [firmaError, setFirmaError] = useState<string | null>(null);
   const [huellaSubiendo, setHuellaSubiendo] = useState(false);
   const [firmaSubiendo, setFirmaSubiendo] = useState(false);
+
+  async function confirmarBorradoCarnet(
+    cnId: number,
+    motivo: string,
+  ): Promise<void> {
+    const res = await borrarCarnet(f.id, cnId, motivo);
+    if (!res.ok) throw new Error(res.error);
+    setData((prev) =>
+      prev === null
+        ? prev
+        : { ...prev, carnets: prev.carnets.filter((c) => c.id !== cnId) },
+    );
+  }
 
   useEffect(() => {
     setHuellaUrl(f.huella_url ?? null);
@@ -201,6 +218,7 @@ export default function SeccionDocumentos({ funcionario: f, userRoles }: Props) 
     <SectionShell
       title="Documentos"
       description="Foto, huella, firma y documentos digitales del funcionario."
+      soloLectura={soloLectura}
     >
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card title="Foto">
@@ -311,6 +329,13 @@ export default function SeccionDocumentos({ funcionario: f, userRoles }: Props) 
                   <th scope="col" className="text-left p-2 font-medium">
                     Observaciones
                   </th>
+                  {puedeEditar && (
+                    <th
+                      scope="col"
+                      className="text-right p-2 font-medium w-1"
+                      aria-label="Acciones"
+                    />
+                  )}
                 </tr>
               </thead>
               <tbody>
@@ -337,6 +362,19 @@ export default function SeccionDocumentos({ funcionario: f, userRoles }: Props) 
                     <td className="p-2 text-muted-foreground">
                       {c.observaciones ?? "—"}
                     </td>
+                    {puedeEditar && (
+                      <td className="p-2 text-right whitespace-nowrap">
+                        <button
+                          type="button"
+                          onClick={() => setBorrandoCarnet(c)}
+                          className="inline-flex items-center gap-1 rounded border border-destructive/30 bg-destructive/5 px-2 py-1 text-xs font-medium text-destructive hover:bg-destructive/10"
+                          title="Eliminar"
+                        >
+                          <Trash2 className="w-3 h-3" aria-hidden="true" />
+                          Eliminar
+                        </button>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
@@ -396,6 +434,19 @@ export default function SeccionDocumentos({ funcionario: f, userRoles }: Props) 
           </div>
         )}
       </Card>
+
+      {borrandoCarnet && (
+        <ConfirmarBorrado
+          titulo="Eliminar carnet"
+          descripcion={`Vas a marcar como eliminado el carnet ${borrandoCarnet.tipo}${
+            borrandoCarnet.numero ? ` Nº ${borrandoCarnet.numero}` : ""
+          }.`}
+          onConfirm={(motivo) =>
+            confirmarBorradoCarnet(borrandoCarnet.id, motivo)
+          }
+          onClose={() => setBorrandoCarnet(null)}
+        />
+      )}
     </SectionShell>
   );
 }

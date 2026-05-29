@@ -1,10 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Trash2 } from "lucide-react";
 import { api } from "@/lib/api";
-import { hasAnyRole } from "@/lib/roles";
 import { formatDate } from "@/lib/utils";
+import ConfirmarBorrado from "../ConfirmarBorrado";
+import { borrarActividad, borrarHabilidad } from "./actions";
 import { SectionShell, Card, EmptyState } from "./_shared";
+import type { NivelAcceso } from "@/lib/permisos-funcionario";
 
 interface Page<T> {
   items: T[];
@@ -38,6 +41,7 @@ interface Datos {
 interface Props {
   funcionarioId: number;
   userRoles: string[];
+  nivelAcceso: NivelAcceso;
 }
 
 const TIPO_ACTIVIDAD_BADGE: Record<string, string> = {
@@ -49,13 +53,19 @@ const TIPO_ACTIVIDAD_BADGE: Record<string, string> = {
   ACADEMICA: "badge badge-neutral",
 };
 
+type ObjetivoBorrado =
+  | { tipo: "habilidad"; id: number; nombre: string }
+  | { tipo: "actividad"; id: number; nombre: string };
+
 export default function SeccionHabilidades({
   funcionarioId,
-  userRoles,
+  nivelAcceso,
 }: Props) {
   const [data, setData] = useState<Datos | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const puedeEditar = hasAnyRole(userRoles, ["RRHH", "ADMIN"]);
+  const [borrando, setBorrando] = useState<ObjetivoBorrado | null>(null);
+  const puedeEditar = nivelAcceso === "edit";
+  const soloLectura = nivelAcceso === "view";
 
   useEffect(() => {
     let alive = true;
@@ -88,9 +98,33 @@ export default function SeccionHabilidades({
     };
   }, [funcionarioId]);
 
+  async function ejecutarBorrado(
+    objetivo: ObjetivoBorrado,
+    motivo: string,
+  ): Promise<void> {
+    const res =
+      objetivo.tipo === "habilidad"
+        ? await borrarHabilidad(funcionarioId, objetivo.id, motivo)
+        : await borrarActividad(funcionarioId, objetivo.id, motivo);
+    if (!res.ok) throw new Error(res.error);
+    setData((prev) => {
+      if (prev === null) return prev;
+      if (objetivo.tipo === "habilidad") {
+        return {
+          ...prev,
+          habilidades: prev.habilidades.filter((h) => h.id !== objetivo.id),
+        };
+      }
+      return {
+        ...prev,
+        actividades: prev.actividades.filter((a) => a.id !== objetivo.id),
+      };
+    });
+  }
+
   if (error) {
     return (
-      <SectionShell title="Habilidades y actividades">
+      <SectionShell title="Habilidades y actividades" soloLectura={soloLectura}>
         <div
           role="alert"
           className="rounded-md bg-destructive/10 border border-destructive/30 p-4 text-sm text-destructive"
@@ -103,7 +137,7 @@ export default function SeccionHabilidades({
 
   if (!data) {
     return (
-      <SectionShell title="Habilidades y actividades">
+      <SectionShell title="Habilidades y actividades" soloLectura={soloLectura}>
         <p className="text-sm text-muted-foreground">Cargando…</p>
       </SectionShell>
     );
@@ -113,6 +147,7 @@ export default function SeccionHabilidades({
     <SectionShell
       title="Habilidades y actividades"
       description="Habilidades específicas declaradas y actividades culturales, deportivas, científicas y laborales del funcionario."
+      soloLectura={soloLectura}
     >
       <Card title="Habilidades">
         {data.habilidades.length === 0 ? (
@@ -138,6 +173,13 @@ export default function SeccionHabilidades({
                   <th scope="col" className="text-left p-2 font-medium">
                     Fecha registro
                   </th>
+                  {puedeEditar && (
+                    <th
+                      scope="col"
+                      className="text-right p-2 font-medium w-1"
+                      aria-label="Acciones"
+                    />
+                  )}
                 </tr>
               </thead>
               <tbody>
@@ -150,6 +192,25 @@ export default function SeccionHabilidades({
                     <td className="p-2 text-muted-foreground">
                       {formatDate(h.fecha_registro)}
                     </td>
+                    {puedeEditar && (
+                      <td className="p-2 text-right whitespace-nowrap">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setBorrando({
+                              tipo: "habilidad",
+                              id: h.id,
+                              nombre: h.nombre,
+                            })
+                          }
+                          className="inline-flex items-center gap-1 rounded border border-destructive/30 bg-destructive/5 px-2 py-1 text-xs font-medium text-destructive hover:bg-destructive/10"
+                          title="Eliminar"
+                        >
+                          <Trash2 className="w-3 h-3" aria-hidden="true" />
+                          Eliminar
+                        </button>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
@@ -192,6 +253,13 @@ export default function SeccionHabilidades({
                   <th scope="col" className="text-left p-2 font-medium">
                     Observaciones
                   </th>
+                  {puedeEditar && (
+                    <th
+                      scope="col"
+                      className="text-right p-2 font-medium w-1"
+                      aria-label="Acciones"
+                    />
+                  )}
                 </tr>
               </thead>
               <tbody>
@@ -210,6 +278,25 @@ export default function SeccionHabilidades({
                     <td className="p-2 text-muted-foreground">
                       {a.observaciones ?? "—"}
                     </td>
+                    {puedeEditar && (
+                      <td className="p-2 text-right whitespace-nowrap">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setBorrando({
+                              tipo: "actividad",
+                              id: a.id,
+                              nombre: a.actividad,
+                            })
+                          }
+                          className="inline-flex items-center gap-1 rounded border border-destructive/30 bg-destructive/5 px-2 py-1 text-xs font-medium text-destructive hover:bg-destructive/10"
+                          title="Eliminar"
+                        >
+                          <Trash2 className="w-3 h-3" aria-hidden="true" />
+                          Eliminar
+                        </button>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
@@ -227,6 +314,19 @@ export default function SeccionHabilidades({
           </div>
         )}
       </Card>
+
+      {borrando && (
+        <ConfirmarBorrado
+          titulo={
+            borrando.tipo === "habilidad"
+              ? "Eliminar habilidad"
+              : "Eliminar actividad"
+          }
+          descripcion={`Vas a marcar como eliminado el registro "${borrando.nombre}".`}
+          onConfirm={(motivo) => ejecutarBorrado(borrando, motivo)}
+          onClose={() => setBorrando(null)}
+        />
+      )}
     </SectionShell>
   );
 }

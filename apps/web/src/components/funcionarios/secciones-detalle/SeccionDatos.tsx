@@ -2,20 +2,24 @@
 
 import { SectionShell, Card, Field } from "./_shared";
 import { formatCedula, formatDate } from "@/lib/utils";
+import type { NivelAcceso } from "@/lib/permisos-funcionario";
 
 interface Props {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   funcionario: any;
+  nivelAcceso: NivelAcceso;
 }
 
-export default function SeccionDatos({ funcionario: f }: Props) {
+export default function SeccionDatos({ funcionario: f, nivelAcceso }: Props) {
   const sexoLabel =
     f.sexo === "M" ? "Masculino" : f.sexo === "F" ? "Femenino" : f.sexo ?? null;
+  const soloLectura = nivelAcceso === "view";
 
   return (
     <SectionShell
       title="Datos personales"
       description="Información completa registrada del funcionario."
+      soloLectura={soloLectura}
     >
       <Card title="Identidad">
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">

@@ -1946,6 +1946,114 @@ export function demoResolve(path: string, rolActivo: string = "ADMIN"): unknown 
     case base === "/catalogos/parroquias":
       return PARROQUIAS_VE;
 
+    case base === "/catalogos/parentescos":
+      return [
+        { id: 1, codigo: "CONYUGE", nombre: "Cónyuge", activo: true },
+        { id: 2, codigo: "HIJO", nombre: "Hijo", activo: true },
+        { id: 3, codigo: "HIJA", nombre: "Hija", activo: true },
+        { id: 4, codigo: "PADRE", nombre: "Padre", activo: true },
+        { id: 5, codigo: "MADRE", nombre: "Madre", activo: true },
+        { id: 6, codigo: "HERMANO", nombre: "Hermano", activo: true },
+        { id: 7, codigo: "HERMANA", nombre: "Hermana", activo: true },
+        { id: 8, codigo: "ABUELO", nombre: "Abuelo", activo: true },
+        { id: 9, codigo: "ABUELA", nombre: "Abuela", activo: true },
+        { id: 10, codigo: "TIO", nombre: "Tío", activo: true },
+        { id: 11, codigo: "TIA", nombre: "Tía", activo: true },
+        { id: 12, codigo: "NIETO", nombre: "Nieto", activo: true },
+        { id: 13, codigo: "NIETA", nombre: "Nieta", activo: true },
+        { id: 14, codigo: "OTRO", nombre: "Otro", activo: true },
+      ];
+    case base === "/catalogos/tipos-licencia":
+      return [
+        { id: 1, codigo: "1", nombre: "1ra Grado - Vehículos hasta 3.500 kg", activo: true },
+        { id: 2, codigo: "2", nombre: "2da Grado - Vehículos hasta 7.500 kg", activo: true },
+        { id: 3, codigo: "3", nombre: "3ra Grado - Vehículos pesados", activo: true },
+        { id: 4, codigo: "4", nombre: "4ta Grado - Vehículos articulados", activo: true },
+        { id: 5, codigo: "5", nombre: "5ta Grado - Transporte público", activo: true },
+        { id: 6, codigo: "MOTO", nombre: "Moto", activo: true },
+        { id: 7, codigo: "A", nombre: "Categoría A", activo: true },
+        { id: 8, codigo: "B", nombre: "Categoría B", activo: true },
+        { id: 9, codigo: "C", nombre: "Categoría C", activo: true },
+        { id: 10, codigo: "D", nombre: "Categoría D", activo: true },
+        { id: 11, codigo: "E", nombre: "Categoría E", activo: true },
+      ];
+    case base === "/catalogos/tipos-nacionalizacion":
+      return [
+        { id: 1, codigo: "POR_MATRIMONIO", nombre: "Por matrimonio", activo: true },
+        { id: 2, codigo: "POR_RESIDENCIA", nombre: "Por residencia", activo: true },
+        { id: 3, codigo: "POR_NACIMIENTO", nombre: "Por nacimiento", activo: true },
+        { id: 4, codigo: "POR_ADOPCION", nombre: "Por adopción", activo: true },
+        { id: 5, codigo: "POR_NATURALIZACION", nombre: "Por naturalización", activo: true },
+      ];
+    case base === "/catalogos/idiomas":
+      return [
+        { id: 1, codigo: "ESPANOL", nombre: "Español", activo: true },
+        { id: 2, codigo: "INGLES", nombre: "Inglés", activo: true },
+        { id: 3, codigo: "FRANCES", nombre: "Francés", activo: true },
+        { id: 4, codigo: "PORTUGUES", nombre: "Portugués", activo: true },
+        { id: 5, codigo: "ITALIANO", nombre: "Italiano", activo: true },
+        { id: 6, codigo: "ALEMAN", nombre: "Alemán", activo: true },
+        { id: 7, codigo: "CHINO", nombre: "Chino", activo: true },
+        { id: 8, codigo: "JAPONES", nombre: "Japonés", activo: true },
+        { id: 9, codigo: "ARABE", nombre: "Árabe", activo: true },
+        { id: 10, codigo: "RUSO", nombre: "Ruso", activo: true },
+      ];
+    case base === "/catalogos/paises":
+      return [
+        { id: 1, codigo: "VEN", nombre: "Venezuela", activo: true },
+        { id: 2, codigo: "COL", nombre: "Colombia", activo: true },
+        { id: 3, codigo: "ECU", nombre: "Ecuador", activo: true },
+        { id: 4, codigo: "PER", nombre: "Perú", activo: true },
+        { id: 5, codigo: "CHL", nombre: "Chile", activo: true },
+        { id: 6, codigo: "ARG", nombre: "Argentina", activo: true },
+        { id: 7, codigo: "BRA", nombre: "Brasil", activo: true },
+        { id: 8, codigo: "MEX", nombre: "México", activo: true },
+        { id: 9, codigo: "ESP", nombre: "España", activo: true },
+        { id: 10, codigo: "USA", nombre: "Estados Unidos", activo: true },
+        { id: 11, codigo: "ITA", nombre: "Italia", activo: true },
+        { id: 12, codigo: "PRT", nombre: "Portugal", activo: true },
+        { id: 13, codigo: "FRA", nombre: "Francia", activo: true },
+        { id: 14, codigo: "GBR", nombre: "Reino Unido", activo: true },
+        { id: 15, codigo: "DEU", nombre: "Alemania", activo: true },
+        { id: 16, codigo: "NLD", nombre: "Países Bajos", activo: true },
+        { id: 17, codigo: "CHE", nombre: "Suiza", activo: true },
+        { id: 18, codigo: "BEL", nombre: "Bélgica", activo: true },
+        { id: 19, codigo: "CHN", nombre: "China", activo: true },
+        { id: 20, codigo: "JPN", nombre: "Japón", activo: true },
+        { id: 21, codigo: "KOR", nombre: "Corea del Sur", activo: true },
+        { id: 22, codigo: "IND", nombre: "India", activo: true },
+        { id: 23, codigo: "LBN", nombre: "Líbano", activo: true },
+        { id: 24, codigo: "SYR", nombre: "Siria", activo: true },
+        { id: 25, codigo: "EGY", nombre: "Egipto", activo: true },
+        { id: 26, codigo: "MAR", nombre: "Marruecos", activo: true },
+        { id: 27, codigo: "ZAF", nombre: "Sudáfrica", activo: true },
+        { id: 28, codigo: "NGA", nombre: "Nigeria", activo: true },
+        { id: 29, codigo: "CRI", nombre: "Costa Rica", activo: true },
+        { id: 30, codigo: "PAN", nombre: "Panamá", activo: true },
+        { id: 31, codigo: "DOM", nombre: "República Dominicana", activo: true },
+        { id: 32, codigo: "CUB", nombre: "Cuba", activo: true },
+        { id: 33, codigo: "HND", nombre: "Honduras", activo: true },
+        { id: 34, codigo: "GTM", nombre: "Guatemala", activo: true },
+        { id: 35, codigo: "SLV", nombre: "El Salvador", activo: true },
+        { id: 36, codigo: "NIC", nombre: "Nicaragua", activo: true },
+        { id: 37, codigo: "BOL", nombre: "Bolivia", activo: true },
+        { id: 38, codigo: "URY", nombre: "Uruguay", activo: true },
+        { id: 39, codigo: "PRY", nombre: "Paraguay", activo: true },
+        { id: 40, codigo: "CAN", nombre: "Canadá", activo: true },
+        { id: 41, codigo: "AUS", nombre: "Australia", activo: true },
+        { id: 42, codigo: "NZL", nombre: "Nueva Zelanda", activo: true },
+        { id: 43, codigo: "ISR", nombre: "Israel", activo: true },
+        { id: 44, codigo: "TUR", nombre: "Turquía", activo: true },
+        { id: 45, codigo: "RUS", nombre: "Rusia", activo: true },
+      ];
+    case base === "/catalogos/secciones-funcionario":
+      return [
+        { id: 1, codigo: "A", nombre: "Sección A", activo: true },
+        { id: 2, codigo: "B", nombre: "Sección B", activo: true },
+        { id: 3, codigo: "C", nombre: "Sección C", activo: true },
+        { id: 4, codigo: "D", nombre: "Sección D", activo: true },
+      ];
+
     case base === "/catalogos/tipos-reposo":
       return [
         { id: 1, codigo: "ENFERMEDAD", nombre: "Enfermedad común", activo: true },

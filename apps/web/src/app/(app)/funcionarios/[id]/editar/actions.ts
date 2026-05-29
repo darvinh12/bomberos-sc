@@ -29,10 +29,14 @@ export interface EditarFuncionarioPayload {
 
   // Identidad - nacionalización
   tipo_nacionalizacion?: string | null;
+  tipo_nacionalizacion_id?: string | number | null;
   fecha_nacionalizacion?: string | null;
   numero_gaceta_nacionalizacion?: string | null;
   pais_origen?: string | null;
+  pais_origen_id?: string | number | null;
+  pais_nacimiento_id?: string | number | null;
   idiomas?: string | null;
+  idiomas_ids?: number[];
 
   // Empleo
   tipo_personal?: string | null;
@@ -48,6 +52,7 @@ export interface EditarFuncionarioPayload {
   es_voluntario?: boolean;
   institucion_formadora_id?: string | number | null;
   licencia_conducir?: string | null;
+  licencia_conducir_id?: string | number | null;
   fecha_egreso?: string | null;
   fecha_reintegro?: string | null;
   fecha_este?: string | null;
@@ -60,6 +65,7 @@ export interface EditarFuncionarioPayload {
   dependencia_id?: string | number | null;
   division_id?: string | number | null;
   seccion?: string | null;
+  seccion_id?: string | number | null;
   horario?: string | null;
 
   // Contacto
@@ -70,6 +76,7 @@ export interface EditarFuncionarioPayload {
   persona_contacto?: string | null;
   telefono_contacto?: string | null;
   parentesco_contacto?: string | null;
+  parentesco_contacto_id?: string | number | null;
 
   // Educación
   nivel_educativo_id?: string | number | null;
@@ -101,7 +108,16 @@ const CAMPOS_ID = new Set([
   "nivel_educativo_id",
   "especialidad_id",
   "institucion_formadora_id",
+  // Mini-sprint
+  "parentesco_contacto_id",
+  "licencia_conducir_id",
+  "tipo_nacionalizacion_id",
+  "pais_origen_id",
+  "pais_nacimiento_id",
+  "seccion_id",
 ]);
+
+const CAMPOS_ARRAY_IGNORADOS = new Set(["idiomas_ids"]);
 
 const CAMPOS_BOOL = new Set([
   "pre_jubilado",
@@ -120,11 +136,12 @@ function normalizar(payload: EditarFuncionarioPayload): Record<string, unknown> 
 
   for (const [k, v] of Object.entries(payload)) {
     if (k === "metadata") {
-      if (v && typeof v === "object" && Object.keys(v).length > 0) {
+      if (v && typeof v === "object" && !Array.isArray(v) && Object.keys(v).length > 0) {
         out.metadata = v;
       }
       continue;
     }
+    if (CAMPOS_ARRAY_IGNORADOS.has(k)) continue; // se manda por endpoint aparte
     if (CAMPOS_INMUTABLES.has(k)) continue;
     if (v === undefined) continue;
 
@@ -171,6 +188,9 @@ export async function actualizarFuncionario(
 ): Promise<EditarFuncionarioResult> {
   const token = await requireAuth();
   const body = normalizar(payload);
+  const idiomasIds: number[] | undefined = Array.isArray(payload.idiomas_ids)
+    ? payload.idiomas_ids
+    : undefined;
 
   if (isDemoMode()) {
     revalidatePath(`/funcionarios/${id}`);
@@ -186,6 +206,15 @@ export async function actualizarFuncionario(
       ok: false,
       error: e instanceof Error ? e.message : "Error al actualizar",
     };
+  }
+
+  // Idiomas (N:M): solo si vinieron en el payload (undefined ≠ borrar)
+  if (idiomasIds !== undefined) {
+    try {
+      await api.put(`/funcionarios/${id}/idiomas`, idiomasIds, token);
+    } catch (e) {
+      console.warn(`[actualizarFuncionario] idiomas falló id=${id}:`, e);
+    }
   }
 
   // Foto: best-effort

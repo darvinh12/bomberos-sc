@@ -32,9 +32,10 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column
 
 from bomberos_api.models.base import Base
+from bomberos_api.models.mixins import SoftDeleteMixin
 
 
-class Direccion(Base):
+class Direccion(SoftDeleteMixin, Base):
     __tablename__ = "direcciones"
     __table_args__ = {"schema": "personal"}
 

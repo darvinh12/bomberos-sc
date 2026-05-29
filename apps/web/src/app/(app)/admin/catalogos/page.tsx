@@ -22,6 +22,12 @@ const ENTIDADES: EntidadCat[] = [
   "estados",
   "municipios",
   "parroquias",
+  "parentescos",
+  "tipos-licencia",
+  "tipos-nacionalizacion",
+  "idiomas",
+  "paises",
+  "secciones-funcionario",
 ];
 
 export default async function CatalogosAdminPage() {

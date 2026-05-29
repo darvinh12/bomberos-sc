@@ -18,6 +18,19 @@ from pydantic import BaseModel, ConfigDict, Field
 _TIPO_ACTIVIDAD = r"^(CULTURAL|DEPORTIVA|MUSICAL|CIENTIFICA|LABORAL|ACADEMICA)$"
 
 
+class _SoftDeleteOut(BaseModel):
+    """Campos de auditoría de borrado lógico expuestos al cliente.
+
+    Estos campos son siempre nulos en items activos. Cuando el cliente solicita
+    `?incluir_borrados=true` (solo ADMIN), pueden venir poblados para que la UI
+    de papelera muestre quién y por qué eliminó el registro.
+    """
+
+    deleted_at: datetime | None = None
+    deleted_by: int | None = None
+    delete_reason: str | None = None
+
+
 # =============================================================================
 # CARGA FAMILIAR
 # =============================================================================
@@ -57,7 +70,7 @@ class CargaFamiliarUpdate(_CargaFamiliarBase):
     pass
 
 
-class CargaFamiliarOut(_CargaFamiliarBase):
+class CargaFamiliarOut(_CargaFamiliarBase, _SoftDeleteOut):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
@@ -98,7 +111,7 @@ class HistoricoJerarquiaUpdate(_HistoricoJerarquiaBase):
     pass
 
 
-class HistoricoJerarquiaOut(_HistoricoJerarquiaBase):
+class HistoricoJerarquiaOut(_HistoricoJerarquiaBase, _SoftDeleteOut):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
@@ -135,7 +148,7 @@ class HistoricoUbicacionUpdate(_HistoricoUbicacionBase):
     pass
 
 
-class HistoricoUbicacionOut(_HistoricoUbicacionBase):
+class HistoricoUbicacionOut(_HistoricoUbicacionBase, _SoftDeleteOut):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
@@ -167,7 +180,7 @@ class TiempoAdmPublicaUpdate(_TiempoAdmPublicaBase):
     pass
 
 
-class TiempoAdmPublicaOut(_TiempoAdmPublicaBase):
+class TiempoAdmPublicaOut(_TiempoAdmPublicaBase, _SoftDeleteOut):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
@@ -198,7 +211,7 @@ class HabilidadUpdate(_HabilidadBase):
     pass
 
 
-class HabilidadOut(_HabilidadBase):
+class HabilidadOut(_HabilidadBase, _SoftDeleteOut):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
@@ -234,7 +247,7 @@ class ActividadUpdate(_ActividadBase):
     pass
 
 
-class ActividadOut(_ActividadBase):
+class ActividadOut(_ActividadBase, _SoftDeleteOut):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
@@ -271,7 +284,7 @@ class CarnetUpdate(_CarnetBase):
     motivo_cambio: str | None = Field(default=None, max_length=200)
 
 
-class CarnetOut(_CarnetBase):
+class CarnetOut(_CarnetBase, _SoftDeleteOut):
     model_config = ConfigDict(from_attributes=True)
 
     id: int

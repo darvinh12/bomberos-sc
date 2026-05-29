@@ -3,9 +3,9 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { api } from "@/lib/api";
-import { hasAnyRole } from "@/lib/roles";
 import { formatDate } from "@/lib/utils";
 import { SectionShell, Card, EmptyState } from "./_shared";
+import type { NivelAcceso } from "@/lib/permisos-funcionario";
 
 interface Page<T> {
   items: T[];
@@ -55,14 +55,16 @@ interface Datos {
 interface Props {
   funcionarioId: number;
   userRoles: string[];
+  nivelAcceso: NivelAcceso;
 }
 
 const PAGE_SIZE = "100";
 
-export default function SeccionSalud({ funcionarioId, userRoles }: Props) {
+export default function SeccionSalud({ funcionarioId, nivelAcceso }: Props) {
   const [data, setData] = useState<Datos | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const puedeCrear = hasAnyRole(userRoles, ["ADMIN", "RRHH"]);
+  const puedeCrear = nivelAcceso === "edit";
+  const soloLectura = nivelAcceso === "view";
 
   useEffect(() => {
     let alive = true;
@@ -103,7 +105,7 @@ export default function SeccionSalud({ funcionarioId, userRoles }: Props) {
 
   if (error) {
     return (
-      <SectionShell title="Salud">
+      <SectionShell title="Salud" soloLectura={soloLectura}>
         <div className="rounded-md bg-destructive/10 border border-destructive/30 p-4 text-sm text-destructive">
           {error}
         </div>
@@ -113,7 +115,7 @@ export default function SeccionSalud({ funcionarioId, userRoles }: Props) {
 
   if (!data) {
     return (
-      <SectionShell title="Salud">
+      <SectionShell title="Salud" soloLectura={soloLectura}>
         <p className="text-sm text-muted-foreground">Cargando…</p>
       </SectionShell>
     );
@@ -123,6 +125,7 @@ export default function SeccionSalud({ funcionarioId, userRoles }: Props) {
     <SectionShell
       title="Salud"
       description="Reposos, lesiones y evaluaciones físicas del funcionario."
+      soloLectura={soloLectura}
       actions={
         puedeCrear ? (
           <Link

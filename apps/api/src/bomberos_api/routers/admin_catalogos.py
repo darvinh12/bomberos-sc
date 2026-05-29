@@ -10,7 +10,7 @@ Guardrails:
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel, ConfigDict, Field, field_validator
-from sqlalchemy import delete, func, select
+from sqlalchemy import delete, func, select, text
 from sqlalchemy.exc import IntegrityError
 import re
 
@@ -24,10 +24,16 @@ from bomberos_api.models.catalogos import (
     EstadoCivil,
     EstatusFuncionario,
     GrupoSanguineo,
+    Idioma,
     InstitucionFormadora,
     Jerarquia,
     NivelEducativo,
+    Pais,
+    Parentesco,
+    SeccionFuncionario,
     TenenciaVivienda,
+    TipoLicencia,
+    TipoNacionalizacion,
     TipoPersonal,
     TipoVivienda,
 )
@@ -1297,3 +1303,375 @@ async def borrar_parroquia(
             detail=f"En uso por {n} dirección(es). No se puede borrar.",
         )
     await db.execute(delete(Parroquia).where(Parroquia.id == rec_id))
+
+
+# =============================================================================
+# Mini-sprint: 6 catálogos nuevos (parentescos, tipos-licencia,
+# tipos-nacionalizacion, idiomas, paises, secciones-funcionario)
+#
+# Todos siguen el patrón CatBase (codigo, nombre, activo). Para borrar:
+#  - Parentescos / licencia / nacionalización / país / sección: chequeo de FK
+#    contra Funcionario (la columna *_id). Si está en uso → 409.
+#  - Idiomas: chequeo contra la tabla pivote personal.funcionario_idiomas.
+# =============================================================================
+
+
+async def _en_uso_pivote_idiomas(db, idioma_id: int) -> int:
+    """Cuenta funcionarios que tienen este idioma asignado (pivote)."""
+    return (
+        await db.scalar(
+            text("SELECT COUNT(*) FROM personal.funcionario_idiomas WHERE idioma_id = :id")
+            .bindparams(id=idioma_id)
+        )
+    ) or 0
+
+
+# ---------- Parentescos ----------
+
+
+@router.get("/parentescos", response_model=list[CatBaseOut])
+async def listar_parentescos(db: DbSession, _: CurrentUser) -> list[CatBaseOut]:
+    rows = (await db.execute(select(Parentesco).order_by(Parentesco.codigo))).scalars().all()
+    return [CatBaseOut.model_validate(r) for r in rows]
+
+
+@router.post("/parentescos", response_model=CatBaseOut, status_code=status.HTTP_201_CREATED)
+async def crear_parentesco(
+    request: Request, payload: CatBaseCreate, db: DbSession, user: CurrentUser
+) -> CatBaseOut:
+    await set_audit_ctx(db, user.id, client_ip(request))
+    r = Parentesco(**payload.model_dump())
+    db.add(r)
+    try:
+        await db.flush()
+    except IntegrityError as e:
+        raise integrity_409(e) from e
+    return CatBaseOut.model_validate(r)
+
+
+@router.patch("/parentescos/{rec_id}", response_model=CatBaseOut)
+async def actualizar_parentesco(
+    request: Request, rec_id: int, payload: CatBaseUpdate, db: DbSession, user: CurrentUser
+) -> CatBaseOut:
+    await set_audit_ctx(db, user.id, client_ip(request))
+    r = await db.scalar(select(Parentesco).where(Parentesco.id == rec_id))
+    if r is None:
+        raise not_found("Parentesco")
+    for k, v in payload.model_dump(exclude_unset=True).items():
+        setattr(r, k, v)
+    await db.flush()
+    return CatBaseOut.model_validate(r)
+
+
+@router.delete("/parentescos/{rec_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def borrar_parentesco(
+    request: Request, rec_id: int, db: DbSession, user: CurrentUser
+) -> None:
+    await set_audit_ctx(db, user.id, client_ip(request))
+    if await db.scalar(select(Parentesco).where(Parentesco.id == rec_id)) is None:
+        raise not_found("Parentesco")
+    n = await _en_uso(db, Funcionario.parentesco_contacto_id, rec_id)
+    if n:
+        raise HTTPException(
+            status_code=409,
+            detail=f"En uso por {n} funcionario(s). Desactivá en su lugar.",
+        )
+    try:
+        await db.execute(delete(Parentesco).where(Parentesco.id == rec_id))
+        await db.flush()
+    except IntegrityError as e:
+        raise HTTPException(
+            status_code=409,
+            detail="El parentesco tiene referencias en uso (carga familiar). Desactivá en su lugar.",
+        ) from e
+
+
+# ---------- Tipos de licencia ----------
+
+
+@router.get("/tipos-licencia", response_model=list[CatBaseOut])
+async def listar_tipos_licencia(db: DbSession, _: CurrentUser) -> list[CatBaseOut]:
+    rows = (await db.execute(select(TipoLicencia).order_by(TipoLicencia.codigo))).scalars().all()
+    return [CatBaseOut.model_validate(r) for r in rows]
+
+
+@router.post("/tipos-licencia", response_model=CatBaseOut, status_code=status.HTTP_201_CREATED)
+async def crear_tipo_licencia(
+    request: Request, payload: CatBaseCreate, db: DbSession, user: CurrentUser
+) -> CatBaseOut:
+    await set_audit_ctx(db, user.id, client_ip(request))
+    r = TipoLicencia(**payload.model_dump())
+    db.add(r)
+    try:
+        await db.flush()
+    except IntegrityError as e:
+        raise integrity_409(e) from e
+    return CatBaseOut.model_validate(r)
+
+
+@router.patch("/tipos-licencia/{rec_id}", response_model=CatBaseOut)
+async def actualizar_tipo_licencia(
+    request: Request, rec_id: int, payload: CatBaseUpdate, db: DbSession, user: CurrentUser
+) -> CatBaseOut:
+    await set_audit_ctx(db, user.id, client_ip(request))
+    r = await db.scalar(select(TipoLicencia).where(TipoLicencia.id == rec_id))
+    if r is None:
+        raise not_found("Tipo de licencia")
+    for k, v in payload.model_dump(exclude_unset=True).items():
+        setattr(r, k, v)
+    await db.flush()
+    return CatBaseOut.model_validate(r)
+
+
+@router.delete("/tipos-licencia/{rec_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def borrar_tipo_licencia(
+    request: Request, rec_id: int, db: DbSession, user: CurrentUser
+) -> None:
+    # FK desde funcionarios.licencia_conducir_id y desde
+    # personal.licencias_conducir.tipo_licencia_id (renovaciones).
+    await set_audit_ctx(db, user.id, client_ip(request))
+    if await db.scalar(select(TipoLicencia).where(TipoLicencia.id == rec_id)) is None:
+        raise not_found("Tipo de licencia")
+    n = await _en_uso(db, Funcionario.licencia_conducir_id, rec_id)
+    if n:
+        raise HTTPException(
+            status_code=409,
+            detail=f"En uso por {n} funcionario(s). Desactivá en su lugar.",
+        )
+    try:
+        await db.execute(delete(TipoLicencia).where(TipoLicencia.id == rec_id))
+        await db.flush()
+    except IntegrityError as e:
+        raise HTTPException(
+            status_code=409,
+            detail="El tipo de licencia tiene renovaciones registradas. Desactivá en su lugar.",
+        ) from e
+
+
+# ---------- Tipos de nacionalización ----------
+
+
+@router.get("/tipos-nacionalizacion", response_model=list[CatBaseOut])
+async def listar_tipos_nacionalizacion(db: DbSession, _: CurrentUser) -> list[CatBaseOut]:
+    rows = (
+        await db.execute(select(TipoNacionalizacion).order_by(TipoNacionalizacion.codigo))
+    ).scalars().all()
+    return [CatBaseOut.model_validate(r) for r in rows]
+
+
+@router.post(
+    "/tipos-nacionalizacion", response_model=CatBaseOut, status_code=status.HTTP_201_CREATED
+)
+async def crear_tipo_nacionalizacion(
+    request: Request, payload: CatBaseCreate, db: DbSession, user: CurrentUser
+) -> CatBaseOut:
+    await set_audit_ctx(db, user.id, client_ip(request))
+    r = TipoNacionalizacion(**payload.model_dump())
+    db.add(r)
+    try:
+        await db.flush()
+    except IntegrityError as e:
+        raise integrity_409(e) from e
+    return CatBaseOut.model_validate(r)
+
+
+@router.patch("/tipos-nacionalizacion/{rec_id}", response_model=CatBaseOut)
+async def actualizar_tipo_nacionalizacion(
+    request: Request, rec_id: int, payload: CatBaseUpdate, db: DbSession, user: CurrentUser
+) -> CatBaseOut:
+    await set_audit_ctx(db, user.id, client_ip(request))
+    r = await db.scalar(select(TipoNacionalizacion).where(TipoNacionalizacion.id == rec_id))
+    if r is None:
+        raise not_found("Tipo de nacionalización")
+    for k, v in payload.model_dump(exclude_unset=True).items():
+        setattr(r, k, v)
+    await db.flush()
+    return CatBaseOut.model_validate(r)
+
+
+@router.delete("/tipos-nacionalizacion/{rec_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def borrar_tipo_nacionalizacion(
+    request: Request, rec_id: int, db: DbSession, user: CurrentUser
+) -> None:
+    await set_audit_ctx(db, user.id, client_ip(request))
+    if (
+        await db.scalar(select(TipoNacionalizacion).where(TipoNacionalizacion.id == rec_id))
+        is None
+    ):
+        raise not_found("Tipo de nacionalización")
+    n = await _en_uso(db, Funcionario.tipo_nacionalizacion_id, rec_id)
+    if n:
+        raise HTTPException(
+            status_code=409,
+            detail=f"En uso por {n} funcionario(s). Desactivá en su lugar.",
+        )
+    await db.execute(delete(TipoNacionalizacion).where(TipoNacionalizacion.id == rec_id))
+
+
+# ---------- Idiomas (multi-select vía pivote) ----------
+
+
+@router.get("/idiomas", response_model=list[CatBaseOut])
+async def listar_idiomas(db: DbSession, _: CurrentUser) -> list[CatBaseOut]:
+    rows = (await db.execute(select(Idioma).order_by(Idioma.codigo))).scalars().all()
+    return [CatBaseOut.model_validate(r) for r in rows]
+
+
+@router.post("/idiomas", response_model=CatBaseOut, status_code=status.HTTP_201_CREATED)
+async def crear_idioma(
+    request: Request, payload: CatBaseCreate, db: DbSession, user: CurrentUser
+) -> CatBaseOut:
+    await set_audit_ctx(db, user.id, client_ip(request))
+    r = Idioma(**payload.model_dump())
+    db.add(r)
+    try:
+        await db.flush()
+    except IntegrityError as e:
+        raise integrity_409(e) from e
+    return CatBaseOut.model_validate(r)
+
+
+@router.patch("/idiomas/{rec_id}", response_model=CatBaseOut)
+async def actualizar_idioma(
+    request: Request, rec_id: int, payload: CatBaseUpdate, db: DbSession, user: CurrentUser
+) -> CatBaseOut:
+    await set_audit_ctx(db, user.id, client_ip(request))
+    r = await db.scalar(select(Idioma).where(Idioma.id == rec_id))
+    if r is None:
+        raise not_found("Idioma")
+    for k, v in payload.model_dump(exclude_unset=True).items():
+        setattr(r, k, v)
+    await db.flush()
+    return CatBaseOut.model_validate(r)
+
+
+@router.delete("/idiomas/{rec_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def borrar_idioma(
+    request: Request, rec_id: int, db: DbSession, user: CurrentUser
+) -> None:
+    await set_audit_ctx(db, user.id, client_ip(request))
+    if await db.scalar(select(Idioma).where(Idioma.id == rec_id)) is None:
+        raise not_found("Idioma")
+    n = await _en_uso_pivote_idiomas(db, rec_id)
+    if n:
+        raise HTTPException(
+            status_code=409,
+            detail=f"Asignado a {n} funcionario(s). Desactivá en su lugar.",
+        )
+    await db.execute(delete(Idioma).where(Idioma.id == rec_id))
+
+
+# ---------- Países ----------
+
+
+@router.get("/paises", response_model=list[CatBaseOut])
+async def listar_paises(db: DbSession, _: CurrentUser) -> list[CatBaseOut]:
+    rows = (await db.execute(select(Pais).order_by(Pais.nombre))).scalars().all()
+    return [CatBaseOut.model_validate(r) for r in rows]
+
+
+@router.post("/paises", response_model=CatBaseOut, status_code=status.HTTP_201_CREATED)
+async def crear_pais(
+    request: Request, payload: CatBaseCreate, db: DbSession, user: CurrentUser
+) -> CatBaseOut:
+    await set_audit_ctx(db, user.id, client_ip(request))
+    r = Pais(**payload.model_dump())
+    db.add(r)
+    try:
+        await db.flush()
+    except IntegrityError as e:
+        raise integrity_409(e) from e
+    return CatBaseOut.model_validate(r)
+
+
+@router.patch("/paises/{rec_id}", response_model=CatBaseOut)
+async def actualizar_pais(
+    request: Request, rec_id: int, payload: CatBaseUpdate, db: DbSession, user: CurrentUser
+) -> CatBaseOut:
+    await set_audit_ctx(db, user.id, client_ip(request))
+    r = await db.scalar(select(Pais).where(Pais.id == rec_id))
+    if r is None:
+        raise not_found("País")
+    for k, v in payload.model_dump(exclude_unset=True).items():
+        setattr(r, k, v)
+    await db.flush()
+    return CatBaseOut.model_validate(r)
+
+
+@router.delete("/paises/{rec_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def borrar_pais(
+    request: Request, rec_id: int, db: DbSession, user: CurrentUser
+) -> None:
+    # Dos columnas FK posibles: pais_origen_id y pais_nacimiento_id
+    await set_audit_ctx(db, user.id, client_ip(request))
+    if await db.scalar(select(Pais).where(Pais.id == rec_id)) is None:
+        raise not_found("País")
+    n_origen = await _en_uso(db, Funcionario.pais_origen_id, rec_id)
+    n_nacimiento = await _en_uso(db, Funcionario.pais_nacimiento_id, rec_id)
+    total = n_origen + n_nacimiento
+    if total:
+        raise HTTPException(
+            status_code=409,
+            detail=f"En uso por {total} funcionario(s). Desactivá en su lugar.",
+        )
+    await db.execute(delete(Pais).where(Pais.id == rec_id))
+
+
+# ---------- Secciones de funcionario ----------
+
+
+@router.get("/secciones-funcionario", response_model=list[CatBaseOut])
+async def listar_secciones_funcionario(db: DbSession, _: CurrentUser) -> list[CatBaseOut]:
+    rows = (
+        await db.execute(select(SeccionFuncionario).order_by(SeccionFuncionario.codigo))
+    ).scalars().all()
+    return [CatBaseOut.model_validate(r) for r in rows]
+
+
+@router.post(
+    "/secciones-funcionario", response_model=CatBaseOut, status_code=status.HTTP_201_CREATED
+)
+async def crear_seccion_funcionario(
+    request: Request, payload: CatBaseCreate, db: DbSession, user: CurrentUser
+) -> CatBaseOut:
+    await set_audit_ctx(db, user.id, client_ip(request))
+    r = SeccionFuncionario(**payload.model_dump())
+    db.add(r)
+    try:
+        await db.flush()
+    except IntegrityError as e:
+        raise integrity_409(e) from e
+    return CatBaseOut.model_validate(r)
+
+
+@router.patch("/secciones-funcionario/{rec_id}", response_model=CatBaseOut)
+async def actualizar_seccion_funcionario(
+    request: Request, rec_id: int, payload: CatBaseUpdate, db: DbSession, user: CurrentUser
+) -> CatBaseOut:
+    await set_audit_ctx(db, user.id, client_ip(request))
+    r = await db.scalar(select(SeccionFuncionario).where(SeccionFuncionario.id == rec_id))
+    if r is None:
+        raise not_found("Sección de funcionario")
+    for k, v in payload.model_dump(exclude_unset=True).items():
+        setattr(r, k, v)
+    await db.flush()
+    return CatBaseOut.model_validate(r)
+
+
+@router.delete("/secciones-funcionario/{rec_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def borrar_seccion_funcionario(
+    request: Request, rec_id: int, db: DbSession, user: CurrentUser
+) -> None:
+    await set_audit_ctx(db, user.id, client_ip(request))
+    if (
+        await db.scalar(select(SeccionFuncionario).where(SeccionFuncionario.id == rec_id))
+        is None
+    ):
+        raise not_found("Sección de funcionario")
+    n = await _en_uso(db, Funcionario.seccion_id, rec_id)
+    if n:
+        raise HTTPException(
+            status_code=409,
+            detail=f"En uso por {n} funcionario(s). Desactivá en su lugar.",
+        )
+    await db.execute(delete(SeccionFuncionario).where(SeccionFuncionario.id == rec_id))
