@@ -25,7 +25,7 @@ interface Page<T> {
 }
 
 interface SearchProps {
-  searchParams: { activo?: string; page?: string };
+  searchParams: { activo?: string; page?: string; funcionario_id?: string };
 }
 
 export default async function ComisionesPage({ searchParams }: SearchProps) {
@@ -35,19 +35,55 @@ export default async function ComisionesPage({ searchParams }: SearchProps) {
     .catch(() => ({ roles: [] as string[] }));
   const puedeEditar = hasAnyRole(me.roles, ["ADMIN", "RRHH"]);
   const page = Number(searchParams.page ?? 1);
+  const funcionarioId = searchParams.funcionario_id;
   const params = new URLSearchParams({ page: String(page), page_size: "50" });
   if (searchParams.activo) params.set("activo", searchParams.activo);
+  if (funcionarioId) params.set("funcionario_id", funcionarioId);
 
   let data: Page<Comision> | null = null;
+  let funcionario: { id: number; nombre_completo: string | null } | null = null;
   let err: string | null = null;
   try {
-    data = await api.get<Page<Comision>>(`/ops/comisiones?${params}`, token);
+    const [comisiones, funcionarioData] = await Promise.all([
+      api.get<Page<Comision>>(`/ops/comisiones?${params}`, token),
+      funcionarioId
+        ? api
+            .get<{ id: number; nombre_completo: string | null }>(
+              `/funcionarios/${funcionarioId}`,
+              token,
+            )
+            .catch(() => null)
+        : Promise.resolve(null),
+    ]);
+    data = comisiones;
+    funcionario = funcionarioData;
   } catch (e: unknown) {
     err = e instanceof Error ? e.message : "Error";
   }
 
   return (
     <div className="space-y-6">
+      {funcionario && (
+        <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 flex items-center justify-between">
+          <div className="flex items-center gap-3 text-sm">
+            <Link
+              href={`/funcionarios/${funcionario.id}`}
+              className="text-muted-foreground hover:text-foreground"
+            >
+              ← {funcionario.nombre_completo ?? `Funcionario #${funcionario.id}`}
+            </Link>
+            <span className="text-muted-foreground">·</span>
+            <span className="text-foreground">Comisiones de este funcionario</span>
+          </div>
+          <Link
+            href="/ops/comisiones"
+            className="text-xs text-muted-foreground hover:text-foreground underline"
+          >
+            Quitar filtro
+          </Link>
+        </div>
+      )}
+
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">Comisiones de servicio</h1>
@@ -66,6 +102,9 @@ export default async function ComisionesPage({ searchParams }: SearchProps) {
       </div>
 
       <form className="flex gap-3 items-end">
+        {funcionarioId && (
+          <input type="hidden" name="funcionario_id" value={funcionarioId} />
+        )}
         <div>
           <label className="block text-xs font-medium mb-1">Activas</label>
           <select
@@ -124,13 +163,9 @@ export default async function ComisionesPage({ searchParams }: SearchProps) {
                     </td>
                     <td className="p-3">
                       {c.activo ? (
-                        <span className="inline-block px-2 py-0.5 rounded-full text-xs bg-blue-100 text-blue-800">
-                          Activa
-                        </span>
+                        <span className="badge badge-info">Activa</span>
                       ) : (
-                        <span className="inline-block px-2 py-0.5 rounded-full text-xs bg-gray-200 text-gray-700">
-                          Cerrada
-                        </span>
+                        <span className="badge badge-neutral">Cerrada</span>
                       )}
                     </td>
                     <td className="p-3 text-right">
@@ -161,7 +196,10 @@ export default async function ComisionesPage({ searchParams }: SearchProps) {
             page={data.page}
             pages={data.pages}
             basePath="/ops/comisiones"
-            searchParams={{ activo: searchParams.activo }}
+            searchParams={{
+              activo: searchParams.activo,
+              funcionario_id: funcionarioId,
+            }}
           />
         </div>
       )}

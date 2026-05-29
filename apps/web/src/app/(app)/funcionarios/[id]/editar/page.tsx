@@ -3,13 +3,11 @@ import { api, ApiError } from "@/lib/api";
 import { requireAuth } from "@/lib/session";
 import { requireRoleOrRedirect } from "@/lib/roles";
 import { listarCamposCustom } from "@/app/(app)/admin/campos-custom/actions";
+import {
+  cargarCatalogosFuncionario,
+  type CatalogosFuncionario,
+} from "@/lib/catalogos";
 import EditarForm from "./form";
-
-interface Cat {
-  id: number;
-  codigo: string;
-  nombre: string;
-}
 
 interface Me {
   roles: string[];
@@ -35,16 +33,42 @@ export default async function EditarFuncionarioPage({
     throw e;
   }
 
-  const [jerarquias, cargos, zonas, estaciones, camposCustom] = await Promise.all([
-    api.get<Cat[]>("/catalogos/jerarquias", token).catch(() => []),
-    api.get<Cat[]>("/catalogos/cargos", token).catch(() => []),
-    api.get<Cat[]>("/catalogos/zonas", token).catch(() => []),
-    api.get<Cat[]>("/catalogos/estaciones", token).catch(() => []),
-    listarCamposCustom().then((cs) => cs.filter((c) => c.entidad === "funcionario" && c.activo)),
-  ]);
+  let catalogos: CatalogosFuncionario = {
+    jerarquias: [],
+    cargos: [],
+    condiciones: [],
+    zonas: [],
+    estaciones: [],
+    areas: [],
+    dependencias: [],
+    divisiones: [],
+    estadosCiviles: [],
+    gruposSanguineos: [],
+    nivelesEducativos: [],
+    especialidades: [],
+    tiposPersonal: [],
+    estatusFuncionario: [],
+    institucionesFormadoras: [],
+    estados: [],
+    municipios: [],
+    parroquias: [],
+    tiposVivienda: [],
+    tenenciasVivienda: [],
+  };
+  let camposCustom: Awaited<ReturnType<typeof listarCamposCustom>> = [];
+  try {
+    [catalogos, camposCustom] = await Promise.all([
+      cargarCatalogosFuncionario(token),
+      listarCamposCustom().then((cs) =>
+        cs.filter((c) => c.entidad === "funcionario" && c.activo),
+      ),
+    ]);
+  } catch {
+    // si la API no responde, los selects quedan vacíos
+  }
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
+    <div className="max-w-6xl mx-auto space-y-6">
       <div>
         <h1 className="text-2xl font-bold">Editar funcionario</h1>
         <p className="text-sm text-muted-foreground font-mono">
@@ -54,12 +78,10 @@ export default async function EditarFuncionarioPage({
       </div>
       <EditarForm
         funcionario={funcionario}
-        jerarquias={jerarquias}
-        cargos={cargos}
-        zonas={zonas}
-        estaciones={estaciones}
+        catalogos={catalogos}
         camposCustom={camposCustom}
         esAdmin={me.roles.includes("ADMIN")}
+        userRoles={me.roles}
       />
     </div>
   );

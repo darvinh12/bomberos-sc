@@ -38,6 +38,10 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     log_format: str = "json"
 
+    # Almacenamiento local (intranet sin acceso a internet).
+    # Carpeta raíz donde se guardan fotos, huellas, firmas, documentos.
+    storage_path: str = "./data/uploads"
+
     @field_validator("cors_origins", mode="before")
     @classmethod
     def split_cors(cls, v):

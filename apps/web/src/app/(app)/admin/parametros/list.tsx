@@ -73,12 +73,12 @@ function Fila({ p }: { p: Parametro }) {
               {p.tipo_dato}
             </span>
             {!p.editable && (
-              <span className="text-[10px] px-1.5 py-0.5 bg-yellow-100 text-yellow-800 rounded">
+              <span className="text-[10px] px-1.5 py-0.5 rounded border border-amber-700/50 bg-amber-900/40 text-amber-300">
                 read-only
               </span>
             )}
             {p.sensible && (
-              <span className="text-[10px] px-1.5 py-0.5 bg-red-100 text-red-800 rounded">
+              <span className="text-[10px] px-1.5 py-0.5 rounded border border-red-700/50 bg-red-900/40 text-red-300">
                 sensible
               </span>
             )}

@@ -8,10 +8,16 @@ from bomberos_api.models.catalogos import (
     Condicion,
     EstadoCivil,
     Especialidad,
+    EstatusFuncionario,
     GrupoSanguineo,
+    InstitucionFormadora,
     Jerarquia,
     NivelEducativo,
+    TenenciaVivienda,
+    TipoPersonal,
+    TipoVivienda,
 )
+from bomberos_api.models.geografia import Estado, Municipio, Parroquia
 from bomberos_api.models.org import Area, Dependencia, Division, Estacion, Zona
 from bomberos_api.schemas.common import ORMBase
 
@@ -35,6 +41,21 @@ class _JerarquiaOut(_CatalogoOut):
 
 class _EstacionOut(_CatalogoOut):
     zona_id: int
+
+
+class _EstadoOut(_CatalogoOut):
+    """Estados de geo.* — no tienen `activo` real; lo sintetizamos como True
+    para mantener la simetría con el resto del catálogo del frontend."""
+
+    capital: str | None = None
+
+
+class _MunicipioOut(_CatalogoOut):
+    estado_id: int
+
+
+class _ParroquiaOut(_CatalogoOut):
+    municipio_id: int
 
 
 @router.get("/jerarquias", response_model=list[_JerarquiaOut])
@@ -138,3 +159,96 @@ async def dependencias(db: DbSession, _: CurrentUser):
         select(Dependencia).where(Dependencia.activo).order_by(Dependencia.nombre)
     )
     return [_CatalogoOut.model_validate(x) for x in res.scalars().all()]
+
+
+@router.get("/tipos-personal", response_model=list[_CatalogoOut])
+async def tipos_personal(db: DbSession, _: CurrentUser):
+    res = await db.execute(
+        select(TipoPersonal).where(TipoPersonal.activo).order_by(TipoPersonal.nombre)
+    )
+    return [_CatalogoOut.model_validate(x) for x in res.scalars().all()]
+
+
+@router.get("/estatus-funcionario", response_model=list[_CatalogoOut])
+async def estatus_funcionario(db: DbSession, _: CurrentUser):
+    res = await db.execute(
+        select(EstatusFuncionario)
+        .where(EstatusFuncionario.activo)
+        .order_by(EstatusFuncionario.nombre)
+    )
+    return [_CatalogoOut.model_validate(x) for x in res.scalars().all()]
+
+
+@router.get("/instituciones-formadoras", response_model=list[_CatalogoOut])
+async def instituciones_formadoras(db: DbSession, _: CurrentUser):
+    res = await db.execute(
+        select(InstitucionFormadora)
+        .where(InstitucionFormadora.activo)
+        .order_by(InstitucionFormadora.nombre)
+    )
+    return [_CatalogoOut.model_validate(x) for x in res.scalars().all()]
+
+
+@router.get("/tipos-vivienda", response_model=list[_CatalogoOut])
+async def tipos_vivienda(db: DbSession, _: CurrentUser):
+    res = await db.execute(
+        select(TipoVivienda).where(TipoVivienda.activo).order_by(TipoVivienda.nombre)
+    )
+    return [_CatalogoOut.model_validate(x) for x in res.scalars().all()]
+
+
+@router.get("/tenencias-vivienda", response_model=list[_CatalogoOut])
+async def tenencias_vivienda(db: DbSession, _: CurrentUser):
+    res = await db.execute(
+        select(TenenciaVivienda)
+        .where(TenenciaVivienda.activo)
+        .order_by(TenenciaVivienda.nombre)
+    )
+    return [_CatalogoOut.model_validate(x) for x in res.scalars().all()]
+
+
+@router.get("/estados", response_model=list[_EstadoOut])
+async def estados(db: DbSession, _: CurrentUser):
+    res = await db.execute(select(Estado).order_by(Estado.nombre))
+    return [
+        _EstadoOut(
+            id=x.id, codigo=x.codigo, nombre=x.nombre, activo=True, capital=x.capital
+        )
+        for x in res.scalars().all()
+    ]
+
+
+@router.get("/municipios", response_model=list[_MunicipioOut])
+async def municipios(db: DbSession, _: CurrentUser, estado_id: int | None = None):
+    stmt = select(Municipio)
+    if estado_id is not None:
+        stmt = stmt.where(Municipio.estado_id == estado_id)
+    res = await db.execute(stmt.order_by(Municipio.nombre))
+    return [
+        _MunicipioOut(
+            id=x.id,
+            codigo=x.codigo,
+            nombre=x.nombre,
+            activo=True,
+            estado_id=x.estado_id,
+        )
+        for x in res.scalars().all()
+    ]
+
+
+@router.get("/parroquias", response_model=list[_ParroquiaOut])
+async def parroquias(db: DbSession, _: CurrentUser, municipio_id: int | None = None):
+    stmt = select(Parroquia)
+    if municipio_id is not None:
+        stmt = stmt.where(Parroquia.municipio_id == municipio_id)
+    res = await db.execute(stmt.order_by(Parroquia.nombre))
+    return [
+        _ParroquiaOut(
+            id=x.id,
+            codigo=x.codigo,
+            nombre=x.nombre,
+            activo=True,
+            municipio_id=x.municipio_id,
+        )
+        for x in res.scalars().all()
+    ]

@@ -22,11 +22,18 @@ from bomberos_api.models.catalogos import (
     Condicion,
     Especialidad,
     EstadoCivil,
+    EstatusFuncionario,
     GrupoSanguineo,
+    InstitucionFormadora,
     Jerarquia,
     NivelEducativo,
+    TenenciaVivienda,
+    TipoPersonal,
+    TipoVivienda,
 )
+from bomberos_api.models.direccion import Direccion
 from bomberos_api.models.funcionario import Funcionario
+from bomberos_api.models.geografia import Estado, Municipio, Parroquia
 
 router = APIRouter(
     prefix="/admin/catalogos",
@@ -49,6 +56,19 @@ async def _en_uso(db, fk_col, registro_id: int) -> int:
     return (
         await db.scalar(
             select(func.count()).select_from(Funcionario).where(fk_col == registro_id)
+        )
+    ) or 0
+
+
+async def _en_uso_direccion(db, fk_col, registro_id: int) -> int:
+    """Cuenta cuántas direcciones apuntan a esta fila vía la FK indicada.
+
+    Se usa para catálogos referenciados desde personal.direcciones
+    (tipos_vivienda, tenencias_vivienda, geo.estados/municipios/parroquias).
+    """
+    return (
+        await db.scalar(
+            select(func.count()).select_from(Direccion).where(fk_col == registro_id)
         )
     ) or 0
 
@@ -692,3 +712,588 @@ async def borrar_banco(
             status_code=409,
             detail="El banco tiene referencias en uso. Desactivá en su lugar.",
         ) from e
+
+
+# ============================================================
+# Tipos de personal (plano, sin FK desde funcionarios — tipo_personal es string libre)
+# ============================================================
+
+
+@router.get("/tipos-personal", response_model=list[CatBaseOut])
+async def listar_tipos_personal(db: DbSession, _: CurrentUser) -> list[CatBaseOut]:
+    rows = (await db.execute(select(TipoPersonal).order_by(TipoPersonal.codigo))).scalars().all()
+    return [CatBaseOut.model_validate(r) for r in rows]
+
+
+@router.post("/tipos-personal", response_model=CatBaseOut, status_code=status.HTTP_201_CREATED)
+async def crear_tipo_personal(
+    request: Request, payload: CatBaseCreate, db: DbSession, user: CurrentUser
+) -> CatBaseOut:
+    await set_audit_ctx(db, user.id, client_ip(request))
+    r = TipoPersonal(**payload.model_dump())
+    db.add(r)
+    try:
+        await db.flush()
+    except IntegrityError as e:
+        raise integrity_409(e) from e
+    return CatBaseOut.model_validate(r)
+
+
+@router.patch("/tipos-personal/{rec_id}", response_model=CatBaseOut)
+async def actualizar_tipo_personal(
+    request: Request, rec_id: int, payload: CatBaseUpdate, db: DbSession, user: CurrentUser
+) -> CatBaseOut:
+    await set_audit_ctx(db, user.id, client_ip(request))
+    r = await db.scalar(select(TipoPersonal).where(TipoPersonal.id == rec_id))
+    if r is None:
+        raise not_found("Tipo de personal")
+    for k, v in payload.model_dump(exclude_unset=True).items():
+        setattr(r, k, v)
+    await db.flush()
+    return CatBaseOut.model_validate(r)
+
+
+@router.delete("/tipos-personal/{rec_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def borrar_tipo_personal(
+    request: Request, rec_id: int, db: DbSession, user: CurrentUser
+) -> None:
+    # `tipo_personal` en funcionarios es string libre, no FK → no chequeamos uso.
+    await set_audit_ctx(db, user.id, client_ip(request))
+    if await db.scalar(select(TipoPersonal).where(TipoPersonal.id == rec_id)) is None:
+        raise not_found("Tipo de personal")
+    await db.execute(delete(TipoPersonal).where(TipoPersonal.id == rec_id))
+
+
+# ============================================================
+# Estatus de funcionario (plano, sin FK — estatus es string libre)
+# ============================================================
+
+
+@router.get("/estatus-funcionario", response_model=list[CatBaseOut])
+async def listar_estatus_funcionario(db: DbSession, _: CurrentUser) -> list[CatBaseOut]:
+    rows = (
+        await db.execute(select(EstatusFuncionario).order_by(EstatusFuncionario.codigo))
+    ).scalars().all()
+    return [CatBaseOut.model_validate(r) for r in rows]
+
+
+@router.post(
+    "/estatus-funcionario", response_model=CatBaseOut, status_code=status.HTTP_201_CREATED
+)
+async def crear_estatus_funcionario(
+    request: Request, payload: CatBaseCreate, db: DbSession, user: CurrentUser
+) -> CatBaseOut:
+    await set_audit_ctx(db, user.id, client_ip(request))
+    r = EstatusFuncionario(**payload.model_dump())
+    db.add(r)
+    try:
+        await db.flush()
+    except IntegrityError as e:
+        raise integrity_409(e) from e
+    return CatBaseOut.model_validate(r)
+
+
+@router.patch("/estatus-funcionario/{rec_id}", response_model=CatBaseOut)
+async def actualizar_estatus_funcionario(
+    request: Request, rec_id: int, payload: CatBaseUpdate, db: DbSession, user: CurrentUser
+) -> CatBaseOut:
+    await set_audit_ctx(db, user.id, client_ip(request))
+    r = await db.scalar(select(EstatusFuncionario).where(EstatusFuncionario.id == rec_id))
+    if r is None:
+        raise not_found("Estatus de funcionario")
+    for k, v in payload.model_dump(exclude_unset=True).items():
+        setattr(r, k, v)
+    await db.flush()
+    return CatBaseOut.model_validate(r)
+
+
+@router.delete("/estatus-funcionario/{rec_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def borrar_estatus_funcionario(
+    request: Request, rec_id: int, db: DbSession, user: CurrentUser
+) -> None:
+    # `estatus` en funcionarios es string libre, no FK → no chequeamos uso.
+    await set_audit_ctx(db, user.id, client_ip(request))
+    if await db.scalar(select(EstatusFuncionario).where(EstatusFuncionario.id == rec_id)) is None:
+        raise not_found("Estatus de funcionario")
+    await db.execute(delete(EstatusFuncionario).where(EstatusFuncionario.id == rec_id))
+
+
+# ============================================================
+# Instituciones formadoras (plano, FK desde funcionarios.institucion_formadora_id)
+# ============================================================
+
+
+@router.get("/instituciones-formadoras", response_model=list[CatBaseOut])
+async def listar_instituciones_formadoras(db: DbSession, _: CurrentUser) -> list[CatBaseOut]:
+    rows = (
+        await db.execute(select(InstitucionFormadora).order_by(InstitucionFormadora.codigo))
+    ).scalars().all()
+    return [CatBaseOut.model_validate(r) for r in rows]
+
+
+@router.post(
+    "/instituciones-formadoras", response_model=CatBaseOut, status_code=status.HTTP_201_CREATED
+)
+async def crear_institucion_formadora(
+    request: Request, payload: CatBaseCreate, db: DbSession, user: CurrentUser
+) -> CatBaseOut:
+    await set_audit_ctx(db, user.id, client_ip(request))
+    r = InstitucionFormadora(**payload.model_dump())
+    db.add(r)
+    try:
+        await db.flush()
+    except IntegrityError as e:
+        raise integrity_409(e) from e
+    return CatBaseOut.model_validate(r)
+
+
+@router.patch("/instituciones-formadoras/{rec_id}", response_model=CatBaseOut)
+async def actualizar_institucion_formadora(
+    request: Request, rec_id: int, payload: CatBaseUpdate, db: DbSession, user: CurrentUser
+) -> CatBaseOut:
+    await set_audit_ctx(db, user.id, client_ip(request))
+    r = await db.scalar(select(InstitucionFormadora).where(InstitucionFormadora.id == rec_id))
+    if r is None:
+        raise not_found("Institución formadora")
+    for k, v in payload.model_dump(exclude_unset=True).items():
+        setattr(r, k, v)
+    await db.flush()
+    return CatBaseOut.model_validate(r)
+
+
+@router.delete("/instituciones-formadoras/{rec_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def borrar_institucion_formadora(
+    request: Request, rec_id: int, db: DbSession, user: CurrentUser
+) -> None:
+    await set_audit_ctx(db, user.id, client_ip(request))
+    if (
+        await db.scalar(select(InstitucionFormadora).where(InstitucionFormadora.id == rec_id))
+        is None
+    ):
+        raise not_found("Institución formadora")
+    n = await _en_uso(db, Funcionario.institucion_formadora_id, rec_id)
+    if n:
+        raise HTTPException(
+            status_code=409,
+            detail=f"En uso por {n} funcionario(s). Desactivá en su lugar.",
+        )
+    await db.execute(delete(InstitucionFormadora).where(InstitucionFormadora.id == rec_id))
+
+
+# ============================================================
+# Tipos de vivienda (plano, FK desde personal.direcciones.tipo_vivienda_id)
+# ============================================================
+
+
+@router.get("/tipos-vivienda", response_model=list[CatBaseOut])
+async def listar_tipos_vivienda(db: DbSession, _: CurrentUser) -> list[CatBaseOut]:
+    rows = (await db.execute(select(TipoVivienda).order_by(TipoVivienda.codigo))).scalars().all()
+    return [CatBaseOut.model_validate(r) for r in rows]
+
+
+@router.post("/tipos-vivienda", response_model=CatBaseOut, status_code=status.HTTP_201_CREATED)
+async def crear_tipo_vivienda(
+    request: Request, payload: CatBaseCreate, db: DbSession, user: CurrentUser
+) -> CatBaseOut:
+    await set_audit_ctx(db, user.id, client_ip(request))
+    r = TipoVivienda(**payload.model_dump())
+    db.add(r)
+    try:
+        await db.flush()
+    except IntegrityError as e:
+        raise integrity_409(e) from e
+    return CatBaseOut.model_validate(r)
+
+
+@router.patch("/tipos-vivienda/{rec_id}", response_model=CatBaseOut)
+async def actualizar_tipo_vivienda(
+    request: Request, rec_id: int, payload: CatBaseUpdate, db: DbSession, user: CurrentUser
+) -> CatBaseOut:
+    await set_audit_ctx(db, user.id, client_ip(request))
+    r = await db.scalar(select(TipoVivienda).where(TipoVivienda.id == rec_id))
+    if r is None:
+        raise not_found("Tipo de vivienda")
+    for k, v in payload.model_dump(exclude_unset=True).items():
+        setattr(r, k, v)
+    await db.flush()
+    return CatBaseOut.model_validate(r)
+
+
+@router.delete("/tipos-vivienda/{rec_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def borrar_tipo_vivienda(
+    request: Request, rec_id: int, db: DbSession, user: CurrentUser
+) -> None:
+    await set_audit_ctx(db, user.id, client_ip(request))
+    if await db.scalar(select(TipoVivienda).where(TipoVivienda.id == rec_id)) is None:
+        raise not_found("Tipo de vivienda")
+    n = await _en_uso_direccion(db, Direccion.tipo_vivienda_id, rec_id)
+    if n:
+        raise HTTPException(
+            status_code=409,
+            detail=f"En uso por {n} dirección(es). Desactivá en su lugar.",
+        )
+    await db.execute(delete(TipoVivienda).where(TipoVivienda.id == rec_id))
+
+
+# ============================================================
+# Tenencias de vivienda (plano, FK desde personal.direcciones.tenencia_id)
+# ============================================================
+
+
+@router.get("/tenencias-vivienda", response_model=list[CatBaseOut])
+async def listar_tenencias_vivienda(db: DbSession, _: CurrentUser) -> list[CatBaseOut]:
+    rows = (
+        await db.execute(select(TenenciaVivienda).order_by(TenenciaVivienda.codigo))
+    ).scalars().all()
+    return [CatBaseOut.model_validate(r) for r in rows]
+
+
+@router.post(
+    "/tenencias-vivienda", response_model=CatBaseOut, status_code=status.HTTP_201_CREATED
+)
+async def crear_tenencia_vivienda(
+    request: Request, payload: CatBaseCreate, db: DbSession, user: CurrentUser
+) -> CatBaseOut:
+    await set_audit_ctx(db, user.id, client_ip(request))
+    r = TenenciaVivienda(**payload.model_dump())
+    db.add(r)
+    try:
+        await db.flush()
+    except IntegrityError as e:
+        raise integrity_409(e) from e
+    return CatBaseOut.model_validate(r)
+
+
+@router.patch("/tenencias-vivienda/{rec_id}", response_model=CatBaseOut)
+async def actualizar_tenencia_vivienda(
+    request: Request, rec_id: int, payload: CatBaseUpdate, db: DbSession, user: CurrentUser
+) -> CatBaseOut:
+    await set_audit_ctx(db, user.id, client_ip(request))
+    r = await db.scalar(select(TenenciaVivienda).where(TenenciaVivienda.id == rec_id))
+    if r is None:
+        raise not_found("Tenencia de vivienda")
+    for k, v in payload.model_dump(exclude_unset=True).items():
+        setattr(r, k, v)
+    await db.flush()
+    return CatBaseOut.model_validate(r)
+
+
+@router.delete("/tenencias-vivienda/{rec_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def borrar_tenencia_vivienda(
+    request: Request, rec_id: int, db: DbSession, user: CurrentUser
+) -> None:
+    await set_audit_ctx(db, user.id, client_ip(request))
+    if await db.scalar(select(TenenciaVivienda).where(TenenciaVivienda.id == rec_id)) is None:
+        raise not_found("Tenencia de vivienda")
+    n = await _en_uso_direccion(db, Direccion.tenencia_id, rec_id)
+    if n:
+        raise HTTPException(
+            status_code=409,
+            detail=f"En uso por {n} dirección(es). Desactivá en su lugar.",
+        )
+    await db.execute(delete(TenenciaVivienda).where(TenenciaVivienda.id == rec_id))
+
+
+# ============================================================
+# Geografía VE — schema `geo` (fuente de verdad única)
+#
+# Las tablas geo.estados / geo.municipios / geo.parroquias NO tienen
+# columna `activo`: la división político-territorial existe o no existe.
+# Para mantener la simetría con el resto de catálogos del admin UI
+# sintetizamos `activo=true` en las respuestas (read-only desde frontend).
+#
+# El check de "en uso" se hace contra personal.direcciones, que es donde
+# realmente se referencia la geografía (el funcionario ya no la guarda
+# como columnas planas).
+# ============================================================
+
+
+class _GeoCatOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    codigo: str
+    nombre: str
+    activo: bool = True
+
+
+class _EstadoOut(_GeoCatOut):
+    capital: str | None = None
+
+
+class _EstadoCreate(BaseModel):
+    codigo: str = Field(min_length=1, max_length=16)
+    nombre: str = Field(min_length=2, max_length=64)
+    capital: str | None = Field(default=None, max_length=120)
+
+    @field_validator("codigo")
+    @classmethod
+    def cv(cls, v: str) -> str:
+        return _validar_codigo(v)
+
+
+class _EstadoUpdate(BaseModel):
+    nombre: str | None = Field(default=None, min_length=2, max_length=64)
+    capital: str | None = Field(default=None, max_length=120)
+
+
+class _MunicipioOut(_GeoCatOut):
+    estado_id: int
+
+
+class _MunicipioCreate(BaseModel):
+    codigo: str = Field(min_length=1, max_length=64)
+    nombre: str = Field(min_length=2, max_length=120)
+    estado_id: int
+
+    @field_validator("codigo")
+    @classmethod
+    def cv(cls, v: str) -> str:
+        return _validar_codigo(v)
+
+
+class _MunicipioUpdate(BaseModel):
+    nombre: str | None = Field(default=None, min_length=2, max_length=120)
+    estado_id: int | None = None
+
+
+class _ParroquiaOut(_GeoCatOut):
+    municipio_id: int
+
+
+class _ParroquiaCreate(BaseModel):
+    codigo: str = Field(min_length=1, max_length=64)
+    nombre: str = Field(min_length=2, max_length=120)
+    municipio_id: int
+
+    @field_validator("codigo")
+    @classmethod
+    def cv(cls, v: str) -> str:
+        return _validar_codigo(v)
+
+
+class _ParroquiaUpdate(BaseModel):
+    nombre: str | None = Field(default=None, min_length=2, max_length=120)
+    municipio_id: int | None = None
+
+
+# ----- Estados -----
+
+@router.get("/estados", response_model=list[_EstadoOut])
+async def listar_estados(db: DbSession, _: CurrentUser) -> list[_EstadoOut]:
+    rows = (await db.execute(select(Estado).order_by(Estado.codigo))).scalars().all()
+    return [
+        _EstadoOut(
+            id=r.id, codigo=r.codigo, nombre=r.nombre, capital=r.capital, activo=True
+        )
+        for r in rows
+    ]
+
+
+@router.post("/estados", response_model=_EstadoOut, status_code=status.HTTP_201_CREATED)
+async def crear_estado(
+    request: Request, payload: _EstadoCreate, db: DbSession, user: CurrentUser
+) -> _EstadoOut:
+    await set_audit_ctx(db, user.id, client_ip(request))
+    r = Estado(**payload.model_dump())
+    db.add(r)
+    try:
+        await db.flush()
+    except IntegrityError as e:
+        raise integrity_409(e) from e
+    return _EstadoOut(
+        id=r.id, codigo=r.codigo, nombre=r.nombre, capital=r.capital, activo=True
+    )
+
+
+@router.patch("/estados/{rec_id}", response_model=_EstadoOut)
+async def actualizar_estado(
+    request: Request, rec_id: int, payload: _EstadoUpdate, db: DbSession, user: CurrentUser
+) -> _EstadoOut:
+    await set_audit_ctx(db, user.id, client_ip(request))
+    r = await db.scalar(select(Estado).where(Estado.id == rec_id))
+    if r is None:
+        raise not_found("Estado")
+    for k, v in payload.model_dump(exclude_unset=True).items():
+        setattr(r, k, v)
+    await db.flush()
+    return _EstadoOut(
+        id=r.id, codigo=r.codigo, nombre=r.nombre, capital=r.capital, activo=True
+    )
+
+
+@router.delete("/estados/{rec_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def borrar_estado(
+    request: Request, rec_id: int, db: DbSession, user: CurrentUser
+) -> None:
+    await set_audit_ctx(db, user.id, client_ip(request))
+    if await db.scalar(select(Estado).where(Estado.id == rec_id)) is None:
+        raise not_found("Estado")
+    n = await _en_uso_direccion(db, Direccion.estado_id, rec_id)
+    if n:
+        raise HTTPException(
+            status_code=409,
+            detail=f"En uso por {n} dirección(es). No se puede borrar.",
+        )
+    try:
+        await db.execute(delete(Estado).where(Estado.id == rec_id))
+        await db.flush()
+    except IntegrityError as e:
+        raise HTTPException(
+            status_code=409,
+            detail="El estado tiene municipios u otras referencias. No se puede borrar.",
+        ) from e
+
+
+# ----- Municipios -----
+
+@router.get("/municipios", response_model=list[_MunicipioOut])
+async def listar_municipios(
+    db: DbSession, _: CurrentUser, estado_id: int | None = None
+) -> list[_MunicipioOut]:
+    stmt = select(Municipio)
+    if estado_id is not None:
+        stmt = stmt.where(Municipio.estado_id == estado_id)
+    rows = (await db.execute(stmt.order_by(Municipio.codigo))).scalars().all()
+    return [
+        _MunicipioOut(
+            id=r.id, codigo=r.codigo, nombre=r.nombre, estado_id=r.estado_id, activo=True
+        )
+        for r in rows
+    ]
+
+
+@router.post(
+    "/municipios", response_model=_MunicipioOut, status_code=status.HTTP_201_CREATED
+)
+async def crear_municipio(
+    request: Request, payload: _MunicipioCreate, db: DbSession, user: CurrentUser
+) -> _MunicipioOut:
+    await set_audit_ctx(db, user.id, client_ip(request))
+    r = Municipio(**payload.model_dump())
+    db.add(r)
+    try:
+        await db.flush()
+    except IntegrityError as e:
+        raise integrity_409(e) from e
+    return _MunicipioOut(
+        id=r.id, codigo=r.codigo, nombre=r.nombre, estado_id=r.estado_id, activo=True
+    )
+
+
+@router.patch("/municipios/{rec_id}", response_model=_MunicipioOut)
+async def actualizar_municipio(
+    request: Request, rec_id: int, payload: _MunicipioUpdate, db: DbSession, user: CurrentUser
+) -> _MunicipioOut:
+    await set_audit_ctx(db, user.id, client_ip(request))
+    r = await db.scalar(select(Municipio).where(Municipio.id == rec_id))
+    if r is None:
+        raise not_found("Municipio")
+    for k, v in payload.model_dump(exclude_unset=True).items():
+        setattr(r, k, v)
+    await db.flush()
+    return _MunicipioOut(
+        id=r.id, codigo=r.codigo, nombre=r.nombre, estado_id=r.estado_id, activo=True
+    )
+
+
+@router.delete("/municipios/{rec_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def borrar_municipio(
+    request: Request, rec_id: int, db: DbSession, user: CurrentUser
+) -> None:
+    await set_audit_ctx(db, user.id, client_ip(request))
+    if await db.scalar(select(Municipio).where(Municipio.id == rec_id)) is None:
+        raise not_found("Municipio")
+    n = await _en_uso_direccion(db, Direccion.municipio_id, rec_id)
+    if n:
+        raise HTTPException(
+            status_code=409,
+            detail=f"En uso por {n} dirección(es). No se puede borrar.",
+        )
+    try:
+        await db.execute(delete(Municipio).where(Municipio.id == rec_id))
+        await db.flush()
+    except IntegrityError as e:
+        raise HTTPException(
+            status_code=409,
+            detail="El municipio tiene parroquias u otras referencias. No se puede borrar.",
+        ) from e
+
+
+# ----- Parroquias -----
+
+@router.get("/parroquias", response_model=list[_ParroquiaOut])
+async def listar_parroquias(
+    db: DbSession, _: CurrentUser, municipio_id: int | None = None
+) -> list[_ParroquiaOut]:
+    stmt = select(Parroquia)
+    if municipio_id is not None:
+        stmt = stmt.where(Parroquia.municipio_id == municipio_id)
+    rows = (await db.execute(stmt.order_by(Parroquia.codigo))).scalars().all()
+    return [
+        _ParroquiaOut(
+            id=r.id,
+            codigo=r.codigo,
+            nombre=r.nombre,
+            municipio_id=r.municipio_id,
+            activo=True,
+        )
+        for r in rows
+    ]
+
+
+@router.post(
+    "/parroquias", response_model=_ParroquiaOut, status_code=status.HTTP_201_CREATED
+)
+async def crear_parroquia(
+    request: Request, payload: _ParroquiaCreate, db: DbSession, user: CurrentUser
+) -> _ParroquiaOut:
+    await set_audit_ctx(db, user.id, client_ip(request))
+    r = Parroquia(**payload.model_dump())
+    db.add(r)
+    try:
+        await db.flush()
+    except IntegrityError as e:
+        raise integrity_409(e) from e
+    return _ParroquiaOut(
+        id=r.id,
+        codigo=r.codigo,
+        nombre=r.nombre,
+        municipio_id=r.municipio_id,
+        activo=True,
+    )
+
+
+@router.patch("/parroquias/{rec_id}", response_model=_ParroquiaOut)
+async def actualizar_parroquia(
+    request: Request, rec_id: int, payload: _ParroquiaUpdate, db: DbSession, user: CurrentUser
+) -> _ParroquiaOut:
+    await set_audit_ctx(db, user.id, client_ip(request))
+    r = await db.scalar(select(Parroquia).where(Parroquia.id == rec_id))
+    if r is None:
+        raise not_found("Parroquia")
+    for k, v in payload.model_dump(exclude_unset=True).items():
+        setattr(r, k, v)
+    await db.flush()
+    return _ParroquiaOut(
+        id=r.id,
+        codigo=r.codigo,
+        nombre=r.nombre,
+        municipio_id=r.municipio_id,
+        activo=True,
+    )
+
+
+@router.delete("/parroquias/{rec_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def borrar_parroquia(
+    request: Request, rec_id: int, db: DbSession, user: CurrentUser
+) -> None:
+    await set_audit_ctx(db, user.id, client_ip(request))
+    if await db.scalar(select(Parroquia).where(Parroquia.id == rec_id)) is None:
+        raise not_found("Parroquia")
+    n = await _en_uso_direccion(db, Direccion.parroquia_id, rec_id)
+    if n:
+        raise HTTPException(
+            status_code=409,
+            detail=f"En uso por {n} dirección(es). No se puede borrar.",
+        )
+    await db.execute(delete(Parroquia).where(Parroquia.id == rec_id))

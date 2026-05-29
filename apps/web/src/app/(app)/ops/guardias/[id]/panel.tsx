@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { Check, X } from "lucide-react";
 import {
   asignarFuncionarioAGuardia,
   cerrarGuardia,
@@ -137,34 +138,44 @@ export default function GuardiaPanel({
                     {puedeEditar && !cerradaState ? (
                       <div className="inline-flex gap-1">
                         <button
+                          type="button"
                           onClick={() => toggleAsistencia(a.id, true)}
                           disabled={pending}
-                          className={`px-2 py-0.5 text-xs rounded border ${
+                          aria-label="Marcar como asistió"
+                          className={`inline-flex items-center justify-center w-7 h-7 text-xs rounded border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                             a.asistio === true
-                              ? "bg-green-100 border-green-300 text-green-800"
-                              : "hover:bg-green-50"
+                              ? "bg-emerald-900/40 border-emerald-700/50 text-emerald-300"
+                              : "border-border text-muted-foreground hover:bg-emerald-900/30 hover:text-emerald-300"
                           }`}
                           title="Marcar como asistió"
                         >
-                          ✓
+                          <Check className="w-3.5 h-3.5" aria-hidden="true" />
                         </button>
                         <button
+                          type="button"
                           onClick={() => toggleAsistencia(a.id, false)}
                           disabled={pending}
-                          className={`px-2 py-0.5 text-xs rounded border ${
+                          aria-label="Marcar como NO asistió"
+                          className={`inline-flex items-center justify-center w-7 h-7 text-xs rounded border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                             a.asistio === false
-                              ? "bg-red-100 border-red-300 text-red-800"
-                              : "hover:bg-red-50"
+                              ? "bg-red-900/40 border-red-700/50 text-red-300"
+                              : "border-border text-muted-foreground hover:bg-red-900/30 hover:text-red-300"
                           }`}
                           title="Marcar como NO asistió"
                         >
-                          ✗
+                          <X className="w-3.5 h-3.5" aria-hidden="true" />
                         </button>
                       </div>
                     ) : a.asistio === true ? (
-                      <span className="text-green-700">✓ Asistió</span>
+                      <span className="inline-flex items-center gap-1 text-emerald-300">
+                        <Check className="w-3.5 h-3.5" aria-hidden="true" />
+                        Asistió
+                      </span>
                     ) : a.asistio === false ? (
-                      <span className="text-red-700">✗ No asistió</span>
+                      <span className="inline-flex items-center gap-1 text-red-300">
+                        <X className="w-3.5 h-3.5" aria-hidden="true" />
+                        No asistió
+                      </span>
                     ) : (
                       <span className="text-muted-foreground">—</span>
                     )}

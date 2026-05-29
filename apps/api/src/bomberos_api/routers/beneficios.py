@@ -60,6 +60,16 @@ async def crear_ayuda(
     return AyudaOut.model_validate(a)
 
 
+@router.get("/ayudas/{ayuda_id}", response_model=AyudaOut)
+async def obtener_ayuda(
+    ayuda_id: int, db: DbSession, _: CurrentUser
+) -> AyudaOut:
+    a = await db.scalar(select(Ayuda).where(Ayuda.id == ayuda_id))
+    if a is None:
+        raise not_found("Ayuda")
+    return AyudaOut.model_validate(a)
+
+
 @router.patch(
     "/ayudas/{ayuda_id}",
     response_model=AyudaOut,

@@ -14,7 +14,15 @@ export type EntidadCat =
   | "especialidades"
   | "estados-civiles"
   | "grupos-sanguineos"
-  | "bancos";
+  | "bancos"
+  | "tipos-personal"
+  | "estatus-funcionario"
+  | "instituciones-formadoras"
+  | "tipos-vivienda"
+  | "tenencias-vivienda"
+  | "estados"
+  | "municipios"
+  | "parroquias";
 
 export type CatItem = {
   id: number;
@@ -30,6 +38,9 @@ export type CatItem = {
   descripcion?: string | null;
   es_jefatura?: boolean;
   swift?: string | null;
+  // FK para municipios / parroquias
+  estado_id?: number | null;
+  municipio_id?: number | null;
   _deleted?: boolean;
 };
 
@@ -42,6 +53,14 @@ const COOKIES: Record<EntidadCat, string> = {
   "estados-civiles": "bcd_demo_cat_ec",
   "grupos-sanguineos": "bcd_demo_cat_gs",
   bancos: "bcd_demo_cat_bnc",
+  "tipos-personal": "bcd_demo_cat_tp",
+  "estatus-funcionario": "bcd_demo_cat_ef",
+  "instituciones-formadoras": "bcd_demo_cat_if",
+  "tipos-vivienda": "bcd_demo_cat_tv",
+  "tenencias-vivienda": "bcd_demo_cat_tnv",
+  estados: "bcd_demo_cat_est",
+  municipios: "bcd_demo_cat_mun",
+  parroquias: "bcd_demo_cat_par",
 };
 
 function readDemo(entidad: EntidadCat): CatItem[] {
@@ -116,6 +135,16 @@ export async function crearCat(
     payload.activo = fd.get("activo") !== "off";
   } else if (entidad === "bancos") {
     payload.swift = String(fd.get("swift") ?? "").trim() || null;
+    payload.activo = fd.get("activo") !== "off";
+  } else if (entidad === "municipios") {
+    const estadoId = Number(fd.get("estado_id") ?? 0);
+    if (!estadoId) return { error: "Debés seleccionar un estado" };
+    payload.estado_id = estadoId;
+    payload.activo = fd.get("activo") !== "off";
+  } else if (entidad === "parroquias") {
+    const municipioId = Number(fd.get("municipio_id") ?? 0);
+    if (!municipioId) return { error: "Debés seleccionar un municipio" };
+    payload.municipio_id = municipioId;
     payload.activo = fd.get("activo") !== "off";
   } else {
     payload.activo = fd.get("activo") !== "off";

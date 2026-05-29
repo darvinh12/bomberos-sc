@@ -22,9 +22,24 @@ secrets/
 
 # Logs
 *.log
+bootstrap_logs.json
+now_logs.json
+deploy_logs.json
+*_logs.json
+*_logs*.json
 
 # Output de psql
 *.out
+
+# Dumps de CLI de plataformas (render, vercel, neon, etc.)
+render_*.json
+neon_*.json
+deploys.json
+deploys*.json
+latest_deploy.json
+recent*.json
+all_logs.json
+l.json
 
 # Carpetas comunes de scripts
 node_modules/

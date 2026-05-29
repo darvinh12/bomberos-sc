@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { createPortal } from "react-dom";
 import { useFormState } from "react-dom";
+import { Check, X } from "lucide-react";
 import {
   actualizarOrg,
   borrarOrg,
@@ -13,6 +14,14 @@ import {
   type OrgFormState,
   type Zona,
 } from "./actions";
+
+function BoolIcon({ value }: { value: boolean }) {
+  return value ? (
+    <Check className="w-4 h-4 text-emerald-400 inline" aria-label="Activo" />
+  ) : (
+    <X className="w-4 h-4 text-muted-foreground inline" aria-label="Inactivo" />
+  );
+}
 
 type Tab = {
   key: EntidadOrg;
@@ -145,7 +154,7 @@ function ZonaFila({ z }: { z: Zona }) {
       <td className="p-3 font-mono text-xs">{z.codigo}</td>
       <td className="p-3 font-medium">{z.nombre}</td>
       <td className="p-3 text-muted-foreground">{z.descripcion ?? "—"}</td>
-      <td className="p-3 text-center">{z.activo ? "✓" : "✗"}</td>
+      <td className="p-3 text-center"><BoolIcon value={z.activo} /></td>
       <BotonesFila id={z.id} entidad="zonas" onEditar={() => setEdit(true)} />
     </tr>
   );
@@ -292,7 +301,7 @@ function EstacionFila({
       <td className="p-3 text-muted-foreground">{zonaNombre.get(e.zona_id) ?? `#${e.zona_id}`}</td>
       <td className="p-3 text-muted-foreground truncate max-w-xs">{e.direccion ?? "—"}</td>
       <td className="p-3 text-muted-foreground">{e.telefono ?? "—"}</td>
-      <td className="p-3 text-center">{e.activa ? "✓" : "✗"}</td>
+      <td className="p-3 text-center"><BoolIcon value={e.activa} /></td>
       <BotonesFila id={e.id} entidad="estaciones" onEditar={() => setEdit(true)} />
     </tr>
   );
@@ -500,7 +509,7 @@ function PlanaFila({
           {it.parent_id ? parentNombre.get(it.parent_id) ?? `#${it.parent_id}` : "—"}
         </td>
       )}
-      <td className="p-3 text-center">{it.activo ? "✓" : "✗"}</td>
+      <td className="p-3 text-center"><BoolIcon value={it.activo} /></td>
       <BotonesFila id={it.id} entidad={entidad} onEditar={() => setEdit(true)} />
     </tr>
   );

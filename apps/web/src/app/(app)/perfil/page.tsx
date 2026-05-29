@@ -56,7 +56,7 @@ export default async function PerfilPage({ searchParams }: SearchProps) {
       )}
 
       {me?.debe_cambiar_password && (
-        <div className="rounded-md bg-yellow-50 border border-yellow-300 p-4 text-sm text-yellow-900">
+        <div role="alert" className="rounded border border-amber-700/50 bg-amber-900/30 p-4 text-sm text-amber-200">
           Tu contraseña requiere cambio. Por favor actualízala antes de continuar usando el sistema.
         </div>
       )}

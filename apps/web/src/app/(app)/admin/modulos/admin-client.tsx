@@ -1,12 +1,21 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { Check, X } from "lucide-react";
 import {
   actualizarModulo,
   borrarModulo,
   type ModuloFormState,
 } from "./actions";
 import type { Modulo } from "../permisos/actions";
+
+function BoolIcon({ value }: { value: boolean }) {
+  return value ? (
+    <Check className="w-4 h-4 text-emerald-400 inline" aria-label="Activo" />
+  ) : (
+    <X className="w-4 h-4 text-muted-foreground inline" aria-label="Inactivo" />
+  );
+}
 
 export default function ModulosAdmin({ modulos }: { modulos: Modulo[] }) {
   const [editando, setEditando] = useState<number | null>(null);
@@ -44,7 +53,7 @@ export default function ModulosAdmin({ modulos }: { modulos: Modulo[] }) {
                         {m.descripcion ?? "—"}
                       </td>
                       <td className="p-3 text-center">{m.orden}</td>
-                      <td className="p-3 text-center">{m.activo ? "✓" : "✗"}</td>
+                      <td className="p-3 text-center"><BoolIcon value={m.activo} /></td>
                       <td className="p-3 text-right space-x-2">
                         <button
                           type="button"

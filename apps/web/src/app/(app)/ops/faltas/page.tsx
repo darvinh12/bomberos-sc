@@ -27,13 +27,13 @@ interface Page<T> {
 }
 
 const TIPO_COLORS: Record<string, string> = {
-  LEVE: "bg-yellow-100 text-yellow-800",
-  MEDIA: "bg-orange-100 text-orange-800",
-  GRAVE: "bg-red-100 text-red-800",
+  LEVE:  "badge badge-warning",
+  MEDIA: "badge badge-warning",
+  GRAVE: "badge badge-danger",
 };
 
 interface SearchProps {
-  searchParams: { page?: string };
+  searchParams: { page?: string; funcionario_id?: string };
 }
 
 export default async function FaltasPage({ searchParams }: SearchProps) {
@@ -43,18 +43,54 @@ export default async function FaltasPage({ searchParams }: SearchProps) {
   const puedeCrear = hasAnyRole(me.roles, ["ADMIN", "SUPERVISOR", "INSPECTOR"]);
 
   const page = Number(searchParams.page ?? 1);
+  const funcionarioId = searchParams.funcionario_id;
   const params = new URLSearchParams({ page: String(page), page_size: "50" });
+  if (funcionarioId) params.set("funcionario_id", funcionarioId);
 
   let data: Page<Falta> | null = null;
+  let funcionario: { id: number; nombre_completo: string | null } | null = null;
   let err: string | null = null;
   try {
-    data = await api.get<Page<Falta>>(`/ops/faltas?${params}`, token);
+    const [faltas, funcionarioData] = await Promise.all([
+      api.get<Page<Falta>>(`/ops/faltas?${params}`, token),
+      funcionarioId
+        ? api
+            .get<{ id: number; nombre_completo: string | null }>(
+              `/funcionarios/${funcionarioId}`,
+              token,
+            )
+            .catch(() => null)
+        : Promise.resolve(null),
+    ]);
+    data = faltas;
+    funcionario = funcionarioData;
   } catch (e: unknown) {
     err = e instanceof Error ? e.message : "Error";
   }
 
   return (
     <div className="space-y-6">
+      {funcionario && (
+        <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 flex items-center justify-between">
+          <div className="flex items-center gap-3 text-sm">
+            <Link
+              href={`/funcionarios/${funcionario.id}`}
+              className="text-muted-foreground hover:text-foreground"
+            >
+              ← {funcionario.nombre_completo ?? `Funcionario #${funcionario.id}`}
+            </Link>
+            <span className="text-muted-foreground">·</span>
+            <span className="text-foreground">Faltas de este funcionario</span>
+          </div>
+          <Link
+            href="/ops/faltas"
+            className="text-xs text-muted-foreground hover:text-foreground underline"
+          >
+            Quitar filtro
+          </Link>
+        </div>
+      )}
+
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">Faltas y sanciones</h1>
@@ -98,11 +134,7 @@ export default async function FaltasPage({ searchParams }: SearchProps) {
                   <tr key={f.id} className="border-t hover:bg-muted/30">
                     <td className="p-3 font-mono text-xs">#{f.funcionario_id}</td>
                     <td className="p-3">
-                      <span
-                        className={`inline-block px-2 py-0.5 rounded-full text-xs ${
-                          TIPO_COLORS[f.tipo_falta] ?? "bg-gray-100"
-                        }`}
-                      >
+                      <span className={TIPO_COLORS[f.tipo_falta] ?? "badge badge-neutral"}>
                         {f.tipo_falta}
                       </span>
                     </td>
@@ -116,7 +148,7 @@ export default async function FaltasPage({ searchParams }: SearchProps) {
                     <td className="p-3 text-right">{f.dias_suspension ?? "—"}</td>
                     <td className="p-3">
                       {f.apelada ? (
-                        <span className="text-blue-700">Sí</span>
+                        <span className="text-sky-400">Sí</span>
                       ) : (
                         <span className="text-muted-foreground">No</span>
                       )}
@@ -137,7 +169,7 @@ export default async function FaltasPage({ searchParams }: SearchProps) {
             page={data.page}
             pages={data.pages}
             basePath="/ops/faltas"
-            searchParams={{}}
+            searchParams={{ funcionario_id: funcionarioId }}
           />
         </div>
       )}

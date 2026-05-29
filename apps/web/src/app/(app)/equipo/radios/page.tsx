@@ -26,11 +26,11 @@ interface Page<T> {
 }
 
 const ESTATUS_COLORS: Record<string, string> = {
-  DISPONIBLE: "bg-green-100 text-green-800",
-  ASIGNADO: "bg-blue-100 text-blue-800",
-  EN_REPARACION: "bg-yellow-100 text-yellow-800",
-  DADO_DE_BAJA: "bg-gray-200 text-gray-700",
-  PERDIDO: "bg-red-100 text-red-800",
+  DISPONIBLE:    "badge badge-success",
+  ASIGNADO:      "badge badge-info",
+  EN_REPARACION: "badge badge-warning",
+  DADO_DE_BAJA:  "badge badge-neutral",
+  PERDIDO:       "badge badge-danger",
 };
 
 interface SearchProps {
@@ -128,11 +128,7 @@ export default async function RadiosPage({ searchParams }: SearchProps) {
                       {formatDate(r.fecha_adquisicion)}
                     </td>
                     <td className="p-3">
-                      <span
-                        className={`inline-block px-2 py-0.5 rounded-full text-xs ${
-                          ESTATUS_COLORS[r.estatus] ?? "bg-gray-100"
-                        }`}
-                      >
+                      <span className={ESTATUS_COLORS[r.estatus] ?? "badge badge-neutral"}>
                         {r.estatus}
                       </span>
                     </td>

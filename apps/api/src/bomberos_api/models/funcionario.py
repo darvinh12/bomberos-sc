@@ -46,6 +46,13 @@ class Funcionario(Base):
     lugar_nacimiento: Mapped[str | None] = mapped_column(String)
     pais_nacimiento: Mapped[str | None] = mapped_column(String)
 
+    # Nacionalización (para nacidos en el extranjero)
+    tipo_nacionalizacion: Mapped[str | None] = mapped_column(String(40))
+    fecha_nacionalizacion: Mapped[date | None] = mapped_column(Date)
+    numero_gaceta_nacionalizacion: Mapped[str | None] = mapped_column(String(50))
+    pais_origen: Mapped[str | None] = mapped_column(String(80))
+    idiomas: Mapped[str | None] = mapped_column(String(200))
+
     # Empleo
     tipo_personal: Mapped[str] = mapped_column(String, default="BOMBERO")
     numero_empleado: Mapped[str | None] = mapped_column(String, unique=True)
@@ -60,6 +67,13 @@ class Funcionario(Base):
         SmallInteger, ForeignKey("core.jerarquias.id")
     )
     cargo_id: Mapped[int | None] = mapped_column(SmallInteger, ForeignKey("core.cargos.id"))
+    institucion_formadora_id: Mapped[int | None] = mapped_column(
+        SmallInteger, ForeignKey("core.instituciones_formadoras.id")
+    )
+    fecha_egreso: Mapped[date | None] = mapped_column(Date)
+    fecha_reintegro: Mapped[date | None] = mapped_column(Date)
+    fecha_este: Mapped[date | None] = mapped_column(Date)
+    fecha_ingreso_gdf: Mapped[date | None] = mapped_column(Date)
 
     # Ubicación administrativa (snapshot)
     zona_id: Mapped[int | None] = mapped_column(SmallInteger, ForeignKey("org.zonas.id"))
@@ -75,6 +89,12 @@ class Funcionario(Base):
     )
     seccion: Mapped[str | None] = mapped_column(CHAR(1))
     horario: Mapped[str | None] = mapped_column(String)
+
+    # Domicilio del funcionario: NO se modela aquí. Es 1:N en
+    # personal.direcciones (ver bomberos_api.models.direccion.Direccion),
+    # con historial de mudanzas (es_actual, fecha_registro). El bienestar
+    # social (damnificado, reside_alto_riesgo, ayuda_economica) también
+    # vive en esa tabla porque está atado a la residencia.
 
     # Contacto
     telefono_habitacion: Mapped[str | None] = mapped_column(String)
@@ -95,6 +115,8 @@ class Funcionario(Base):
     )
     iutb: Mapped[bool] = mapped_column(Boolean, default=False)
     egresado_unes: Mapped[bool] = mapped_column(Boolean, default=False)
+    licencia_conducir: Mapped[str | None] = mapped_column(String(20))
+    factor_sanguineo: Mapped[str | None] = mapped_column(String(15))
 
     # Misceláneos
     foto_url: Mapped[str | None] = mapped_column(String)
