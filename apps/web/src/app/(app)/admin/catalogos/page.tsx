@@ -14,6 +14,14 @@ const ENTIDADES: EntidadCat[] = [
   "estados-civiles",
   "grupos-sanguineos",
   "bancos",
+  "tipos-personal",
+  "estatus-funcionario",
+  "instituciones-formadoras",
+  "tipos-vivienda",
+  "tenencias-vivienda",
+  "estados",
+  "municipios",
+  "parroquias",
 ];
 
 export default async function CatalogosAdminPage() {
@@ -39,13 +47,19 @@ export default async function CatalogosAdminPage() {
         </Link>
         <h1 className="text-2xl font-bold mt-1">Catálogos del sistema</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Editá jerarquías, cargos, condiciones, niveles educativos,
-          especialidades, estados civiles, grupos sanguíneos y bancos. Cada
+          Editá los catálogos del sistema (jerarquías, cargos, condiciones,
+          niveles educativos, especialidades, estados civiles, grupos sanguíneos,
+          bancos, tipos de personal, estatus funcionario, instituciones formadoras,
+          tipos y tenencias de vivienda, estados, municipios y parroquias). Cada
           cambio queda auditado (mirá <Link href="/admin/auditoria" className="underline">/admin/auditoria</Link>).
           Si una opción está en uso, no se puede borrar — desactivá en su lugar.
         </p>
       </div>
-      <CatalogosTabs data={map} />
+      <CatalogosTabs
+        data={map}
+        estadosLista={map["estados"] ?? []}
+        municipiosLista={map["municipios"] ?? []}
+      />
     </div>
   );
 }

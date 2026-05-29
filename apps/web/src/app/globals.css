@@ -11,8 +11,8 @@
     --card: 220 24% 12%;              /* #131720 */
     --card-foreground: 213 20% 88%;
 
-    --primary: 355 72% 19%;           /* #540e14 — burdeos oscuro */
-    --primary-foreground: 0 0% 92%;
+    --primary: 355 75% 40%;           /* #b32430 — burdeos vibrante con buen contraste */
+    --primary-foreground: 0 0% 98%;
 
     --secondary: 220 28% 17%;         /* #1e2433 */
     --secondary-foreground: 213 20% 88%;
@@ -36,7 +36,7 @@
 
     --border: 220 28% 17%;            /* #1e2433 */
     --input: 220 24% 12%;             /* #131720 */
-    --ring: 355 58% 35%;              /* #8c2535 — focus burdeos */
+    --ring: 355 75% 55%;              /* #d44856 — focus burdeos visible */
 
     --radius: 0.25rem;
   }

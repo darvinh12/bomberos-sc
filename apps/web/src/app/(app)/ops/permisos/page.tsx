@@ -25,7 +25,7 @@ interface Page<T> {
 }
 
 interface SearchProps {
-  searchParams: { autorizado?: string; page?: string };
+  searchParams: { autorizado?: string; page?: string; funcionario_id?: string };
 }
 
 export default async function PermisosPage({ searchParams }: SearchProps) {
@@ -35,19 +35,55 @@ export default async function PermisosPage({ searchParams }: SearchProps) {
     .catch(() => ({ roles: [] as string[] }));
   const puedeEditar = hasAnyRole(me.roles, ["ADMIN", "RRHH", "SUPERVISOR"]);
   const page = Number(searchParams.page ?? 1);
+  const funcionarioId = searchParams.funcionario_id;
   const params = new URLSearchParams({ page: String(page), page_size: "50" });
   if (searchParams.autorizado) params.set("autorizado", searchParams.autorizado);
+  if (funcionarioId) params.set("funcionario_id", funcionarioId);
 
   let data: Page<Permiso> | null = null;
+  let funcionario: { id: number; nombre_completo: string | null } | null = null;
   let err: string | null = null;
   try {
-    data = await api.get<Page<Permiso>>(`/ops/permisos?${params}`, token);
+    const [permisos, funcionarioData] = await Promise.all([
+      api.get<Page<Permiso>>(`/ops/permisos?${params}`, token),
+      funcionarioId
+        ? api
+            .get<{ id: number; nombre_completo: string | null }>(
+              `/funcionarios/${funcionarioId}`,
+              token,
+            )
+            .catch(() => null)
+        : Promise.resolve(null),
+    ]);
+    data = permisos;
+    funcionario = funcionarioData;
   } catch (e: unknown) {
     err = e instanceof Error ? e.message : "Error";
   }
 
   return (
     <div className="space-y-6">
+      {funcionario && (
+        <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 flex items-center justify-between">
+          <div className="flex items-center gap-3 text-sm">
+            <Link
+              href={`/funcionarios/${funcionario.id}`}
+              className="text-muted-foreground hover:text-foreground"
+            >
+              ← {funcionario.nombre_completo ?? `Funcionario #${funcionario.id}`}
+            </Link>
+            <span className="text-muted-foreground">·</span>
+            <span className="text-foreground">Permisos de este funcionario</span>
+          </div>
+          <Link
+            href="/ops/permisos"
+            className="text-xs text-muted-foreground hover:text-foreground underline"
+          >
+            Quitar filtro
+          </Link>
+        </div>
+      )}
+
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">Permisos</h1>
@@ -63,6 +99,9 @@ export default async function PermisosPage({ searchParams }: SearchProps) {
       </div>
 
       <form className="flex gap-3 items-end">
+        {funcionarioId && (
+          <input type="hidden" name="funcionario_id" value={funcionarioId} />
+        )}
         <div>
           <label className="block text-xs font-medium mb-1">Autorizado</label>
           <select
@@ -148,7 +187,10 @@ export default async function PermisosPage({ searchParams }: SearchProps) {
             page={data.page}
             pages={data.pages}
             basePath="/ops/permisos"
-            searchParams={{ autorizado: searchParams.autorizado }}
+            searchParams={{
+              autorizado: searchParams.autorizado,
+              funcionario_id: funcionarioId,
+            }}
           />
         </div>
       )}

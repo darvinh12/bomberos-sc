@@ -15,10 +15,16 @@ from bomberos_api.models.catalogos import (
     Condicion,
     Especialidad,
     EstadoCivil,
+    EstatusFuncionario,
     GrupoSanguineo,
+    InstitucionFormadora,
     Jerarquia,
     NivelEducativo,
+    TenenciaVivienda,
+    TipoPersonal,
+    TipoVivienda,
 )
+from bomberos_api.models.geografia import Estado, Municipio, Parroquia
 from bomberos_api.models.egresos import Fallecimiento, Jubilado, SolicitudJubilacion
 from bomberos_api.models.equipo import (
     ProteccionAsignacion,
@@ -26,6 +32,17 @@ from bomberos_api.models.equipo import (
     Radio,
     RadioAsignacion,
     TipoProteccion,
+)
+from bomberos_api.models.direccion import Direccion
+from bomberos_api.models.expediente import (
+    Actividad,
+    Carnet,
+    CargaFamiliar,
+    Habilidad,
+    HistoricoCarnet,
+    HistoricoJerarquia,
+    HistoricoUbicacion,
+    TiempoAdmPublica,
 )
 from bomberos_api.models.funcionario import Funcionario, PeriodoServicio
 from bomberos_api.models.ops import (
@@ -52,17 +69,36 @@ from bomberos_api.models.usuario import Rol, Usuario, UsuarioRol
 __all__ = [
     "Base",
     # personal
+    "Direccion",
     "Funcionario",
     "PeriodoServicio",
+    # expediente
+    "CargaFamiliar",
+    "HistoricoJerarquia",
+    "HistoricoUbicacion",
+    "TiempoAdmPublica",
+    "Habilidad",
+    "Actividad",
+    "Carnet",
+    "HistoricoCarnet",
     # catalogos
     "Banco",
     "Cargo",
     "Condicion",
     "Especialidad",
     "EstadoCivil",
+    "EstatusFuncionario",
     "GrupoSanguineo",
+    "InstitucionFormadora",
     "Jerarquia",
     "NivelEducativo",
+    "TenenciaVivienda",
+    "TipoPersonal",
+    "TipoVivienda",
+    # geografia
+    "Estado",
+    "Municipio",
+    "Parroquia",
     # org
     "Area",
     "Dependencia",

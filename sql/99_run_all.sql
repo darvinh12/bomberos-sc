@@ -21,5 +21,8 @@
 \echo '=== 07_roles_por_departamento.sql ==='
 \i 07_roles_por_departamento.sql
 
+\echo '=== 08_catalogos_ola1.sql ==='
+\i 08_catalogos_ola1.sql
+
 \echo ''
 \echo 'Instalación completa.'

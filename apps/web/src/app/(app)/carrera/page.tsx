@@ -65,7 +65,7 @@ const TABS: { key: Tab; label: string; path: string }[] = [
 ];
 
 interface SearchProps {
-  searchParams: { tab?: string; page?: string };
+  searchParams: { tab?: string; page?: string; funcionario_id?: string };
 }
 
 export default async function CarreraPage({ searchParams }: SearchProps) {
@@ -78,22 +78,64 @@ export default async function CarreraPage({ searchParams }: SearchProps) {
   const tab: Tab =
     (TABS.find((t) => t.key === searchParams.tab)?.key as Tab) ?? "cursos";
   const page = Number(searchParams.page ?? 1);
+  const funcionarioId = searchParams.funcionario_id;
   const path = TABS.find((t) => t.key === tab)!.path;
   const params = new URLSearchParams({
     page: String(page),
     page_size: tab === "meritos" ? "100" : "25",
   });
+  if (funcionarioId) params.set("funcionario_id", funcionarioId);
 
   let data: Page<unknown> | null = null;
+  let funcionario: { id: number; nombre_completo: string | null } | null = null;
   let err: string | null = null;
   try {
-    data = await api.get<Page<unknown>>(`${path}?${params}`, token);
+    const [tabData, funcionarioData] = await Promise.all([
+      api.get<Page<unknown>>(`${path}?${params}`, token),
+      funcionarioId
+        ? api
+            .get<{ id: number; nombre_completo: string | null }>(
+              `/funcionarios/${funcionarioId}`,
+              token,
+            )
+            .catch(() => null)
+        : Promise.resolve(null),
+    ]);
+    data = tabData;
+    funcionario = funcionarioData;
   } catch (e: unknown) {
     err = e instanceof Error ? e.message : "Error";
   }
 
+  const tabHref = (key: Tab) => {
+    const sp = new URLSearchParams({ tab: key });
+    if (funcionarioId) sp.set("funcionario_id", funcionarioId);
+    return `/carrera?${sp.toString()}`;
+  };
+
   return (
     <div className="space-y-6">
+      {funcionario && (
+        <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 flex items-center justify-between">
+          <div className="flex items-center gap-3 text-sm">
+            <Link
+              href={`/funcionarios/${funcionario.id}`}
+              className="text-muted-foreground hover:text-foreground"
+            >
+              ← {funcionario.nombre_completo ?? `Funcionario #${funcionario.id}`}
+            </Link>
+            <span className="text-muted-foreground">·</span>
+            <span className="text-foreground">Carrera de este funcionario</span>
+          </div>
+          <Link
+            href={`/carrera?tab=${tab}`}
+            className="text-xs text-muted-foreground hover:text-foreground underline"
+          >
+            Quitar filtro
+          </Link>
+        </div>
+      )}
+
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">Carrera</h1>
@@ -125,7 +167,7 @@ export default async function CarreraPage({ searchParams }: SearchProps) {
         {TABS.map((t) => (
           <Link
             key={t.key}
-            href={`/carrera?tab=${t.key}`}
+            href={tabHref(t.key)}
             className={`px-4 py-2 text-sm font-medium border-b-2 transition ${
               t.key === tab
                 ? "border-primary text-primary"

@@ -181,7 +181,12 @@ def _normalize_estatus(s: str) -> str:
         "MUERTO": "FALLECIDO",
         "SUSPENDIDO": "SUSPENDIDO",
     }
-    return mapping.get(s, "ACTIVO")
+    if s not in mapping:
+        raise ValueError(
+            f"Estatus legacy desconocido: {s!r}. Añádelo al mapping en "
+            f"transform._normalize_estatus o normaliza la data origen antes de migrar."
+        )
+    return mapping[s]
 
 
 def _normalize_tipo_personal(v: Any) -> str:

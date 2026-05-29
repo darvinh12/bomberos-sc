@@ -168,7 +168,618 @@ function parseQuery(path: string) {
     zona_id: numeric("zona_id"),
     estacion_id: numeric("estacion_id"),
     jerarquia_id: numeric("jerarquia_id"),
+    funcionario_id: numeric("funcionario_id"),
   };
+}
+
+/**
+ * Generador pseudo-aleatorio determinístico por id. Mismo `id` produce
+ * siempre la misma secuencia, así la ficha de cada funcionario es estable.
+ */
+function rngFor(id: number, salt = 0) {
+  let h = (id * 2654435761 + salt * 7691) >>> 0;
+  return () => {
+    h = (h * 9301 + 49297) >>> 0;
+    h = h % 233280;
+    return h / 233280;
+  };
+}
+
+function pick<T>(rng: () => number, arr: readonly T[]): T {
+  return arr[Math.floor(rng() * arr.length)];
+}
+
+function addDays(iso: string, days: number): string {
+  const d = new Date(iso);
+  d.setDate(d.getDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+function isoDateInYear(rng: () => number, year: number): string {
+  const m = 1 + Math.floor(rng() * 12);
+  const day = 1 + Math.floor(rng() * 28);
+  return `${year}-${String(m).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
+// ---- Generadores por funcionario (datos pocos pero coherentes) ----
+
+function generarRepososPara(fid: number) {
+  const rng = rngFor(fid, 11);
+  const n = Math.floor(rng() * 3); // 0..2
+  const diag = ["Lumbalgia", "Fractura tibia", "Gripe H1N1", "Cirugía menor", "Dengue", "Conjuntivitis"];
+  return Array.from({ length: n }, (_, i) => {
+    const fecha_inicio = isoDateInYear(rng, 2025 + (i % 2));
+    const dias = 3 + Math.floor(rng() * 25);
+    return {
+      id: fid * 100 + i + 1,
+      funcionario_id: fid,
+      tipo_reposo_id: 1 + Math.floor(rng() * 4),
+      diagnostico_libre: pick(rng, diag),
+      fecha_inicio,
+      fecha_fin: addDays(fecha_inicio, dias),
+      dias,
+      anulado: false,
+    };
+  });
+}
+
+function generarVacacionesPara(fid: number) {
+  const rng = rngFor(fid, 22);
+  const n = 1 + Math.floor(rng() * 2); // 1..2
+  return Array.from({ length: n }, (_, i) => {
+    const periodo_anio = 2024 + i;
+    const fecha_inicio = isoDateInYear(rng, periodo_anio);
+    return {
+      id: fid * 100 + i + 1,
+      funcionario_id: fid,
+      periodo_anio,
+      fecha_inicio,
+      fecha_fin: addDays(fecha_inicio, 21),
+      dias_calendario: 22,
+      dias_habiles: 15,
+      bono_pagado: rng() > 0.3,
+      monto_bono: rng() > 0.3 ? 1500 : null,
+      autorizado: true,
+      estado: pick(rng, ["FINALIZADA", "EN_CURSO", "PROGRAMADA"]),
+    };
+  });
+}
+
+function generarPermisosPara(fid: number) {
+  const rng = rngFor(fid, 33);
+  const n = Math.floor(rng() * 3); // 0..2
+  const tipos = ["MEDICO", "PERSONAL", "ESTUDIO", "MATRIMONIO"];
+  return Array.from({ length: n }, (_, i) => {
+    const fecha_inicio = isoDateInYear(rng, 2025);
+    return {
+      id: fid * 100 + i + 1,
+      funcionario_id: fid,
+      tipo: pick(rng, tipos),
+      fecha_inicio,
+      fecha_fin: addDays(fecha_inicio, 1 + Math.floor(rng() * 3)),
+      horas: 8 * (1 + Math.floor(rng() * 3)),
+      motivo: "Trámite personal urgente",
+      autorizado: rng() > 0.2,
+    };
+  });
+}
+
+function generarComisionesPara(fid: number) {
+  const rng = rngFor(fid, 44);
+  const n = Math.floor(rng() * 2); // 0..1
+  const instituciones = ["Protección Civil", "Alcaldía Metropolitana", "Defensa Civil", "Hospital Militar"];
+  return Array.from({ length: n }, (_, i) => {
+    const fecha_inicio = isoDateInYear(rng, 2024);
+    const activa = rng() > 0.5;
+    return {
+      id: fid * 100 + i + 1,
+      funcionario_id: fid,
+      institucion_libre: pick(rng, instituciones),
+      cargo_comision: "Coordinador de área",
+      fecha_inicio,
+      fecha_fin: activa ? null : addDays(fecha_inicio, 90 + Math.floor(rng() * 180)),
+      resolucion: `RES-2024-${100 + fid}`,
+      activo: activa,
+    };
+  });
+}
+
+function generarFaltasPara(fid: number) {
+  const rng = rngFor(fid, 55);
+  const n = rng() > 0.7 ? 1 : 0;
+  const tipos: ("LEVE" | "MEDIA" | "GRAVE")[] = ["LEVE", "MEDIA", "GRAVE"];
+  return Array.from({ length: n }, (_, i) => {
+    const tipo = pick(rng, tipos);
+    const sancionMap = { LEVE: "Amonestación", MEDIA: "Suspensión 3 días", GRAVE: "Suspensión 15 días" };
+    const diasMap = { LEVE: 0, MEDIA: 3, GRAVE: 15 };
+    return {
+      id: fid * 100 + i + 1,
+      funcionario_id: fid,
+      tipo_falta: tipo,
+      fecha: isoDateInYear(rng, 2025),
+      descripcion: "Inasistencia injustificada al servicio asignado",
+      sancion: sancionMap[tipo],
+      dias_suspension: diasMap[tipo],
+      fecha_inicio_susp: null,
+      fecha_fin_susp: null,
+      apelada: false,
+    };
+  });
+}
+
+function generarGuardiasPara(fid: number) {
+  const rng = rngFor(fid, 66);
+  const n = 2 + Math.floor(rng() * 3); // 2..4
+  return Array.from({ length: n }, (_, i) => {
+    const fecha = isoDateInYear(rng, 2026);
+    const estacionId = 1 + Math.floor(rng() * 12);
+    return {
+      id: fid * 100 + i + 1,
+      funcionario_id: fid,
+      fecha,
+      estacion_id: estacionId,
+      estacion: ESTACIONES[estacionId - 1].nombre,
+      seccion: pick(rng, ["A", "B", "C"]),
+      turno: pick(rng, ["DIURNO", "NOCTURNO", "24H"]),
+      hora_inicio: "07:00:00",
+      hora_fin: "19:00:00",
+      jefe_guardia_id: null,
+      observaciones: null,
+      cerrada: rng() > 0.4,
+    };
+  });
+}
+
+function generarCursosPara(fid: number) {
+  const rng = rngFor(fid, 77);
+  const n = 1 + Math.floor(rng() * 3); // 1..3
+  const cursos = [
+    "Rescate vertical",
+    "Materiales peligrosos",
+    "Primeros auxilios avanzados",
+    "Bombero forestal",
+    "Manejo de defensa de incendios estructurales",
+  ];
+  return Array.from({ length: n }, (_, i) => {
+    const fecha_inicio = isoDateInYear(rng, 2023 + (i % 3));
+    return {
+      id: fid * 100 + i + 1,
+      funcionario_id: fid,
+      nombre_libre: pick(rng, cursos),
+      institucion: "Academia Nacional de Bomberos",
+      fecha_inicio,
+      fecha_fin: addDays(fecha_inicio, 20 + Math.floor(rng() * 30)),
+      horas: 40 + Math.floor(rng() * 80),
+      nota: 75 + Math.floor(rng() * 25),
+      aprobado: rng() > 0.1,
+    };
+  });
+}
+
+function generarAscensosPara(fid: number) {
+  const rng = rngFor(fid, 88);
+  const n = Math.floor(rng() * 3); // 0..2
+  return Array.from({ length: n }, (_, i) => ({
+    id: fid * 100 + i + 1,
+    funcionario_id: fid,
+    jerarquia_anterior_id: 1 + i,
+    jerarquia_nueva_id: 2 + i,
+    fecha_efectiva: isoDateInYear(rng, 2018 + i * 3),
+    resolucion: `RES-${2018 + i * 3}-${500 + fid}`,
+  }));
+}
+
+function generarReconocimientosPara(fid: number) {
+  const rng = rngFor(fid, 99);
+  const n = Math.floor(rng() * 2); // 0..1
+  const nombres = [
+    "Medalla al mérito",
+    "Reconocimiento por labor humanitaria",
+    "Distinción 25 años de servicio",
+  ];
+  return Array.from({ length: n }, (_, i) => ({
+    id: fid * 100 + i + 1,
+    funcionario_id: fid,
+    nombre_libre: pick(rng, nombres),
+    fecha_otorgamiento: isoDateInYear(rng, 2023 + i),
+    motivo: "Servicio destacado en operativo",
+  }));
+}
+
+function generarMeritosPara(fid: number) {
+  const rng = rngFor(fid, 110);
+  const ev = 70 + rng() * 30;
+  const cu = 5 + rng() * 15;
+  const ac = 2 + rng() * 8;
+  const co = rng() > 0.7 ? 5 : 0;
+  const fa = rng() > 0.85 ? -5 : 0;
+  return [
+    {
+      id: fid,
+      funcionario_id: fid,
+      periodo_id: 1,
+      puntaje_evaluacion: ev,
+      puntaje_cursos: cu,
+      puntaje_actividades: ac,
+      puntaje_condecoraciones: co,
+      puntaje_faltas: fa,
+      puntaje_total: ev + cu + ac + co + fa,
+      posicion: fid,
+    },
+  ];
+}
+
+function generarProteccionAsignacionesPara(fid: number) {
+  const rng = rngFor(fid, 121);
+  const n = 1 + Math.floor(rng() * 2); // 1..2
+  const marcas = ["MSA", "Honeywell", "Drager", "3M"];
+  return Array.from({ length: n }, (_, i) => {
+    const devuelto = i === 0 ? false : rng() > 0.5;
+    const fecha_entrega = isoDateInYear(rng, 2024 + i);
+    return {
+      id: fid * 100 + i + 1,
+      inventario_id: fid * 10 + i + 1,
+      funcionario_id: fid,
+      fecha_entrega,
+      estado_entrega: "Buen estado",
+      documento_url: null,
+      observaciones: null,
+      fecha_devolucion: devuelto ? addDays(fecha_entrega, 180) : null,
+      estado_devolucion: devuelto ? "Buen estado" : null,
+      devuelto,
+      marca: pick(rng, marcas),
+      modelo: `Mod-${100 + i + fid}`,
+      numero_serie: `SN${10000 + fid * 10 + i}`,
+      tipo: pick(rng, ["Casco", "Chaqueta", "Pantalón", "Botas", "Guantes"]),
+    };
+  });
+}
+
+function generarRadiosAsignadasPara(fid: number) {
+  const rng = rngFor(fid, 132);
+  const n = rng() > 0.6 ? 1 : 0;
+  return Array.from({ length: n }, (_, i) => ({
+    id: fid * 100 + i + 1,
+    modelo_id: 1,
+    serial: `RD${20000 + fid * 10 + i}`,
+    placa_inv: `INV-${fid}-${i + 1}`,
+    frecuencia: "VHF 154.250",
+    canal: String(1 + Math.floor(rng() * 10)),
+    fecha_adquisicion: isoDateInYear(rng, 2023),
+    estatus: "ASIGNADO",
+    estacion_id: 1 + Math.floor(rng() * 12),
+    funcionario_id: fid,
+    marca: pick(rng, ["Motorola", "Kenwood", "Icom"]),
+    modelo: `Mod-R${100 + i}`,
+    fecha_asignacion: isoDateInYear(rng, 2024),
+  }));
+}
+
+function generarAyudasPara(fid: number) {
+  const rng = rngFor(fid, 143);
+  const n = Math.floor(rng() * 3); // 0..2
+  const estatusList = ["SOLICITADO", "EN_REVISION", "APROBADO", "PAGADO", "RECHAZADO"];
+  return Array.from({ length: n }, (_, i) => {
+    const estatus = pick(rng, estatusList);
+    const aprobado = ["APROBADO", "PAGADO"].includes(estatus);
+    const pagado = estatus === "PAGADO";
+    const fecha_solicitud = isoDateInYear(rng, 2025);
+    const monto_solicitado = 1500 + Math.floor(rng() * 4000);
+    return {
+      id: fid * 100 + i + 1,
+      funcionario_id: fid,
+      tipo_solicitud_id: 1 + Math.floor(rng() * 4),
+      monto_solicitado,
+      monto_aprobado: aprobado ? monto_solicitado - Math.floor(rng() * 500) : null,
+      monto_pagado: pagado ? monto_solicitado - Math.floor(rng() * 500) : null,
+      fecha_solicitud,
+      fecha_aprobacion: aprobado ? addDays(fecha_solicitud, 5) : null,
+      fecha_pago: pagado ? addDays(fecha_solicitud, 12) : null,
+      motivo: "Apoyo económico por gastos médicos imprevistos.",
+      estatus,
+    };
+  });
+}
+
+function generarLesionesPara(fid: number) {
+  const rng = rngFor(fid, 154);
+  const n = Math.floor(rng() * 2); // 0..1
+  const desc = [
+    "Esguince de tobillo durante operativo",
+    "Quemadura de primer grado en antebrazo",
+    "Contusión costal por caída",
+  ];
+  const gravedad = ["LEVE", "MODERADA", "GRAVE"];
+  return Array.from({ length: n }, (_, i) => ({
+    id: fid * 100 + i + 1,
+    funcionario_id: fid,
+    fecha: isoDateInYear(rng, 2025),
+    descripcion: pick(rng, desc),
+    gravedad: pick(rng, gravedad),
+    requirio_hospitalizacion: rng() > 0.7,
+  }));
+}
+
+function generarEvalFisicaPara(fid: number) {
+  const rng = rngFor(fid, 165);
+  const n = 1 + Math.floor(rng() * 2); // 1..2
+  return Array.from({ length: n }, (_, i) => {
+    const peso = 65 + Math.floor(rng() * 30);
+    const tallaM = 1.6 + rng() * 0.25;
+    const imc = peso / (tallaM * tallaM);
+    return {
+      id: fid * 100 + i + 1,
+      funcionario_id: fid,
+      fecha: isoDateInYear(rng, 2024 + i),
+      resultado: imc < 25 ? "APTO" : imc < 30 ? "APTO_CON_OBSERVACIONES" : "NO_APTO",
+      peso_kg: peso,
+      talla_m: Number(tallaM.toFixed(2)),
+      imc: Number(imc.toFixed(1)),
+      observaciones: imc < 25 ? "Excelente condición" : "Recomendado plan de acondicionamiento",
+    };
+  });
+}
+
+function generarEvalDesempenoPara(fid: number) {
+  const rng = rngFor(fid, 176);
+  const n = 1 + Math.floor(rng() * 2); // 1..2
+  return Array.from({ length: n }, (_, i) => {
+    const nota = 70 + Math.floor(rng() * 30);
+    return {
+      id: fid * 100 + i + 1,
+      funcionario_id: fid,
+      periodo: `${2023 + i}-${2024 + i}`,
+      fecha_evaluacion: isoDateInYear(rng, 2024 + i),
+      nota,
+      observaciones:
+        nota >= 85 ? "Desempeño sobresaliente" : nota >= 75 ? "Desempeño satisfactorio" : "Requiere mejora",
+    };
+  });
+}
+
+// ---- Generadores para módulos nuevos de ficha (lista plana por funcionario) ----
+
+function generarCargaFamiliarPara(fid: number) {
+  const rng = rngFor(fid, 901);
+  const cantidad = 1 + Math.floor(rng() * 4); // 1..4 familiares
+  const PARENTESCOS = ["CONYUGE", "HIJO", "HIJA", "PADRE", "MADRE", "HERMANO"] as const;
+  const CONDICIONES = ["TITULAR", "BENEFICIARIO_HCM", null] as const;
+  const baseYear = 1960 + Math.floor(rng() * 50);
+  return Array.from({ length: cantidad }, (_, i) => {
+    const parentesco = pick(rng, PARENTESCOS);
+    const sexo =
+      parentesco === "HIJA" || parentesco === "MADRE"
+        ? "F"
+        : parentesco === "HIJO" || parentesco === "PADRE" || parentesco === "HERMANO"
+        ? "M"
+        : rng() > 0.5
+        ? "F"
+        : "M";
+    const yearNac =
+      parentesco === "HIJO" || parentesco === "HIJA"
+        ? 2000 + Math.floor(rng() * 24)
+        : parentesco === "PADRE" || parentesco === "MADRE"
+        ? 1940 + Math.floor(rng() * 25)
+        : baseYear + Math.floor(rng() * 10);
+    return {
+      id: fid * 100 + i + 1,
+      funcionario_id: fid,
+      parentesco,
+      nacionalidad: rng() > 0.05 ? "V" : "E",
+      cedula: 5_000_000 + Math.floor(rng() * 25_000_000),
+      apellidos: pick(rng, APELLIDOS),
+      nombres: `${pick(rng, NOMBRES)} ${pick(rng, NOMBRES)}`,
+      fecha_nacimiento: isoDateInYear(rng, yearNac),
+      sexo,
+      condicion: pick(rng, CONDICIONES),
+      observaciones: null,
+    };
+  });
+}
+
+function generarHistJerarquiasPara(fid: number) {
+  const rng = rngFor(fid, 902);
+  const cantidad = 1 + Math.floor(rng() * 5); // 1..5
+  const ingreso = 1990 + Math.floor(rng() * 20);
+  const ahora = new Date().getFullYear();
+  const TIPOS_DOC = ["DECRETO", "RESOLUCION", "OFICIO"] as const;
+  return Array.from({ length: cantidad }, (_, i) => {
+    const year = ingreso + i * (3 + Math.floor(rng() * 5));
+    if (year > ahora) return null;
+    const jerarquia_id = Math.min(12, 1 + i + Math.floor(rng() * 2));
+    const jer = JERARQUIAS.find((j) => j.id === jerarquia_id) ?? JERARQUIAS[0];
+    const fecha = isoDateInYear(rng, year);
+    return {
+      id: fid * 100 + i + 1,
+      funcionario_id: fid,
+      fecha,
+      jerarquia_id,
+      jerarquia_nombre: jer.nombre,
+      tipo_documento: pick(rng, TIPOS_DOC),
+      numero_documento: `${100 + Math.floor(rng() * 900)}-${year}`,
+      fecha_efectiva_nomina: addDays(fecha, Math.floor(rng() * 30)),
+      observaciones: null,
+    };
+  }).filter((x): x is NonNullable<typeof x> => x !== null);
+}
+
+function generarHistUbicacionesPara(fid: number) {
+  const rng = rngFor(fid, 903);
+  const cantidad = 1 + Math.floor(rng() * 4); // 1..4
+  const ingreso = 1995 + Math.floor(rng() * 18);
+  const ahora = new Date().getFullYear();
+  const HORARIOS = ["Diurno", "Nocturno", "24x48", "8 hrs administrativo"];
+  const SECCIONES = ["A", "B", "C", "D"];
+  const AGRUPACIONES = ["Operativa", "Administrativa", "Soporte", "Comando"];
+  return Array.from({ length: cantidad }, (_, i) => {
+    const year = ingreso + i * (3 + Math.floor(rng() * 4));
+    if (year > ahora) return null;
+    const estacion = pick(rng, ESTACIONES);
+    const zona = ZONAS.find((z) => z.id === estacion.zona_id) ?? ZONAS[0];
+    return {
+      id: fid * 100 + i + 1,
+      funcionario_id: fid,
+      fecha_desde: isoDateInYear(rng, year),
+      cod_estacion: estacion.codigo,
+      estacion_nombre: estacion.nombre,
+      cod_zona: zona.codigo,
+      zona_nombre: zona.nombre,
+      cod_area: `AR${1 + Math.floor(rng() * 10)}`,
+      cod_division: `DIV${1 + Math.floor(rng() * 6)}`,
+      agrupacion: pick(rng, AGRUPACIONES),
+      seccion: pick(rng, SECCIONES),
+      horario: pick(rng, HORARIOS),
+      observaciones: null,
+    };
+  }).filter((x): x is NonNullable<typeof x> => x !== null);
+}
+
+function generarTiempoAdmPublicaPara(fid: number) {
+  const rng = rngFor(fid, 904);
+  const cantidad = Math.floor(rng() * 3); // 0..2
+  const DEPENDENCIAS = [
+    "Ministerio de Salud",
+    "Alcaldía de Caracas",
+    "Gobernación de Miranda",
+    "Ministerio del Interior y Justicia",
+    "Protección Civil Nacional",
+    "Defensoría del Pueblo",
+    "Cuerpo de Bomberos de Vargas",
+    "INAC",
+  ];
+  return Array.from({ length: cantidad }, (_, i) => {
+    const yearIn = 1985 + Math.floor(rng() * 15) + i * 4;
+    const fecha_ingreso = isoDateInYear(rng, yearIn);
+    const dias = 365 * (1 + Math.floor(rng() * 6));
+    return {
+      id: fid * 100 + i + 1,
+      funcionario_id: fid,
+      dependencia: pick(rng, DEPENDENCIAS),
+      fecha_ingreso,
+      fecha_egreso: addDays(fecha_ingreso, dias),
+      observaciones: null,
+    };
+  });
+}
+
+function generarHabilidadesPara(fid: number) {
+  const rng = rngFor(fid, 905);
+  const cantidad = Math.floor(rng() * 4); // 0..3
+  const HABILIDADES = [
+    { nombre: "Rescate vertical", descripcion: "Técnicas de rescate con cuerdas en alturas" },
+    { nombre: "Primeros auxilios avanzados", descripcion: "Soporte vital prehospitalario" },
+    { nombre: "Buceo de rescate", descripcion: "Inmersión en operativos acuáticos" },
+    { nombre: "Manejo de materiales peligrosos", descripcion: "Identificación y contención HAZMAT" },
+    { nombre: "Conducción de vehículos pesados", descripcion: "Operación de cisternas y autobombas" },
+    { nombre: "Operador de drones", descripcion: "Pilotaje de UAV para reconocimiento" },
+    { nombre: "Combate de incendios forestales", descripcion: "Técnicas en terreno abierto" },
+  ];
+  return Array.from({ length: cantidad }, (_, i) => {
+    const h = pick(rng, HABILIDADES);
+    return {
+      id: fid * 100 + i + 1,
+      funcionario_id: fid,
+      nombre: h.nombre,
+      descripcion: h.descripcion,
+      fecha_registro: isoDateInYear(rng, 2020 + Math.floor(rng() * 6)),
+    };
+  });
+}
+
+function generarActividadesPara(fid: number) {
+  const rng = rngFor(fid, 906);
+  const cantidad = Math.floor(rng() * 5); // 0..4
+  const TIPOS = ["DEPORTIVA", "CULTURAL", "MUSICAL", "CIENTIFICA", "LABORAL", "ACADEMICA"] as const;
+  const POR_TIPO: Record<typeof TIPOS[number], string[]> = {
+    DEPORTIVA: ["Maratón institucional", "Torneo de fútbol interno", "Triatlón anual"],
+    CULTURAL: ["Festival de tradiciones", "Exposición fotográfica", "Día del patrimonio"],
+    MUSICAL: ["Banda institucional", "Coro de bomberos", "Concierto aniversario"],
+    CIENTIFICA: ["Ponencia en congreso", "Publicación de investigación", "Jornada técnica"],
+    LABORAL: ["Comité de seguridad", "Mesa de trabajo gremial", "Brigada de apoyo"],
+    ACADEMICA: ["Charla en universidad", "Tutoría a cadetes", "Seminario externo"],
+  };
+  return Array.from({ length: cantidad }, (_, i) => {
+    const tipo = pick(rng, TIPOS);
+    return {
+      id: fid * 100 + i + 1,
+      funcionario_id: fid,
+      tipo,
+      actividad: pick(rng, POR_TIPO[tipo]),
+      observaciones: rng() > 0.6 ? "Participación destacada" : null,
+    };
+  });
+}
+
+function generarCarnetsPara(fid: number) {
+  const rng = rngFor(fid, 907);
+  const cantidad = 1 + Math.floor(rng() * 2); // 1..2
+  const TIPOS = ["BRIGADISTA", "INSTITUCIONAL", "OPERATIVO"];
+  const hoy = new Date();
+  return Array.from({ length: cantidad }, (_, i) => {
+    const tipo = pick(rng, TIPOS);
+    const yearEm = hoy.getFullYear() - 1 - Math.floor(rng() * 3);
+    const fecha_emision = isoDateInYear(rng, yearEm);
+    // Mezcla de estados: ~30% vencidos, ~30% por vencer, ~40% vigentes con holgura
+    const bucket = rng();
+    let dias_vigencia: number;
+    if (bucket < 0.3) {
+      // vencido (vencimiento en el pasado, dentro de los últimos 6 meses)
+      const diasDesdeEmision =
+        Math.floor((hoy.getTime() - new Date(fecha_emision).getTime()) / (86400 * 1000));
+      dias_vigencia = Math.max(30, diasDesdeEmision - 30 - Math.floor(rng() * 150));
+    } else if (bucket < 0.6) {
+      // próximo a vencer (vencimiento en próximos 60 días)
+      const diasDesdeEmision =
+        Math.floor((hoy.getTime() - new Date(fecha_emision).getTime()) / (86400 * 1000));
+      dias_vigencia = diasDesdeEmision + 15 + Math.floor(rng() * 45);
+    } else {
+      // vigente con holgura
+      dias_vigencia = 365 * (2 + Math.floor(rng() * 3));
+    }
+    return {
+      id: fid * 100 + i + 1,
+      funcionario_id: fid,
+      tipo,
+      numero: `CN-${yearEm}-${String(1000 + fid * 10 + i).padStart(5, "0")}`,
+      fecha_emision,
+      fecha_vencimiento: addDays(fecha_emision, dias_vigencia),
+      brigadista: tipo === "BRIGADISTA",
+      libro: String(1 + Math.floor(rng() * 30)),
+      folio: String(1 + Math.floor(rng() * 200)),
+      observaciones: null,
+    };
+  });
+}
+
+function generarHistCarnetsPara(fid: number) {
+  const rng = rngFor(fid, 908);
+  const cantidad = Math.floor(rng() * 4); // 0..3
+  const TIPOS = ["BRIGADISTA", "INSTITUCIONAL", "OPERATIVO"];
+  const MOTIVOS = [
+    "Renovación por vencimiento",
+    "Pérdida del carnet anterior",
+    "Cambio de jerarquía",
+    "Deterioro del documento",
+    "Actualización de datos",
+  ];
+  return Array.from({ length: cantidad }, (_, i) => {
+    const yearEm = 2005 + Math.floor(rng() * 15) + i * 2;
+    const fecha_emision = isoDateInYear(rng, yearEm);
+    const tipo = pick(rng, TIPOS);
+    return {
+      id: fid * 100 + i + 1,
+      funcionario_id: fid,
+      tipo,
+      numero: `CN-${yearEm}-${String(500 + fid * 10 + i).padStart(5, "0")}`,
+      fecha_emision,
+      fecha_vencimiento: addDays(fecha_emision, 365 * (2 + Math.floor(rng() * 3))),
+      brigadista: tipo === "BRIGADISTA",
+      libro: String(1 + Math.floor(rng() * 30)),
+      folio: String(1 + Math.floor(rng() * 200)),
+      motivo_cambio: pick(rng, MOTIVOS),
+      observaciones: null,
+    };
+  });
 }
 
 const REPOSOS = Array.from({ length: 18 }, (_, i) => ({
@@ -506,12 +1117,32 @@ export function demoMe(rol: string = "ADMIN") {
   };
 }
 
+/** Devuelve una ayuda económica por id para la página de edición. */
+export function demoAyuda(id: number) {
+  const base = AYUDAS.find((a) => a.id === id) ?? AYUDAS[0];
+  return {
+    ...base,
+    id,
+    referencia_pago: base.monto_pagado ? `TRX-${10000 + id}` : null,
+    observaciones: null,
+  };
+}
+
 /** @deprecated usar demoMe(rol) para soportar rol dinámico */
 export const DEMO_ME = demoMe("ADMIN");
 
 export function demoResolve(path: string, rolActivo: string = "ADMIN"): unknown {
-  const { base, page, page_size, estatus, q, zona_id, estacion_id, jerarquia_id } =
-    parseQuery(path);
+  const {
+    base,
+    page,
+    page_size,
+    estatus,
+    q,
+    zona_id,
+    estacion_id,
+    jerarquia_id,
+    funcionario_id,
+  } = parseQuery(path);
 
   switch (true) {
     case base === "/auth/me":
@@ -534,6 +1165,46 @@ export function demoResolve(path: string, rolActivo: string = "ADMIN"): unknown 
         );
       }
       return paginate(items, page, page_size);
+    }
+
+    case /^\/funcionarios\/\d+\/carga-familiar$/.test(base): {
+      const fid = Number(base.split("/")[2]);
+      return generarCargaFamiliarPara(fid);
+    }
+
+    case /^\/funcionarios\/\d+\/historico-jerarquias$/.test(base): {
+      const fid = Number(base.split("/")[2]);
+      return generarHistJerarquiasPara(fid);
+    }
+
+    case /^\/funcionarios\/\d+\/historico-ubicaciones$/.test(base): {
+      const fid = Number(base.split("/")[2]);
+      return generarHistUbicacionesPara(fid);
+    }
+
+    case /^\/funcionarios\/\d+\/tiempo-admpublica$/.test(base): {
+      const fid = Number(base.split("/")[2]);
+      return generarTiempoAdmPublicaPara(fid);
+    }
+
+    case /^\/funcionarios\/\d+\/habilidades$/.test(base): {
+      const fid = Number(base.split("/")[2]);
+      return generarHabilidadesPara(fid);
+    }
+
+    case /^\/funcionarios\/\d+\/actividades$/.test(base): {
+      const fid = Number(base.split("/")[2]);
+      return generarActividadesPara(fid);
+    }
+
+    case /^\/funcionarios\/\d+\/carnets$/.test(base): {
+      const fid = Number(base.split("/")[2]);
+      return generarCarnetsPara(fid);
+    }
+
+    case /^\/funcionarios\/\d+\/historico-carnets$/.test(base): {
+      const fid = Number(base.split("/")[2]);
+      return generarHistCarnetsPara(fid);
     }
 
     case base.startsWith("/funcionarios/"): {
@@ -590,7 +1261,13 @@ export function demoResolve(path: string, rolActivo: string = "ADMIN"): unknown 
     case base === "/catalogos/especialidades":
       return cat(15, "ESP", "Especialidad");
     case base === "/catalogos/estados-civiles":
-      return cat(5, "EC", "Estado civil");
+      return [
+        { id: 1, codigo: "SOLTERO", nombre: "Soltero(a)", activo: true },
+        { id: 2, codigo: "CASADO", nombre: "Casado(a)", activo: true },
+        { id: 3, codigo: "DIVORCIADO", nombre: "Divorciado(a)", activo: true },
+        { id: 4, codigo: "VIUDO", nombre: "Viudo(a)", activo: true },
+        { id: 5, codigo: "CONCUBINATO", nombre: "Unión estable de hecho", activo: true },
+      ];
     case base === "/catalogos/grupos-sanguineos":
       return [
         "O+",
@@ -610,6 +1287,75 @@ export function demoResolve(path: string, rolActivo: string = "ADMIN"): unknown 
       return cat(10, "AR", "Área");
     case base === "/catalogos/dependencias":
       return cat(8, "DEP", "Dependencia");
+
+    case base === "/catalogos/tipos-personal":
+      return [
+        { id: 1, codigo: "UNIFORMADO", nombre: "Uniformado", activo: true },
+        { id: 2, codigo: "ADMINISTRATIVO", nombre: "Administrativo", activo: true },
+        { id: 3, codigo: "OBRERO", nombre: "Obrero", activo: true },
+      ];
+    case base === "/catalogos/estatus-funcionario":
+      return [
+        { id: 1, codigo: "ACTIVO", nombre: "Activo", activo: true },
+        { id: 2, codigo: "REPOSO", nombre: "En reposo", activo: true },
+        { id: 3, codigo: "COMISION", nombre: "En comisión", activo: true },
+        { id: 4, codigo: "PRE_JUBILADO", nombre: "Pre-jubilado", activo: true },
+        { id: 5, codigo: "JUBILADO", nombre: "Jubilado", activo: true },
+        { id: 6, codigo: "EGRESADO", nombre: "Egresado", activo: true },
+        { id: 7, codigo: "FALLECIDO", nombre: "Fallecido", activo: true },
+        { id: 8, codigo: "SUSPENDIDO", nombre: "Suspendido", activo: true },
+      ];
+    case base === "/catalogos/instituciones-formadoras":
+      return [
+        { id: 1, codigo: "IUTB", nombre: "Instituto Universitario Tecnológico de Bomberos", activo: true },
+        { id: 2, codigo: "UNES", nombre: "Universidad Nacional Experimental de la Seguridad", activo: true },
+      ];
+    case base === "/catalogos/tipos-vivienda":
+      return [
+        { id: 1, codigo: "CASA", nombre: "Casa", activo: true },
+        { id: 2, codigo: "APARTAMENTO", nombre: "Apartamento", activo: true },
+        { id: 3, codigo: "QUINTA", nombre: "Quinta", activo: true },
+        { id: 4, codigo: "ANEXO", nombre: "Anexo", activo: true },
+        { id: 5, codigo: "RANCHO", nombre: "Rancho", activo: true },
+        { id: 6, codigo: "HABITACION", nombre: "Habitación", activo: true },
+      ];
+    case base === "/catalogos/tenencias-vivienda":
+      return [
+        { id: 1, codigo: "PROPIA", nombre: "Propia", activo: true },
+        { id: 2, codigo: "ALQUILADA", nombre: "Alquilada", activo: true },
+        { id: 3, codigo: "FAMILIAR", nombre: "Familiar", activo: true },
+        { id: 4, codigo: "CEDIDA", nombre: "Cedida", activo: true },
+        { id: 5, codigo: "OTRA", nombre: "Otra", activo: true },
+      ];
+    case base === "/catalogos/estados":
+      return [
+        { id: 1, codigo: "DC", nombre: "Distrito Capital", activo: true },
+        { id: 2, codigo: "MI", nombre: "Miranda", activo: true },
+        { id: 3, codigo: "VA", nombre: "La Guaira", activo: true },
+        { id: 4, codigo: "AR", nombre: "Aragua", activo: true },
+        { id: 5, codigo: "CA", nombre: "Carabobo", activo: true },
+      ];
+    case base === "/catalogos/municipios":
+      return [
+        { id: 1, estado_id: 1, codigo: "LIBERTADOR", nombre: "Libertador", activo: true },
+        { id: 2, estado_id: 2, codigo: "BARUTA", nombre: "Baruta", activo: true },
+        { id: 3, estado_id: 2, codigo: "CHACAO", nombre: "Chacao", activo: true },
+        { id: 4, estado_id: 2, codigo: "EL_HATILLO", nombre: "El Hatillo", activo: true },
+        { id: 5, estado_id: 2, codigo: "SUCRE", nombre: "Sucre", activo: true },
+        { id: 6, estado_id: 3, codigo: "VARGAS", nombre: "Vargas", activo: true },
+      ];
+    case base === "/catalogos/parroquias":
+      return [
+        { id: 1, municipio_id: 1, codigo: "ALTAGRACIA", nombre: "Altagracia", activo: true },
+        { id: 2, municipio_id: 1, codigo: "CANDELARIA", nombre: "La Candelaria", activo: true },
+        { id: 3, municipio_id: 1, codigo: "CATEDRAL", nombre: "Catedral", activo: true },
+        { id: 4, municipio_id: 1, codigo: "SAN_AGUSTIN", nombre: "San Agustín", activo: true },
+        { id: 5, municipio_id: 1, codigo: "SAN_JOSE", nombre: "San José", activo: true },
+        { id: 6, municipio_id: 1, codigo: "EL_RECREO", nombre: "El Recreo", activo: true },
+        { id: 7, municipio_id: 2, codigo: "EL_CAFETAL", nombre: "El Cafetal", activo: true },
+        { id: 8, municipio_id: 2, codigo: "LAS_MINAS", nombre: "Las Minas", activo: true },
+        { id: 9, municipio_id: 3, codigo: "CHACAO", nombre: "Chacao", activo: true },
+      ];
 
     case base === "/dashboard":
       return {
@@ -651,36 +1397,81 @@ export function demoResolve(path: string, rolActivo: string = "ADMIN"): unknown 
       return VACACIONES;
 
     case base === "/ops/guardias":
+      if (funcionario_id !== undefined)
+        return paginate(generarGuardiasPara(funcionario_id), page, page_size);
       return paginate(GUARDIAS, page, page_size);
     case base === "/ops/permisos":
+      if (funcionario_id !== undefined)
+        return paginate(generarPermisosPara(funcionario_id), page, page_size);
       return paginate(PERMISOS, page, page_size);
     case base === "/ops/vacaciones":
+      if (funcionario_id !== undefined)
+        return paginate(generarVacacionesPara(funcionario_id), page, page_size);
       return paginate(VACACIONES, page, page_size);
     case base === "/ops/comisiones":
+      if (funcionario_id !== undefined)
+        return paginate(generarComisionesPara(funcionario_id), page, page_size);
       return paginate(COMISIONES, page, page_size);
     case base === "/ops/faltas":
+      if (funcionario_id !== undefined)
+        return paginate(generarFaltasPara(funcionario_id), page, page_size);
       return paginate(FALTAS, page, page_size);
 
+    case base === "/salud/reposos":
+      if (funcionario_id !== undefined)
+        return paginate(generarRepososPara(funcionario_id), page, page_size);
+      return paginate(REPOSOS, page, page_size);
+    case base === "/salud/lesiones":
+      if (funcionario_id !== undefined)
+        return paginate(generarLesionesPara(funcionario_id), page, page_size);
+      return paginate([], page, page_size);
+    case base === "/salud/evaluacion-fisica":
+      if (funcionario_id !== undefined)
+        return paginate(generarEvalFisicaPara(funcionario_id), page, page_size);
+      return paginate([], page, page_size);
+
     case base === "/carrera/cursos-realizados":
+      if (funcionario_id !== undefined)
+        return paginate(generarCursosPara(funcionario_id), page, page_size);
       return paginate(CURSOS, page, page_size);
     case base === "/carrera/ascensos":
+      if (funcionario_id !== undefined)
+        return paginate(generarAscensosPara(funcionario_id), page, page_size);
       return paginate(ASCENSOS, page, page_size);
     case base === "/carrera/reconocimientos":
+      if (funcionario_id !== undefined)
+        return paginate(generarReconocimientosPara(funcionario_id), page, page_size);
       return paginate(RECONOCIMIENTOS, page, page_size);
     case base === "/carrera/meritos":
+      if (funcionario_id !== undefined)
+        return paginate(generarMeritosPara(funcionario_id), page, page_size);
       return paginate(MERITOS, page, page_size);
+    case base === "/carrera/evaluaciones":
+      if (funcionario_id !== undefined)
+        return paginate(generarEvalDesempenoPara(funcionario_id), page, page_size);
+      return paginate([], page, page_size);
 
     case base === "/equipo/proteccion/inventario":
       return paginate(PROTECCION, page, page_size);
     case base === "/equipo/proteccion/asignaciones":
+      if (funcionario_id !== undefined)
+        return paginate(generarProteccionAsignacionesPara(funcionario_id), page, page_size);
       return paginate(PROTECCION_ASIGNACIONES, page, page_size);
     case base === "/admin/auditoria":
       return paginate(AUDITORIA, page, page_size);
     case base === "/equipo/radios":
+      if (funcionario_id !== undefined)
+        return paginate(generarRadiosAsignadasPara(funcionario_id), page, page_size);
       return paginate(RADIOS, page, page_size);
 
     case base === "/beneficios/ayudas":
+      if (funcionario_id !== undefined)
+        return paginate(generarAyudasPara(funcionario_id), page, page_size);
       return paginate(AYUDAS, page, page_size);
+    case base === "/beneficios/entregas":
+      if (funcionario_id !== undefined)
+        return paginate(generarProteccionAsignacionesPara(funcionario_id), page, page_size);
+      return paginate([], page, page_size);
 
     case base === "/egresos/jubilados":
       return paginate(JUBILADOS, page, page_size);

@@ -61,3 +61,30 @@ class Banco(_CatalogoMixin, Base):
     __tablename__ = "bancos"
     __table_args__ = {"schema": "core"}
     swift: Mapped[str | None] = mapped_column(String)
+
+
+class TipoPersonal(_CatalogoMixin, Base):
+    __tablename__ = "tipos_personal"
+    __table_args__ = {"schema": "core"}
+
+
+class EstatusFuncionario(_CatalogoMixin, Base):
+    # Schema SQL: core.estatus_funcionarios (plural) — el singular existe como
+    # ENUM (core.estatus_funcionario) y colisiona si se reusa para la tabla.
+    __tablename__ = "estatus_funcionarios"
+    __table_args__ = {"schema": "core"}
+
+
+class InstitucionFormadora(_CatalogoMixin, Base):
+    __tablename__ = "instituciones_formadoras"
+    __table_args__ = {"schema": "core"}
+
+
+class TipoVivienda(_CatalogoMixin, Base):
+    __tablename__ = "tipos_vivienda"
+    __table_args__ = {"schema": "core"}
+
+
+class TenenciaVivienda(_CatalogoMixin, Base):
+    __tablename__ = "tenencias_vivienda"
+    __table_args__ = {"schema": "core"}

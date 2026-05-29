@@ -23,7 +23,7 @@ interface Me {
   debe_cambiar_password: boolean;
 }
 
-export interface NavItem {
+interface NavItem {
   href: string;
   label: string;
   Icon: LucideIcon;
@@ -72,7 +72,7 @@ function filtrar(items: NavItem[], roles: string[]) {
   return items.filter((i) => puedeVer(i.href, roles));
 }
 
-export function NavGroup({ title, items }: { title?: string; items: NavItem[] }) {
+function NavGroup({ title, items }: { title?: string; items: NavItem[] }) {
   if (items.length === 0) return null;
   return (
     <div>
