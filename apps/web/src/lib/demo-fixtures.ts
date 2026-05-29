@@ -25,6 +25,21 @@ const NOMBRES = [
   "Rosa",
   "Miguel",
   "Andrea",
+  "Francisco",
+  "Juan",
+  "Diego",
+  "Sofía",
+  "Camila",
+  "Valentina",
+  "Isabella",
+  "Daniela",
+  "Alejandro",
+  "Gabriel",
+  "Sebastián",
+  "Ricardo",
+  "Eduardo",
+  "Patricia",
+  "Verónica",
 ];
 const APELLIDOS = [
   "González",
@@ -37,9 +52,26 @@ const APELLIDOS = [
   "Ramírez",
   "Torres",
   "Flores",
+  "Castro",
+  "Romero",
+  "Suárez",
+  "Vargas",
+  "Reyes",
+  "Cruz",
+  "Morales",
+  "Ortiz",
+  "Gutiérrez",
+  "Mendoza",
+  "Jiménez",
+  "Rojas",
+  "Silva",
+  "Castillo",
+  "Vásquez",
 ];
 
 const ESTATUS = [
+  "ACTIVO",
+  "ACTIVO",
   "ACTIVO",
   "ACTIVO",
   "ACTIVO",
@@ -52,6 +84,166 @@ const ESTATUS = [
   "EGRESADO",
 ];
 
+// Catálogos médicos / operativos reutilizables --------------------------------
+
+const DIAGNOSTICOS = [
+  "Lumbalgia aguda",
+  "Lumbalgia crónica",
+  "Hernia discal lumbar",
+  "Esguince de rodilla",
+  "Esguince de tobillo",
+  "Fractura de tibia",
+  "Fractura de radio",
+  "Quemaduras de 1er grado",
+  "Quemaduras de 2do grado",
+  "Inhalación de humo",
+  "Intoxicación leve por monóxido",
+  "Estrés post-traumático",
+  "Conjuntivitis química",
+  "Otitis",
+  "Faringitis bacteriana",
+  "Gastroenteritis aguda",
+  "Dengue",
+  "COVID-19",
+  "Hipertensión arterial",
+  "Migraña",
+];
+
+const CENTROS_MEDICOS = [
+  "Hospital Universitario de Caracas",
+  "Hospital Vargas de Caracas",
+  "Hospital Militar Dr. Carlos Arvelo",
+  "Hospital Clínico Universitario",
+  "Hospital Pérez Carreño",
+  "Hospital Domingo Luciani",
+  "Clínica La Floresta",
+  "Centro Médico de Caracas",
+  "Policlínica Metropolitana",
+  "Clínica El Ávila",
+  "IVSS Sanatorio Antituberculoso",
+  "Hospital de Niños J. M. de los Ríos",
+];
+
+const MEDICOS = [
+  "Dr. Andrés Pacheco",
+  "Dra. María Eugenia Lozada",
+  "Dr. Rafael Briceño",
+  "Dra. Karina Sánchez",
+  "Dr. Iván Contreras",
+  "Dra. Patricia Bermúdez",
+  "Dr. Gustavo Linares",
+  "Dra. Marisol Quintero",
+  "Dr. Hernán Delgado",
+  "Dra. Esther Salazar",
+  "Dr. Felipe Mendoza",
+  "Dra. Luisa Aponte",
+];
+
+const TIPOS_PERMISO = [
+  "MEDICO",
+  "PERSONAL",
+  "ESTUDIO",
+  "MATRIMONIO",
+  "PATERNIDAD",
+  "MATERNIDAD",
+  "DUELO",
+  "DEPORTIVO",
+];
+
+const MOTIVOS_PERMISO = [
+  "Trámite personal urgente",
+  "Atención médica ambulatoria",
+  "Acompañamiento familiar a consulta",
+  "Presentación de examen universitario",
+  "Trámite legal en notaría",
+  "Boda civil de familiar directo",
+  "Sepelio de familiar directo",
+  "Representación deportiva institucional",
+];
+
+const INSTITUCIONES_COMISION = [
+  "Protección Civil Caracas",
+  "Alcaldía Metropolitana de Caracas",
+  "Defensa Civil Nacional",
+  "Hospital Militar Dr. Carlos Arvelo",
+  "Funvisis",
+  "Inparques",
+  "Ministerio del Interior y Justicia",
+  "Sundde",
+  "Cuerpo de Bomberos del Estado Miranda",
+  "Aeropuerto Internacional de Maiquetía",
+];
+
+const CARGOS_COMISION = [
+  "Coordinador de área",
+  "Asesor técnico",
+  "Enlace operativo",
+  "Instructor invitado",
+  "Jefe de brigada interinstitucional",
+  "Supervisor de campo",
+];
+
+const DESCRIPCIONES_FALTA = [
+  "Inasistencia injustificada al servicio asignado",
+  "Retraso reiterado al inicio del turno",
+  "Incumplimiento de orden directa del superior",
+  "Uso indebido del uniforme institucional",
+  "Manejo inadecuado de equipo asignado",
+  "Abandono del puesto durante guardia",
+  "Falta de respeto a compañero de servicio",
+  "Negligencia en procedimiento operativo",
+];
+
+const SANCIONES_LEVE = ["Amonestación verbal", "Amonestación escrita", "Llamado de atención formal"];
+const SANCIONES_MEDIA = ["Suspensión 3 días", "Suspensión 5 días", "Suspensión 7 días"];
+const SANCIONES_GRAVE = ["Suspensión 15 días", "Suspensión 30 días", "Suspensión sin goce de sueldo 45 días"];
+
+const CURSOS_NOMBRES = [
+  "Rescate vertical",
+  "Materiales peligrosos (HazMat)",
+  "Primeros auxilios avanzados",
+  "Bombero forestal",
+  "Manejo de defensa de incendios estructurales",
+  "Rescate vehicular avanzado",
+  "Soporte vital básico (BLS)",
+  "Soporte vital avanzado (ACLS)",
+  "Búsqueda y rescate urbano (USAR)",
+  "Investigación de incendios",
+  "Manejo de estructuras colapsadas",
+  "Triage en emergencias masivas",
+  "Educación comunitaria en riesgos",
+  "Operación de bombas y motobombas",
+  "Sistemas de comunicación radial",
+];
+
+const INSTITUCIONES_FORMADORAS = [
+  "Academia Nacional de Bomberos",
+  "Universidad Nacional Experimental de la Seguridad (UNES)",
+  "Instituto Universitario Tecnológico de Bomberos (IUTB)",
+  "Cuerpo de Bomberos de Miami-Dade (visita técnica)",
+  "Cruz Roja Venezolana",
+  "Protección Civil Nacional",
+];
+
+const RECONOCIMIENTOS_NOMBRES = [
+  "Medalla al mérito en servicio",
+  "Reconocimiento por labor humanitaria",
+  "Distinción 25 años de servicio",
+  "Mención de honor por operativo destacado",
+  "Cruz al valor bomberil",
+  "Estrella de servicio distinguido",
+  "Diploma de excelencia operativa",
+];
+
+const RECONOCIMIENTOS_MOTIVOS = [
+  "Servicio destacado en operativo de incendio estructural",
+  "Trayectoria intachable de servicio",
+  "Acción valiente en rescate vehicular",
+  "Liderazgo operativo en emergencia masiva",
+  "Apoyo a comunidad damnificada",
+  "Salvamento en operativo acuático",
+];
+
 const seed = (i: number) => {
   let h = i;
   return () => {
@@ -62,7 +254,7 @@ const seed = (i: number) => {
 
 const gen = seed(42);
 
-const FUNCIONARIOS = Array.from({ length: 50 }, (_, i) => {
+const FUNCIONARIOS = Array.from({ length: 150 }, (_, i) => {
   const id = i + 1;
   const nombres = `${NOMBRES[Math.floor(gen() * NOMBRES.length)]} ${
     NOMBRES[Math.floor(gen() * NOMBRES.length)]
@@ -93,6 +285,8 @@ const FUNCIONARIOS = Array.from({ length: 50 }, (_, i) => {
     pre_jubilado: estatus === "PRE_JUBILADO",
   };
 });
+
+const TOTAL_FUNCIONARIOS = FUNCIONARIOS.length;
 
 const JERARQUIAS = [
   { id: 1, codigo: "BOMB", nombre: "Bombero", nombre_corto: "BOMB", orden: 1, activo: true, es_oficial: false, es_tropa: true, es_estado_mayor: false },
@@ -131,6 +325,199 @@ const ESTACIONES = [
   { id: 12, codigo: "E12", nombre: "Estación Macarao", activo: true, zona_id: 4 },
 ];
 
+// --- Catálogos realistas (reemplazan a cat() genérico) -----------------------
+
+const CARGOS_REALES = [
+  "Jefe de División",
+  "Coordinador Operativo",
+  "Jefe de Estación",
+  "Comandante de Guardia",
+  "Bombero",
+  "Paramédico",
+  "Operador de Radio",
+  "Chofer de Unidad",
+  "Mecánico",
+  "Administrativo",
+  "Almacenista",
+  "Médico",
+  "Enfermero",
+  "Psicólogo",
+  "Trabajador Social",
+].map((nombre, i) => ({
+  id: i + 1,
+  codigo: nombre.toUpperCase().replace(/[^A-Z]+/g, "_").slice(0, 12),
+  nombre,
+  activo: true,
+}));
+
+const CONDICIONES_REALES = [
+  "Titular",
+  "Contratado",
+  "Comisionado",
+  "En Préstamo",
+  "Beca-Trabajo",
+  "Honorario",
+  "Suplente",
+  "Pasante",
+].map((nombre, i) => ({
+  id: i + 1,
+  codigo: nombre.toUpperCase().replace(/[^A-Z]+/g, "_"),
+  nombre,
+  activo: true,
+}));
+
+const NIVELES_EDUCATIVOS_REALES = [
+  "Primaria",
+  "Bachiller",
+  "TSU",
+  "Universitario",
+  "Especialización",
+  "Maestría",
+  "Doctorado",
+].map((nombre, i) => ({
+  id: i + 1,
+  codigo: nombre.toUpperCase().replace(/[^A-Z]+/g, "_"),
+  nombre,
+  activo: true,
+}));
+
+const ESPECIALIDADES_REALES = [
+  "Rescate Urbano",
+  "Materiales Peligrosos (HazMat)",
+  "Rescate Vertical",
+  "Rescate Acuático",
+  "Manejo de Sustancias",
+  "Primeros Auxilios Avanzados",
+  "Soporte Vital Básico",
+  "Soporte Vital Avanzado",
+  "Rescate Vehicular",
+  "Investigación de Incendios",
+  "Sistemas de Comunicación",
+  "Manejo de Estructuras Colapsadas",
+  "Búsqueda y Rescate",
+  "Triage",
+  "Educación Comunitaria",
+].map((nombre, i) => ({
+  id: i + 1,
+  codigo: `ESP${i + 1}`,
+  nombre,
+  activo: true,
+}));
+
+const BANCOS_REALES = [
+  "Banco de Venezuela",
+  "Banesco",
+  "Mercantil",
+  "Provincial",
+  "Bicentenario",
+  "BNC",
+  "Caroní",
+  "Activo",
+  "BOD",
+  "Sofitasa",
+  "Plaza",
+  "Banco del Tesoro",
+  "Banco Agrícola de Venezuela",
+].map((nombre, i) => ({
+  id: i + 1,
+  codigo: `BNC${String(i + 1).padStart(2, "0")}`,
+  nombre,
+  activo: true,
+}));
+
+const DIVISIONES_REALES = [
+  "División Operativa",
+  "División Administrativa",
+  "División de Salud",
+  "División de Recursos Humanos",
+  "División de Logística",
+  "División de Capacitación",
+  "División de Tecnología",
+  "División de Asuntos Legales",
+].map((nombre, i) => ({
+  id: i + 1,
+  codigo: `DIV${i + 1}`,
+  nombre,
+  activo: true,
+}));
+
+const AREAS_REALES = [
+  "Operaciones",
+  "Salud Ocupacional",
+  "Administración",
+  "Recursos Humanos",
+  "Logística",
+  "Almacén",
+  "Mantenimiento",
+  "Comunicaciones",
+  "Inteligencia",
+  "Prevención",
+].map((nombre, i) => ({
+  id: i + 1,
+  codigo: `AR${i + 1}`,
+  nombre,
+  activo: true,
+}));
+
+const DEPENDENCIAS_REALES = [
+  "Comandancia General",
+  "Subcomandancia Operativa",
+  "Subcomandancia Administrativa",
+  "Inspectoría General",
+  "Dirección de Recursos Humanos",
+  "Dirección de Logística",
+  "Dirección de Salud",
+  "Dirección de Capacitación",
+].map((nombre, i) => ({
+  id: i + 1,
+  codigo: `DEP${i + 1}`,
+  nombre,
+  activo: true,
+}));
+
+// Estados / Municipios / Parroquias venezolanos enriquecidos -----------------
+
+const ESTADOS_VE = [
+  { id: 1, codigo: "DC", nombre: "Distrito Capital", activo: true },
+  { id: 2, codigo: "MI", nombre: "Miranda", activo: true },
+  { id: 3, codigo: "VA", nombre: "La Guaira", activo: true },
+  { id: 4, codigo: "AR", nombre: "Aragua", activo: true },
+  { id: 5, codigo: "CA", nombre: "Carabobo", activo: true },
+];
+
+const MUNICIPIOS_VE = [
+  { id: 1, estado_id: 1, codigo: "LIBERTADOR", nombre: "Libertador", activo: true },
+  { id: 2, estado_id: 2, codigo: "BARUTA", nombre: "Baruta", activo: true },
+  { id: 3, estado_id: 2, codigo: "CHACAO", nombre: "Chacao", activo: true },
+  { id: 4, estado_id: 2, codigo: "EL_HATILLO", nombre: "El Hatillo", activo: true },
+  { id: 5, estado_id: 2, codigo: "SUCRE", nombre: "Sucre", activo: true },
+  { id: 6, estado_id: 3, codigo: "VARGAS", nombre: "Vargas", activo: true },
+];
+
+const PARROQUIAS_VE = [
+  { id: 1, municipio_id: 1, codigo: "ALTAGRACIA", nombre: "Altagracia", activo: true },
+  { id: 2, municipio_id: 1, codigo: "CANDELARIA", nombre: "La Candelaria", activo: true },
+  { id: 3, municipio_id: 1, codigo: "CATEDRAL", nombre: "Catedral", activo: true },
+  { id: 4, municipio_id: 1, codigo: "SAN_AGUSTIN", nombre: "San Agustín", activo: true },
+  { id: 5, municipio_id: 1, codigo: "SAN_JOSE", nombre: "San José", activo: true },
+  { id: 6, municipio_id: 1, codigo: "EL_RECREO", nombre: "El Recreo", activo: true },
+  { id: 7, municipio_id: 1, codigo: "SAN_BERNARDINO", nombre: "San Bernardino", activo: true },
+  { id: 8, municipio_id: 1, codigo: "EL_PARAISO", nombre: "El Paraíso", activo: true },
+  { id: 9, municipio_id: 1, codigo: "LA_VEGA", nombre: "La Vega", activo: true },
+  { id: 10, municipio_id: 1, codigo: "ANTIMANO", nombre: "Antímano", activo: true },
+  { id: 11, municipio_id: 1, codigo: "MACARAO", nombre: "Macarao", activo: true },
+  { id: 12, municipio_id: 1, codigo: "COCHE", nombre: "Coche", activo: true },
+  { id: 13, municipio_id: 1, codigo: "EL_VALLE", nombre: "El Valle", activo: true },
+  { id: 14, municipio_id: 2, codigo: "EL_CAFETAL", nombre: "El Cafetal", activo: true },
+  { id: 15, municipio_id: 2, codigo: "LAS_MINAS", nombre: "Las Minas", activo: true },
+  { id: 16, municipio_id: 2, codigo: "NUESTRA_SENORA_DEL_ROSARIO", nombre: "Nuestra Señora del Rosario", activo: true },
+  { id: 17, municipio_id: 3, codigo: "CHACAO_P", nombre: "Chacao", activo: true },
+  { id: 18, municipio_id: 4, codigo: "EL_HATILLO_P", nombre: "El Hatillo", activo: true },
+  { id: 19, municipio_id: 5, codigo: "PETARE", nombre: "Petare", activo: true },
+  { id: 20, municipio_id: 5, codigo: "LEONCIO_MARTINEZ", nombre: "Leoncio Martínez", activo: true },
+];
+
+// Catálogo legacy genérico — solo usado para tipos donde el frontend no exige nombres reales
 const cat = (n: number, prefix: string, label: string) =>
   Array.from({ length: n }, (_, i) => ({
     id: i + 1,
@@ -201,12 +588,30 @@ function isoDateInYear(rng: () => number, year: number): string {
   return `${year}-${String(m).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 }
 
+/**
+ * Devuelve metadatos coherentes de estatus para un funcionario.
+ * Si está jubilado/egresado/fallecido, recortamos generación de eventos
+ * "actuales" para que no aparezcan reposos 2026 a alguien jubilado en 2019.
+ */
+function estadoCarrera(fid: number) {
+  const f = FUNCIONARIOS[fid - 1] ?? FUNCIONARIOS[0];
+  const ingreso = f?.fecha_primer_ingreso ?? "1995-01-01";
+  const ingresoYear = Number(ingreso.slice(0, 4));
+  const inactivo = f?.estatus === "JUBILADO" || f?.estatus === "EGRESADO";
+  // Año de cierre: para jubilados/egresados usamos un año pasado realista
+  const cierreYear = inactivo
+    ? Math.min(2024, Math.max(ingresoYear + 25, 2018 + (fid % 6)))
+    : new Date().getFullYear();
+  return { funcionario: f, ingreso, ingresoYear, inactivo, cierreYear };
+}
+
 // ---- Generadores por funcionario (datos pocos pero coherentes) ----
 
 function generarRepososPara(fid: number) {
+  const { inactivo } = estadoCarrera(fid);
+  if (inactivo) return [];
   const rng = rngFor(fid, 11);
   const n = Math.floor(rng() * 3); // 0..2
-  const diag = ["Lumbalgia", "Fractura tibia", "Gripe H1N1", "Cirugía menor", "Dengue", "Conjuntivitis"];
   return Array.from({ length: n }, (_, i) => {
     const fecha_inicio = isoDateInYear(rng, 2025 + (i % 2));
     const dias = 3 + Math.floor(rng() * 25);
@@ -214,20 +619,23 @@ function generarRepososPara(fid: number) {
       id: fid * 100 + i + 1,
       funcionario_id: fid,
       tipo_reposo_id: 1 + Math.floor(rng() * 4),
-      diagnostico_libre: pick(rng, diag),
+      diagnostico_libre: pick(rng, DIAGNOSTICOS),
       fecha_inicio,
       fecha_fin: addDays(fecha_inicio, dias),
       dias,
       anulado: false,
+      medico_tratante: pick(rng, MEDICOS),
+      centro_medico: pick(rng, CENTROS_MEDICOS),
     };
   });
 }
 
 function generarVacacionesPara(fid: number) {
+  const { inactivo, cierreYear } = estadoCarrera(fid);
   const rng = rngFor(fid, 22);
-  const n = 1 + Math.floor(rng() * 2); // 1..2
+  const n = inactivo ? Math.max(1, Math.floor(rng() * 2)) : 1 + Math.floor(rng() * 2); // 1..2
   return Array.from({ length: n }, (_, i) => {
-    const periodo_anio = 2024 + i;
+    const periodo_anio = inactivo ? cierreYear - i : 2024 + i;
     const fecha_inicio = isoDateInYear(rng, periodo_anio);
     return {
       id: fid * 100 + i + 1,
@@ -240,42 +648,43 @@ function generarVacacionesPara(fid: number) {
       bono_pagado: rng() > 0.3,
       monto_bono: rng() > 0.3 ? 1500 : null,
       autorizado: true,
-      estado: pick(rng, ["FINALIZADA", "EN_CURSO", "PROGRAMADA"]),
+      estado: inactivo ? "FINALIZADA" : pick(rng, ["FINALIZADA", "EN_CURSO", "PROGRAMADA"]),
     };
   });
 }
 
 function generarPermisosPara(fid: number) {
+  const { inactivo } = estadoCarrera(fid);
+  if (inactivo) return [];
   const rng = rngFor(fid, 33);
   const n = Math.floor(rng() * 3); // 0..2
-  const tipos = ["MEDICO", "PERSONAL", "ESTUDIO", "MATRIMONIO"];
   return Array.from({ length: n }, (_, i) => {
     const fecha_inicio = isoDateInYear(rng, 2025);
     return {
       id: fid * 100 + i + 1,
       funcionario_id: fid,
-      tipo: pick(rng, tipos),
+      tipo: pick(rng, TIPOS_PERMISO),
       fecha_inicio,
       fecha_fin: addDays(fecha_inicio, 1 + Math.floor(rng() * 3)),
       horas: 8 * (1 + Math.floor(rng() * 3)),
-      motivo: "Trámite personal urgente",
+      motivo: pick(rng, MOTIVOS_PERMISO),
       autorizado: rng() > 0.2,
     };
   });
 }
 
 function generarComisionesPara(fid: number) {
+  const { inactivo, cierreYear } = estadoCarrera(fid);
   const rng = rngFor(fid, 44);
   const n = Math.floor(rng() * 2); // 0..1
-  const instituciones = ["Protección Civil", "Alcaldía Metropolitana", "Defensa Civil", "Hospital Militar"];
   return Array.from({ length: n }, (_, i) => {
-    const fecha_inicio = isoDateInYear(rng, 2024);
-    const activa = rng() > 0.5;
+    const fecha_inicio = isoDateInYear(rng, inactivo ? cierreYear - 2 : 2024);
+    const activa = !inactivo && rng() > 0.5;
     return {
       id: fid * 100 + i + 1,
       funcionario_id: fid,
-      institucion_libre: pick(rng, instituciones),
-      cargo_comision: "Coordinador de área",
+      institucion_libre: pick(rng, INSTITUCIONES_COMISION),
+      cargo_comision: pick(rng, CARGOS_COMISION),
       fecha_inicio,
       fecha_fin: activa ? null : addDays(fecha_inicio, 90 + Math.floor(rng() * 180)),
       resolucion: `RES-2024-${100 + fid}`,
@@ -285,20 +694,26 @@ function generarComisionesPara(fid: number) {
 }
 
 function generarFaltasPara(fid: number) {
+  const { inactivo, cierreYear } = estadoCarrera(fid);
   const rng = rngFor(fid, 55);
   const n = rng() > 0.7 ? 1 : 0;
   const tipos: ("LEVE" | "MEDIA" | "GRAVE")[] = ["LEVE", "MEDIA", "GRAVE"];
   return Array.from({ length: n }, (_, i) => {
     const tipo = pick(rng, tipos);
-    const sancionMap = { LEVE: "Amonestación", MEDIA: "Suspensión 3 días", GRAVE: "Suspensión 15 días" };
-    const diasMap = { LEVE: 0, MEDIA: 3, GRAVE: 15 };
+    const sancion =
+      tipo === "LEVE"
+        ? pick(rng, SANCIONES_LEVE)
+        : tipo === "MEDIA"
+        ? pick(rng, SANCIONES_MEDIA)
+        : pick(rng, SANCIONES_GRAVE);
+    const diasMap = { LEVE: 0, MEDIA: 3 + Math.floor(rng() * 5), GRAVE: 15 + Math.floor(rng() * 30) };
     return {
       id: fid * 100 + i + 1,
       funcionario_id: fid,
       tipo_falta: tipo,
-      fecha: isoDateInYear(rng, 2025),
-      descripcion: "Inasistencia injustificada al servicio asignado",
-      sancion: sancionMap[tipo],
+      fecha: isoDateInYear(rng, inactivo ? cierreYear - 1 : 2025),
+      descripcion: pick(rng, DESCRIPCIONES_FALTA),
+      sancion,
       dias_suspension: diasMap[tipo],
       fecha_inicio_susp: null,
       fecha_fin_susp: null,
@@ -308,6 +723,8 @@ function generarFaltasPara(fid: number) {
 }
 
 function generarGuardiasPara(fid: number) {
+  const { inactivo } = estadoCarrera(fid);
+  if (inactivo) return [];
   const rng = rngFor(fid, 66);
   const n = 2 + Math.floor(rng() * 3); // 2..4
   return Array.from({ length: n }, (_, i) => {
@@ -331,22 +748,17 @@ function generarGuardiasPara(fid: number) {
 }
 
 function generarCursosPara(fid: number) {
+  const { ingresoYear, cierreYear } = estadoCarrera(fid);
   const rng = rngFor(fid, 77);
   const n = 1 + Math.floor(rng() * 3); // 1..3
-  const cursos = [
-    "Rescate vertical",
-    "Materiales peligrosos",
-    "Primeros auxilios avanzados",
-    "Bombero forestal",
-    "Manejo de defensa de incendios estructurales",
-  ];
   return Array.from({ length: n }, (_, i) => {
-    const fecha_inicio = isoDateInYear(rng, 2023 + (i % 3));
+    const year = Math.min(cierreYear, ingresoYear + 2 + i * 3 + Math.floor(rng() * 3));
+    const fecha_inicio = isoDateInYear(rng, year);
     return {
       id: fid * 100 + i + 1,
       funcionario_id: fid,
-      nombre_libre: pick(rng, cursos),
-      institucion: "Academia Nacional de Bomberos",
+      nombre_libre: pick(rng, CURSOS_NOMBRES),
+      institucion: pick(rng, INSTITUCIONES_FORMADORAS),
       fecha_inicio,
       fecha_fin: addDays(fecha_inicio, 20 + Math.floor(rng() * 30)),
       horas: 40 + Math.floor(rng() * 80),
@@ -357,32 +769,32 @@ function generarCursosPara(fid: number) {
 }
 
 function generarAscensosPara(fid: number) {
+  const { ingresoYear, cierreYear } = estadoCarrera(fid);
   const rng = rngFor(fid, 88);
   const n = Math.floor(rng() * 3); // 0..2
-  return Array.from({ length: n }, (_, i) => ({
-    id: fid * 100 + i + 1,
-    funcionario_id: fid,
-    jerarquia_anterior_id: 1 + i,
-    jerarquia_nueva_id: 2 + i,
-    fecha_efectiva: isoDateInYear(rng, 2018 + i * 3),
-    resolucion: `RES-${2018 + i * 3}-${500 + fid}`,
-  }));
+  return Array.from({ length: n }, (_, i) => {
+    const yearAsc = Math.min(cierreYear, ingresoYear + 5 + i * 4 + Math.floor(rng() * 3));
+    return {
+      id: fid * 100 + i + 1,
+      funcionario_id: fid,
+      jerarquia_anterior_id: 1 + i,
+      jerarquia_nueva_id: 2 + i,
+      fecha_efectiva: isoDateInYear(rng, yearAsc),
+      resolucion: `RES-${yearAsc}-${500 + fid}`,
+    };
+  });
 }
 
 function generarReconocimientosPara(fid: number) {
   const rng = rngFor(fid, 99);
   const n = Math.floor(rng() * 2); // 0..1
-  const nombres = [
-    "Medalla al mérito",
-    "Reconocimiento por labor humanitaria",
-    "Distinción 25 años de servicio",
-  ];
+  const { cierreYear } = estadoCarrera(fid);
   return Array.from({ length: n }, (_, i) => ({
     id: fid * 100 + i + 1,
     funcionario_id: fid,
-    nombre_libre: pick(rng, nombres),
-    fecha_otorgamiento: isoDateInYear(rng, 2023 + i),
-    motivo: "Servicio destacado en operativo",
+    nombre_libre: pick(rng, RECONOCIMIENTOS_NOMBRES),
+    fecha_otorgamiento: isoDateInYear(rng, Math.min(cierreYear, 2023 + i)),
+    motivo: pick(rng, RECONOCIMIENTOS_MOTIVOS),
   }));
 }
 
@@ -412,7 +824,7 @@ function generarMeritosPara(fid: number) {
 function generarProteccionAsignacionesPara(fid: number) {
   const rng = rngFor(fid, 121);
   const n = 1 + Math.floor(rng() * 2); // 1..2
-  const marcas = ["MSA", "Honeywell", "Drager", "3M"];
+  const marcas = ["MSA", "Honeywell", "Drager", "3M", "Bullard", "Scott"];
   return Array.from({ length: n }, (_, i) => {
     const devuelto = i === 0 ? false : rng() > 0.5;
     const fecha_entrega = isoDateInYear(rng, 2024 + i);
@@ -430,7 +842,7 @@ function generarProteccionAsignacionesPara(fid: number) {
       marca: pick(rng, marcas),
       modelo: `Mod-${100 + i + fid}`,
       numero_serie: `SN${10000 + fid * 10 + i}`,
-      tipo: pick(rng, ["Casco", "Chaqueta", "Pantalón", "Botas", "Guantes"]),
+      tipo: pick(rng, ["Casco", "Chaqueta", "Pantalón", "Botas", "Guantes", "SCBA", "Capuz Nomex"]),
     };
   });
 }
@@ -443,13 +855,13 @@ function generarRadiosAsignadasPara(fid: number) {
     modelo_id: 1,
     serial: `RD${20000 + fid * 10 + i}`,
     placa_inv: `INV-${fid}-${i + 1}`,
-    frecuencia: "VHF 154.250",
+    frecuencia: pick(rng, ["VHF 154.250", "VHF 155.475", "UHF 460.125", "UHF 461.750"]),
     canal: String(1 + Math.floor(rng() * 10)),
     fecha_adquisicion: isoDateInYear(rng, 2023),
     estatus: "ASIGNADO",
     estacion_id: 1 + Math.floor(rng() * 12),
     funcionario_id: fid,
-    marca: pick(rng, ["Motorola", "Kenwood", "Icom"]),
+    marca: pick(rng, ["Motorola", "Kenwood", "Icom", "Hytera"]),
     modelo: `Mod-R${100 + i}`,
     fecha_asignacion: isoDateInYear(rng, 2024),
   }));
@@ -488,16 +900,24 @@ function generarLesionesPara(fid: number) {
     "Esguince de tobillo durante operativo",
     "Quemadura de primer grado en antebrazo",
     "Contusión costal por caída",
+    "Inhalación de humo en incendio estructural",
+    "Corte profundo en mano por vidrio",
+    "Trauma craneoencefálico leve",
   ];
   const gravedad = ["LEVE", "MODERADA", "GRAVE"];
-  return Array.from({ length: n }, (_, i) => ({
-    id: fid * 100 + i + 1,
-    funcionario_id: fid,
-    fecha: isoDateInYear(rng, 2025),
-    descripcion: pick(rng, desc),
-    gravedad: pick(rng, gravedad),
-    requirio_hospitalizacion: rng() > 0.7,
-  }));
+  return Array.from({ length: n }, (_, i) => {
+    const requirio_hospitalizacion = rng() > 0.7;
+    return {
+      id: fid * 100 + i + 1,
+      funcionario_id: fid,
+      fecha: isoDateInYear(rng, 2025),
+      descripcion: pick(rng, desc),
+      gravedad: pick(rng, gravedad),
+      requirio_hospitalizacion,
+      medico_tratante: pick(rng, MEDICOS),
+      centro_medico: pick(rng, CENTROS_MEDICOS),
+    };
+  });
 }
 
 function generarEvalFisicaPara(fid: number) {
@@ -714,10 +1134,12 @@ function generarCarnetsPara(fid: number) {
   const rng = rngFor(fid, 907);
   const cantidad = 1 + Math.floor(rng() * 2); // 1..2
   const TIPOS = ["BRIGADISTA", "INSTITUCIONAL", "OPERATIVO"];
+  const { ingresoYear } = estadoCarrera(fid);
   const hoy = new Date();
   return Array.from({ length: cantidad }, (_, i) => {
     const tipo = pick(rng, TIPOS);
-    const yearEm = hoy.getFullYear() - 1 - Math.floor(rng() * 3);
+    // El carnet no puede ser anterior al ingreso del funcionario
+    const yearEm = Math.max(ingresoYear, hoy.getFullYear() - 1 - Math.floor(rng() * 3));
     const fecha_emision = isoDateInYear(rng, yearEm);
     // Mezcla de estados: ~30% vencidos, ~30% por vencer, ~40% vigentes con holgura
     const bucket = rng();
@@ -762,8 +1184,9 @@ function generarHistCarnetsPara(fid: number) {
     "Deterioro del documento",
     "Actualización de datos",
   ];
+  const { ingresoYear } = estadoCarrera(fid);
   return Array.from({ length: cantidad }, (_, i) => {
-    const yearEm = 2005 + Math.floor(rng() * 15) + i * 2;
+    const yearEm = Math.max(ingresoYear, 2005 + Math.floor(rng() * 15) + i * 2);
     const fecha_emision = isoDateInYear(rng, yearEm);
     const tipo = pick(rng, TIPOS);
     return {
@@ -782,134 +1205,277 @@ function generarHistCarnetsPara(fid: number) {
   });
 }
 
-const REPOSOS = Array.from({ length: 18 }, (_, i) => ({
-  id: i + 1,
-  funcionario_id: 1 + Math.floor(gen() * 50),
-  nombre_completo: FUNCIONARIOS[Math.floor(gen() * 50)].nombre_completo,
-  cedula: String(10_000_000 + Math.floor(gen() * 20_000_000)),
-  fecha_inicio: "2026-04-01",
-  fecha_fin: "2026-05-15",
-  dias: 15 + Math.floor(gen() * 30),
-  diagnostico: ["Lumbalgia", "Fractura tibia", "Gripe H1N1", "Cirugía menor"][
-    Math.floor(gen() * 4)
-  ],
-  certificado: gen() > 0.3,
-  zona: ZONAS[Math.floor(gen() * 4)].nombre,
-  estacion: ESTACIONES[Math.floor(gen() * 12)].nombre,
-}));
+// ---- Direcciones por funcionario (1..2 con flag es_actual) ----------------
 
-const VACACIONES = Array.from({ length: 22 }, (_, i) => ({
-  id: i + 1,
-  funcionario_id: 1 + Math.floor(gen() * 50),
-  nombre_completo: FUNCIONARIOS[Math.floor(gen() * 50)].nombre_completo,
-  cedula: String(10_000_000 + Math.floor(gen() * 20_000_000)),
-  periodo_anio: 2025 + Math.floor(gen() * 2),
-  fecha_inicio: "2026-05-10",
-  fecha_fin: "2026-05-31",
-  dias_calendario: 22,
-  dias_habiles: 15,
-  bono_pagado: gen() > 0.4,
-  monto_bono: gen() > 0.4 ? 1500 : null,
-  autorizado: true,
-  zona: ZONAS[Math.floor(gen() * 4)].nombre,
-  estacion: ESTACIONES[Math.floor(gen() * 12)].nombre,
-  estado: ["EN_CURSO", "PROGRAMADA", "FINALIZADA"][Math.floor(gen() * 3)],
-}));
+function generarDireccionesPara(fid: number) {
+  const rng = rngFor(fid, 909);
+  const cantidad = 1 + (rng() > 0.6 ? 1 : 0);
+  const SECTORES = ["El Marqués", "El Cafetal", "Los Palos Grandes", "Las Acacias", "Sabana Grande", "La Trinidad", "Boleíta Norte", "Caricuao", "El Paraíso", "Catia", "23 de Enero", "La California", "Santa Mónica"];
+  const URBANIZACIONES = ["Urb. La Floresta", "Urb. Los Chaguaramos", "Urb. Las Mercedes", "Urb. Macaracuay", "Urb. Lomas del Ávila", "Urb. La Castellana", "Urb. Bello Monte", "Urb. La Urbina"];
+  const CALLES = ["Av. Francisco de Miranda", "Av. Libertador", "Av. Rómulo Gallegos", "Calle Real", "Av. Andrés Bello", "Calle El Roble", "Av. Principal", "Calle Los Mangos", "Av. Sucre"];
+  const REFERENCIAS = ["Cerca del centro comercial", "Frente a la plaza", "Al lado de la iglesia", "Detrás del liceo", "Cerca de la estación de metro"];
+  return Array.from({ length: cantidad }, (_, i) => {
+    const estado = pick(rng, ESTADOS_VE);
+    const municipiosEstado = MUNICIPIOS_VE.filter((m) => m.estado_id === estado.id);
+    const municipio = municipiosEstado.length > 0 ? pick(rng, municipiosEstado) : MUNICIPIOS_VE[0];
+    const parroquiasMun = PARROQUIAS_VE.filter((p) => p.municipio_id === municipio.id);
+    const parroquia = parroquiasMun.length > 0 ? pick(rng, parroquiasMun) : PARROQUIAS_VE[0];
+    const sector = pick(rng, SECTORES);
+    const urb = pick(rng, URBANIZACIONES);
+    const calle = pick(rng, CALLES);
+    const edif = `Edif. ${pick(rng, ["Las Brisas", "El Conde", "Royal", "Centro Plaza", "Don Bosco", "La Esperanza"])}`;
+    const direccion_completa = `${calle}, ${urb}, ${sector}, ${parroquia.nombre}, ${municipio.nombre}, ${estado.nombre}`;
+    return {
+      id: fid * 100 + i + 1,
+      funcionario_id: fid,
+      es_actual: i === 0,
+      estado_id: estado.id,
+      municipio_id: municipio.id,
+      parroquia_id: parroquia.id,
+      sector,
+      urbanizacion: urb,
+      calle,
+      edificio_casa: edif,
+      piso: rng() > 0.5 ? String(1 + Math.floor(rng() * 10)) : null,
+      apartamento: rng() > 0.5 ? `${1 + Math.floor(rng() * 10)}${pick(rng, ["A", "B", "C", "D"])}` : null,
+      referencia: pick(rng, REFERENCIAS),
+      direccion_completa,
+      codigo_postal: String(1010 + Math.floor(rng() * 50)),
+      latitud: 10.48 + rng() * 0.1,
+      longitud: -66.9 + rng() * 0.1,
+      tipo_vivienda_id: 1 + Math.floor(rng() * 6),
+      tenencia_id: 1 + Math.floor(rng() * 5),
+      damnificado: rng() > 0.95,
+      damnificado_desde: null,
+      reside_alto_riesgo: rng() > 0.9,
+      ayuda_economica: rng() > 0.85,
+      fecha_registro: isoDateInYear(rng, 2024 + i),
+      observaciones: null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+  });
+}
 
-const GUARDIAS = Array.from({ length: 14 }, (_, i) => ({
+// ---- Auditoría por funcionario --------------------------------------------
+
+function generarAuditoriaPara(fid: number) {
+  const rng = rngFor(fid, 910);
+  const cantidad = 5 + Math.floor(rng() * 6); // 5..10
+  const TIPOS = ["CREAR", "EDITAR", "ELIMINAR"];
+  const TABLAS = ["funcionarios", "reposos", "ascensos", "permisos", "ayudas", "carnets", "guardias"];
+  const USUARIOS_AUD = [
+    { id: 1, nombre: "admin" },
+    { id: 2, nombre: "rrhh.ana" },
+    { id: 3, nombre: "supervisor.luis" },
+    { id: 4, nombre: "operador.juan" },
+  ];
+  return Array.from({ length: cantidad }, (_, i) => {
+    const u = pick(rng, USUARIOS_AUD);
+    const tabla = pick(rng, TABLAS);
+    const tipo = pick(rng, TIPOS);
+    return {
+      id: fid * 1000 + i + 1,
+      funcionario_id: fid,
+      tipo,
+      tabla,
+      usuario_id: u.id,
+      usuario_nombre: u.nombre,
+      fecha: new Date(Date.now() - (i * 86400000 * (1 + Math.floor(rng() * 5)))).toISOString(),
+      descripcion: `${tipo} en ${tabla} para funcionario ${fid}`,
+      ip: `192.168.1.${10 + Math.floor(rng() * 240)}`,
+    };
+  });
+}
+
+// ============================================================================
+// Listados globales (multiplicados a volumen producción)
+// ============================================================================
+
+const REPOSOS = Array.from({ length: 60 }, (_, i) => {
+  const fid = 1 + Math.floor(gen() * TOTAL_FUNCIONARIOS);
+  const f = FUNCIONARIOS[fid - 1];
+  const yearOffset = Math.floor(gen() * 12); // dispersión en el año
+  const fecha_inicio = `2026-${String(1 + Math.floor(gen() * 5)).padStart(2, "0")}-${String(1 + (yearOffset * 2 % 28)).padStart(2, "0")}`;
+  return {
+    id: i + 1,
+    funcionario_id: fid,
+    nombre_completo: f.nombre_completo,
+    cedula: String(f.cedula),
+    fecha_inicio,
+    fecha_fin: addDays(fecha_inicio, 3 + Math.floor(gen() * 30)),
+    dias: 3 + Math.floor(gen() * 30),
+    diagnostico: DIAGNOSTICOS[Math.floor(gen() * DIAGNOSTICOS.length)],
+    medico_tratante: MEDICOS[Math.floor(gen() * MEDICOS.length)],
+    centro_medico: CENTROS_MEDICOS[Math.floor(gen() * CENTROS_MEDICOS.length)],
+    certificado: gen() > 0.3,
+    zona: ZONAS[Math.floor(gen() * 4)].nombre,
+    estacion: ESTACIONES[Math.floor(gen() * 12)].nombre,
+  };
+});
+
+const VACACIONES = Array.from({ length: 80 }, (_, i) => {
+  const fid = 1 + Math.floor(gen() * TOTAL_FUNCIONARIOS);
+  const f = FUNCIONARIOS[fid - 1];
+  const mes = 1 + Math.floor(gen() * 11);
+  const dia = 1 + Math.floor(gen() * 20);
+  const fecha_inicio = `2026-${String(mes).padStart(2, "0")}-${String(dia).padStart(2, "0")}`;
+  return {
+    id: i + 1,
+    funcionario_id: fid,
+    nombre_completo: f.nombre_completo,
+    cedula: String(f.cedula),
+    periodo_anio: 2024 + Math.floor(gen() * 3),
+    fecha_inicio,
+    fecha_fin: addDays(fecha_inicio, 21),
+    dias_calendario: 22,
+    dias_habiles: 15,
+    bono_pagado: gen() > 0.4,
+    monto_bono: gen() > 0.4 ? 1500 + Math.floor(gen() * 800) : null,
+    autorizado: true,
+    zona: ZONAS[Math.floor(gen() * 4)].nombre,
+    estacion: ESTACIONES[Math.floor(gen() * 12)].nombre,
+    estado: ["EN_CURSO", "PROGRAMADA", "FINALIZADA"][Math.floor(gen() * 3)],
+  };
+});
+
+const GUARDIAS = Array.from({ length: 50 }, (_, i) => ({
   id: i + 1,
-  fecha: `2026-05-${String(1 + (i % 30)).padStart(2, "0")}`,
+  fecha: `2026-${String(1 + Math.floor(i / 30)).padStart(2, "0")}-${String(1 + (i % 30)).padStart(2, "0")}`,
   estacion_id: 1 + (i % 12),
   estacion: ESTACIONES[i % 12].nombre,
-  seccion: ["A", "B", "C"][i % 3],
+  seccion: ["A", "B", "C", "D"][i % 4],
   turno: ["DIURNO", "NOCTURNO", "24H"][i % 3],
   hora_inicio: "07:00:00",
   hora_fin: "19:00:00",
   jefe_guardia_id: null,
   observaciones: null,
-  cerrada: i > 7,
-  funcionarios_count: 8 + Math.floor(gen() * 6),
+  cerrada: i > 25,
+  funcionarios_count: 8 + Math.floor(gen() * 8),
 }));
 
-const PERMISOS = Array.from({ length: 11 }, (_, i) => ({
-  id: i + 1,
-  funcionario_id: 1 + Math.floor(gen() * 50),
-  tipo: ["MEDICO", "PERSONAL", "ESTUDIO", "MATRIMONIO"][i % 4],
-  fecha_inicio: "2026-05-05",
-  fecha_fin: "2026-05-07",
-  horas: 8 * (1 + (i % 3)),
-  motivo: "Trámite personal urgente",
-  autorizado: i > 4,
-}));
+const PERMISOS = Array.from({ length: 40 }, (_, i) => {
+  const fid = 1 + Math.floor(gen() * TOTAL_FUNCIONARIOS);
+  const f = FUNCIONARIOS[fid - 1];
+  const mes = 1 + Math.floor(gen() * 11);
+  const dia = 1 + Math.floor(gen() * 25);
+  const fecha_inicio = `2026-${String(mes).padStart(2, "0")}-${String(dia).padStart(2, "0")}`;
+  return {
+    id: i + 1,
+    funcionario_id: fid,
+    nombre_completo: f.nombre_completo,
+    cedula: String(f.cedula),
+    tipo: TIPOS_PERMISO[i % TIPOS_PERMISO.length],
+    fecha_inicio,
+    fecha_fin: addDays(fecha_inicio, 1 + Math.floor(gen() * 5)),
+    horas: 8 * (1 + Math.floor(gen() * 3)),
+    motivo: MOTIVOS_PERMISO[i % MOTIVOS_PERMISO.length],
+    autorizado: gen() > 0.25,
+  };
+});
 
-const COMISIONES = Array.from({ length: 7 }, (_, i) => ({
-  id: i + 1,
-  funcionario_id: 1 + Math.floor(gen() * 50),
-  institucion_libre: [
-    "Protección Civil",
-    "Alcaldía Metropolitana",
-    "Defensa Civil",
-    "Hospital Militar",
-  ][i % 4],
-  cargo_comision: "Coordinador de área",
-  fecha_inicio: "2026-01-15",
-  fecha_fin: i > 3 ? "2026-04-30" : null,
-  resolucion: `RES-2026-${100 + i}`,
-  activo: i <= 3,
-}));
+const COMISIONES = Array.from({ length: 25 }, (_, i) => {
+  const fid = 1 + Math.floor(gen() * TOTAL_FUNCIONARIOS);
+  const f = FUNCIONARIOS[fid - 1];
+  const activa = i < 12;
+  const mes = 1 + Math.floor(gen() * 11);
+  const fecha_inicio = `2026-${String(mes).padStart(2, "0")}-${String(1 + Math.floor(gen() * 25)).padStart(2, "0")}`;
+  return {
+    id: i + 1,
+    funcionario_id: fid,
+    nombre_completo: f.nombre_completo,
+    cedula: String(f.cedula),
+    institucion_libre: INSTITUCIONES_COMISION[i % INSTITUCIONES_COMISION.length],
+    cargo_comision: CARGOS_COMISION[i % CARGOS_COMISION.length],
+    fecha_inicio,
+    fecha_fin: activa ? null : addDays(fecha_inicio, 60 + Math.floor(gen() * 220)),
+    resolucion: `RES-2026-${100 + i}`,
+    activo: activa,
+  };
+});
 
-const FALTAS = Array.from({ length: 5 }, (_, i) => ({
-  id: i + 1,
-  funcionario_id: 1 + Math.floor(gen() * 50),
-  tipo_falta: ["LEVE", "MEDIA", "GRAVE"][i % 3],
-  fecha: "2026-04-15",
-  descripcion: "Inasistencia injustificada al servicio asignado",
-  sancion: ["Amonestación", "Suspensión 3 días", "Suspensión 15 días"][i % 3],
-  dias_suspension: [0, 3, 15][i % 3],
-  fecha_inicio_susp: null,
-  fecha_fin_susp: null,
-  apelada: false,
-}));
+const FALTAS = Array.from({ length: 18 }, (_, i) => {
+  const fid = 1 + Math.floor(gen() * TOTAL_FUNCIONARIOS);
+  const f = FUNCIONARIOS[fid - 1];
+  const tipos = ["LEVE", "MEDIA", "GRAVE"] as const;
+  const tipo = tipos[i % 3];
+  const sancion =
+    tipo === "LEVE"
+      ? SANCIONES_LEVE[i % SANCIONES_LEVE.length]
+      : tipo === "MEDIA"
+      ? SANCIONES_MEDIA[i % SANCIONES_MEDIA.length]
+      : SANCIONES_GRAVE[i % SANCIONES_GRAVE.length];
+  const dias = tipo === "LEVE" ? 0 : tipo === "MEDIA" ? 3 + Math.floor(gen() * 5) : 15 + Math.floor(gen() * 30);
+  return {
+    id: i + 1,
+    funcionario_id: fid,
+    nombre_completo: f.nombre_completo,
+    cedula: String(f.cedula),
+    tipo_falta: tipo,
+    fecha: `2026-${String(1 + Math.floor(gen() * 5)).padStart(2, "0")}-${String(1 + Math.floor(gen() * 25)).padStart(2, "0")}`,
+    descripcion: DESCRIPCIONES_FALTA[i % DESCRIPCIONES_FALTA.length],
+    sancion,
+    dias_suspension: dias,
+    fecha_inicio_susp: null,
+    fecha_fin_susp: null,
+    apelada: gen() > 0.85,
+  };
+});
 
-const CURSOS = Array.from({ length: 12 }, (_, i) => ({
-  id: i + 1,
-  funcionario_id: 1 + Math.floor(gen() * 50),
-  nombre_libre: [
-    "Rescate vertical",
-    "Materiales peligrosos",
-    "Primeros auxilios avanzados",
-    "Bombero forestal",
-  ][i % 4],
-  institucion: "Academia Nacional de Bomberos",
-  fecha_inicio: "2026-02-01",
-  fecha_fin: "2026-02-28",
-  horas: 40 + (i % 4) * 20,
-  nota: 80 + Math.floor(gen() * 20),
-  aprobado: gen() > 0.15,
-}));
+const CURSOS = Array.from({ length: 45 }, (_, i) => {
+  const fid = 1 + Math.floor(gen() * TOTAL_FUNCIONARIOS);
+  const f = FUNCIONARIOS[fid - 1];
+  const year = 2024 + Math.floor(gen() * 3);
+  const mes = 1 + Math.floor(gen() * 11);
+  const fecha_inicio = `${year}-${String(mes).padStart(2, "0")}-${String(1 + Math.floor(gen() * 25)).padStart(2, "0")}`;
+  return {
+    id: i + 1,
+    funcionario_id: fid,
+    nombre_completo: f.nombre_completo,
+    cedula: String(f.cedula),
+    nombre_libre: CURSOS_NOMBRES[i % CURSOS_NOMBRES.length],
+    institucion: INSTITUCIONES_FORMADORAS[i % INSTITUCIONES_FORMADORAS.length],
+    fecha_inicio,
+    fecha_fin: addDays(fecha_inicio, 15 + Math.floor(gen() * 50)),
+    horas: 40 + (i % 4) * 20 + Math.floor(gen() * 40),
+    nota: 70 + Math.floor(gen() * 30),
+    aprobado: gen() > 0.15,
+  };
+});
 
-const ASCENSOS = Array.from({ length: 8 }, (_, i) => ({
-  id: i + 1,
-  funcionario_id: 1 + Math.floor(gen() * 50),
-  jerarquia_anterior_id: 1 + (i % 11),
-  jerarquia_nueva_id: 2 + (i % 11),
-  fecha_efectiva: "2025-12-15",
-  resolucion: `RES-2025-${500 + i}`,
-}));
+const ASCENSOS = Array.from({ length: 35 }, (_, i) => {
+  const fid = 1 + Math.floor(gen() * TOTAL_FUNCIONARIOS);
+  const f = FUNCIONARIOS[fid - 1];
+  const jer_ant = 1 + (i % 11);
+  const year = 2020 + Math.floor(gen() * 6);
+  return {
+    id: i + 1,
+    funcionario_id: fid,
+    nombre_completo: f.nombre_completo,
+    cedula: String(f.cedula),
+    jerarquia_anterior_id: jer_ant,
+    jerarquia_nueva_id: jer_ant + 1,
+    jerarquia_anterior_nombre: JERARQUIAS[jer_ant - 1]?.nombre ?? null,
+    jerarquia_nueva_nombre: JERARQUIAS[jer_ant]?.nombre ?? null,
+    fecha_efectiva: `${year}-${String(1 + Math.floor(gen() * 11)).padStart(2, "0")}-${String(1 + Math.floor(gen() * 25)).padStart(2, "0")}`,
+    resolucion: `RES-${year}-${500 + i}`,
+  };
+});
 
-const RECONOCIMIENTOS = Array.from({ length: 6 }, (_, i) => ({
-  id: i + 1,
-  funcionario_id: 1 + Math.floor(gen() * 50),
-  nombre_libre: [
-    "Medalla al mérito",
-    "Reconocimiento por labor humanitaria",
-    "Distinción 25 años de servicio",
-  ][i % 3],
-  fecha_otorgamiento: "2026-03-20",
-  motivo: "Servicio destacado en operativo",
-}));
+const RECONOCIMIENTOS = Array.from({ length: 18 }, (_, i) => {
+  const fid = 1 + Math.floor(gen() * TOTAL_FUNCIONARIOS);
+  const f = FUNCIONARIOS[fid - 1];
+  return {
+    id: i + 1,
+    funcionario_id: fid,
+    nombre_completo: f.nombre_completo,
+    nombre_libre: RECONOCIMIENTOS_NOMBRES[i % RECONOCIMIENTOS_NOMBRES.length],
+    fecha_otorgamiento: `2025-${String(1 + Math.floor(gen() * 11)).padStart(2, "0")}-${String(1 + Math.floor(gen() * 25)).padStart(2, "0")}`,
+    motivo: RECONOCIMIENTOS_MOTIVOS[i % RECONOCIMIENTOS_MOTIVOS.length],
+  };
+});
 
-const MERITOS = Array.from({ length: 30 }, (_, i) => ({
+const MERITOS = Array.from({ length: TOTAL_FUNCIONARIOS }, (_, i) => ({
   id: i + 1,
   funcionario_id: i + 1,
   periodo_id: 1,
@@ -930,15 +1496,15 @@ const MERITOS = Array.from({ length: 30 }, (_, i) => ({
     (m.puntaje_faltas ?? 0),
 }));
 
-const PROTECCION = Array.from({ length: 18 }, (_, i) => ({
+const PROTECCION = Array.from({ length: 60 }, (_, i) => ({
   id: i + 1,
-  tipo_id: 1 + (i % 5),
-  marca: ["MSA", "Honeywell", "Drager", "3M"][i % 4],
+  tipo_id: 1 + (i % 7),
+  marca: ["MSA", "Honeywell", "Drager", "3M", "Bullard", "Scott"][i % 6],
   modelo: `Mod-${100 + i}`,
   numero_serie: `SN${10000 + i}`,
   talla_id: null,
-  fecha_adquisicion: "2024-06-15",
-  fecha_vence: "2029-06-15",
+  fecha_adquisicion: `2024-${String(1 + (i % 12)).padStart(2, "0")}-${String(1 + (i % 25)).padStart(2, "0")}`,
+  fecha_vence: `2029-${String(1 + (i % 12)).padStart(2, "0")}-${String(1 + (i % 25)).padStart(2, "0")}`,
   estatus: ["DISPONIBLE", "ASIGNADO", "EN_REPARACION", "DADO_DE_BAJA"][i % 4],
   estacion_id: 1 + (i % 12),
 }));
@@ -948,8 +1514,8 @@ const PROTECCION_ASIGNACIONES = PROTECCION
   .map((p, i) => ({
     id: i + 1,
     inventario_id: p.id,
-    funcionario_id: 1 + (i % 50),
-    fecha_entrega: "2026-03-15",
+    funcionario_id: 1 + (i % TOTAL_FUNCIONARIOS),
+    fecha_entrega: `2026-${String(1 + (i % 5)).padStart(2, "0")}-${String(1 + (i % 25)).padStart(2, "0")}`,
     estado_entrega: "Buen estado",
     documento_url: null,
     observaciones: null,
@@ -958,32 +1524,38 @@ const PROTECCION_ASIGNACIONES = PROTECCION
     devuelto: false,
   }));
 
-const AUDITORIA = Array.from({ length: 35 }, (_, i) => {
+const AUDITORIA = Array.from({ length: 80 }, (_, i) => {
   const tablas = [
     ["personal", "funcionarios"],
     ["salud", "reposos"],
     ["ops", "guardias"],
     ["ops", "permisos"],
+    ["ops", "vacaciones"],
+    ["ops", "comisiones"],
+    ["ops", "faltas"],
     ["beneficios", "ayudas"],
     ["seguridad", "usuarios"],
+    ["carrera", "ascensos"],
+    ["carrera", "cursos"],
     ["equipo", "proteccion_asignaciones"],
+    ["equipo", "radios"],
   ];
   const ops = ["INSERT", "UPDATE", "DELETE"];
   const usuarios = [
     [1, "admin"],
-    [2, "rrhh"],
-    [3, "supervisor"],
-    [4, "operador"],
+    [2, "rrhh.ana"],
+    [3, "supervisor.luis"],
+    [4, "operador.juan"],
+    [5, "logistica.maria"],
   ];
   const t = tablas[i % tablas.length];
   const u = usuarios[i % usuarios.length];
-  const dias = i;
-  const fecha = new Date(Date.now() - dias * 3600000 * 4).toISOString();
+  const fecha = new Date(Date.now() - i * 3600000 * 4).toISOString();
   return {
-    id: 1000 - i,
+    id: 10000 - i,
     schema_name: t[0],
     table_name: t[1],
-    registro_id: String(1 + (i % 50)),
+    registro_id: String(1 + (i % TOTAL_FUNCIONARIOS)),
     operacion: ops[i % ops.length],
     usuario_id: u[0] as number,
     usuario_nombre: u[1] as string,
@@ -993,52 +1565,64 @@ const AUDITORIA = Array.from({ length: 35 }, (_, i) => {
   };
 });
 
-const RADIOS = Array.from({ length: 12 }, (_, i) => ({
+const RADIOS = Array.from({ length: 45 }, (_, i) => ({
   id: i + 1,
-  modelo_id: 1,
+  modelo_id: 1 + (i % 4),
   serial: `RD${20000 + i}`,
   placa_inv: `INV-${i + 1}`,
-  frecuencia: "VHF 154.250",
-  canal: String(i + 1),
-  fecha_adquisicion: "2024-09-01",
-  estatus: ["DISPONIBLE", "ASIGNADO"][i % 2],
+  marca: ["Motorola", "Kenwood", "Icom", "Hytera"][i % 4],
+  modelo: `Mod-R${100 + i}`,
+  frecuencia: ["VHF 154.250", "VHF 155.475", "UHF 460.125", "UHF 461.750"][i % 4],
+  canal: String(1 + (i % 12)),
+  fecha_adquisicion: `2024-${String(1 + (i % 12)).padStart(2, "0")}-01`,
+  estatus: ["DISPONIBLE", "ASIGNADO", "EN_REPARACION", "DADO_DE_BAJA"][i % 4],
   estacion_id: 1 + (i % 12),
 }));
 
-const AYUDAS = Array.from({ length: 10 }, (_, i) => ({
-  id: i + 1,
-  funcionario_id: 1 + Math.floor(gen() * 50),
-  tipo_solicitud_id: 1 + (i % 4),
-  monto_solicitado: 1500 + Math.floor(gen() * 4000),
-  monto_aprobado: i > 2 ? 1500 + Math.floor(gen() * 3000) : null,
-  monto_pagado: i > 5 ? 1500 + Math.floor(gen() * 2500) : null,
-  fecha_solicitud: "2026-04-10",
-  fecha_aprobacion: i > 2 ? "2026-04-15" : null,
-  fecha_pago: i > 5 ? "2026-04-22" : null,
-  motivo:
-    "Apoyo económico por gastos médicos imprevistos del funcionario o familiar directo.",
-  estatus: ["SOLICITADO", "EN_REVISION", "APROBADO", "PAGADO", "RECHAZADO"][
-    i % 5
-  ],
-}));
+const AYUDAS = Array.from({ length: 40 }, (_, i) => {
+  const fid = 1 + Math.floor(gen() * TOTAL_FUNCIONARIOS);
+  const f = FUNCIONARIOS[fid - 1];
+  const estatus = ["SOLICITADO", "EN_REVISION", "APROBADO", "PAGADO", "RECHAZADO"][i % 5];
+  const aprobado = ["APROBADO", "PAGADO"].includes(estatus);
+  const pagado = estatus === "PAGADO";
+  const monto_solicitado = 1500 + Math.floor(gen() * 4000);
+  const mes = 1 + Math.floor(gen() * 11);
+  const fecha_solicitud = `2026-${String(mes).padStart(2, "0")}-${String(1 + Math.floor(gen() * 25)).padStart(2, "0")}`;
+  return {
+    id: i + 1,
+    funcionario_id: fid,
+    nombre_completo: f.nombre_completo,
+    cedula: String(f.cedula),
+    tipo_solicitud_id: 1 + (i % 4),
+    monto_solicitado,
+    monto_aprobado: aprobado ? monto_solicitado - Math.floor(gen() * 500) : null,
+    monto_pagado: pagado ? monto_solicitado - Math.floor(gen() * 500) : null,
+    fecha_solicitud,
+    fecha_aprobacion: aprobado ? addDays(fecha_solicitud, 5) : null,
+    fecha_pago: pagado ? addDays(fecha_solicitud, 12) : null,
+    motivo:
+      "Apoyo económico por gastos médicos imprevistos del funcionario o familiar directo.",
+    estatus,
+  };
+});
 
-const JUBILADOS = Array.from({ length: 8 }, (_, i) => ({
+const JUBILADOS = Array.from({ length: 20 }, (_, i) => ({
   id: i + 1,
-  funcionario_id: 1 + Math.floor(gen() * 50),
-  fecha_jubilacion: `${2020 + (i % 6)}-12-31`,
+  funcionario_id: 1 + Math.floor(gen() * TOTAL_FUNCIONARIOS),
+  fecha_jubilacion: `${2018 + (i % 8)}-${String(1 + (i % 12)).padStart(2, "0")}-${String(1 + (i % 25)).padStart(2, "0")}`,
   años_servicio: 25 + (i % 10),
   tipo_jubilacion: ["ORDINARIA", "INVALIDEZ", "ESPECIAL"][i % 3],
   pension_mensual: 4000 + Math.floor(gen() * 3000),
   moneda: "VES",
-  resolucion: `JUB-${2020 + i}`,
+  resolucion: `JUB-${2018 + i}`,
   activo: true,
 }));
 
-const SOL_JUBILACION = Array.from({ length: 5 }, (_, i) => ({
+const SOL_JUBILACION = Array.from({ length: 12 }, (_, i) => ({
   id: i + 1,
-  funcionario_id: 1 + Math.floor(gen() * 50),
-  fecha_solicitud: "2026-03-01",
-  fecha_efectiva_propuesta: "2026-12-31",
+  funcionario_id: 1 + Math.floor(gen() * TOTAL_FUNCIONARIOS),
+  fecha_solicitud: `2026-${String(1 + (i % 5)).padStart(2, "0")}-${String(1 + (i % 25)).padStart(2, "0")}`,
+  fecha_efectiva_propuesta: `2026-12-31`,
   años_servicio: 25 + (i % 8),
   motivo: "Cumple requisitos de antigüedad",
   estatus: ["SOLICITADA", "EN_TRAMITE", "APROBADA"][i % 3],
@@ -1131,6 +1715,11 @@ export function demoAyuda(id: number) {
 /** @deprecated usar demoMe(rol) para soportar rol dinámico */
 export const DEMO_ME = demoMe("ADMIN");
 
+/** Genera URL de avatar dicebear determinístico por id. */
+function avatarDemo(fid: number) {
+  return `https://api.dicebear.com/7.x/avataaars/svg?seed=funcionario-${fid}`;
+}
+
 export function demoResolve(path: string, rolActivo: string = "ADMIN"): unknown {
   const {
     base,
@@ -1207,14 +1796,37 @@ export function demoResolve(path: string, rolActivo: string = "ADMIN"): unknown 
       return generarHistCarnetsPara(fid);
     }
 
+    case /^\/funcionarios\/\d+\/direcciones$/.test(base): {
+      const fid = Number(base.split("/")[2]);
+      return generarDireccionesPara(fid);
+    }
+
+    case /^\/funcionarios\/\d+\/direccion-actual$/.test(base): {
+      const fid = Number(base.split("/")[2]);
+      const dirs = generarDireccionesPara(fid);
+      return dirs.find((d) => d.es_actual) ?? dirs[0] ?? null;
+    }
+
+    case /^\/funcionarios\/\d+\/foto$/.test(base): {
+      const fid = Number(base.split("/")[2]);
+      return { foto_url: avatarDemo(fid) };
+    }
+
+    case /^\/funcionarios\/\d+\/auditoria$/.test(base): {
+      const fid = Number(base.split("/")[2]);
+      return generarAuditoriaPara(fid);
+    }
+
     case base.startsWith("/funcionarios/"): {
       const id = Number(base.split("/")[2]);
       const f = FUNCIONARIOS.find((x) => x.id === id) ?? FUNCIONARIOS[0];
       const jerarquia = JERARQUIAS.find((j) => j.id === f.jerarquia_id);
       const zona = ZONAS.find((z) => z.id === f.zona_id);
       const estacion = ESTACIONES.find((e) => e.id === f.estacion_id);
-      const cargoIdx = (f.id % 20) + 1;
-      const condicionIdx = (f.id % 8) + 1;
+      const cargoIdx = (f.id % CARGOS_REALES.length) + 1;
+      const condicionIdx = (f.id % CONDICIONES_REALES.length) + 1;
+      const cargoNom = CARGOS_REALES[cargoIdx - 1]?.nombre ?? `Cargo ${cargoIdx}`;
+      const condicionNom = CONDICIONES_REALES[condicionIdx - 1]?.nombre ?? `Condición ${condicionIdx}`;
       return {
         ...f,
         fecha_nacimiento: "1985-06-12",
@@ -1235,12 +1847,12 @@ export function demoResolve(path: string, rolActivo: string = "ADMIN"): unknown 
         profesion: "Bombero profesional",
         iutb: true,
         egresado_unes: false,
-        foto_url: null,
+        foto_url: avatarDemo(f.id),
         observaciones: null,
         jerarquia_nombre: jerarquia?.nombre ?? null,
         jerarquia_nombre_corto: jerarquia?.nombre_corto ?? null,
-        cargo_nombre: `Cargo ${cargoIdx}`,
-        condicion_nombre: `Condición ${condicionIdx}`,
+        cargo_nombre: cargoNom,
+        condicion_nombre: condicionNom,
         zona_nombre: zona?.nombre ?? null,
         estacion_nombre: estacion?.nombre ?? null,
       };
@@ -1253,13 +1865,13 @@ export function demoResolve(path: string, rolActivo: string = "ADMIN"): unknown 
     case base === "/catalogos/estaciones":
       return ESTACIONES;
     case base === "/catalogos/cargos":
-      return cat(20, "C", "Cargo");
+      return CARGOS_REALES;
     case base === "/catalogos/condiciones":
-      return cat(8, "CD", "Condición");
+      return CONDICIONES_REALES;
     case base === "/catalogos/niveles-educativos":
-      return cat(7, "N", "Nivel educativo");
+      return NIVELES_EDUCATIVOS_REALES;
     case base === "/catalogos/especialidades":
-      return cat(15, "ESP", "Especialidad");
+      return ESPECIALIDADES_REALES;
     case base === "/catalogos/estados-civiles":
       return [
         { id: 1, codigo: "SOLTERO", nombre: "Soltero(a)", activo: true },
@@ -1280,13 +1892,13 @@ export function demoResolve(path: string, rolActivo: string = "ADMIN"): unknown 
         "AB-",
       ].map((c, i) => ({ id: i + 1, codigo: c, nombre: c, activo: true }));
     case base === "/catalogos/bancos":
-      return cat(12, "BNC", "Banco");
+      return BANCOS_REALES;
     case base === "/catalogos/divisiones":
-      return cat(6, "DIV", "División");
+      return DIVISIONES_REALES;
     case base === "/catalogos/areas":
-      return cat(10, "AR", "Área");
+      return AREAS_REALES;
     case base === "/catalogos/dependencias":
-      return cat(8, "DEP", "Dependencia");
+      return DEPENDENCIAS_REALES;
 
     case base === "/catalogos/tipos-personal":
       return [
@@ -1328,53 +1940,111 @@ export function demoResolve(path: string, rolActivo: string = "ADMIN"): unknown 
         { id: 5, codigo: "OTRA", nombre: "Otra", activo: true },
       ];
     case base === "/catalogos/estados":
-      return [
-        { id: 1, codigo: "DC", nombre: "Distrito Capital", activo: true },
-        { id: 2, codigo: "MI", nombre: "Miranda", activo: true },
-        { id: 3, codigo: "VA", nombre: "La Guaira", activo: true },
-        { id: 4, codigo: "AR", nombre: "Aragua", activo: true },
-        { id: 5, codigo: "CA", nombre: "Carabobo", activo: true },
-      ];
+      return ESTADOS_VE;
     case base === "/catalogos/municipios":
-      return [
-        { id: 1, estado_id: 1, codigo: "LIBERTADOR", nombre: "Libertador", activo: true },
-        { id: 2, estado_id: 2, codigo: "BARUTA", nombre: "Baruta", activo: true },
-        { id: 3, estado_id: 2, codigo: "CHACAO", nombre: "Chacao", activo: true },
-        { id: 4, estado_id: 2, codigo: "EL_HATILLO", nombre: "El Hatillo", activo: true },
-        { id: 5, estado_id: 2, codigo: "SUCRE", nombre: "Sucre", activo: true },
-        { id: 6, estado_id: 3, codigo: "VARGAS", nombre: "Vargas", activo: true },
-      ];
+      return MUNICIPIOS_VE;
     case base === "/catalogos/parroquias":
+      return PARROQUIAS_VE;
+
+    case base === "/catalogos/tipos-reposo":
       return [
-        { id: 1, municipio_id: 1, codigo: "ALTAGRACIA", nombre: "Altagracia", activo: true },
-        { id: 2, municipio_id: 1, codigo: "CANDELARIA", nombre: "La Candelaria", activo: true },
-        { id: 3, municipio_id: 1, codigo: "CATEDRAL", nombre: "Catedral", activo: true },
-        { id: 4, municipio_id: 1, codigo: "SAN_AGUSTIN", nombre: "San Agustín", activo: true },
-        { id: 5, municipio_id: 1, codigo: "SAN_JOSE", nombre: "San José", activo: true },
-        { id: 6, municipio_id: 1, codigo: "EL_RECREO", nombre: "El Recreo", activo: true },
-        { id: 7, municipio_id: 2, codigo: "EL_CAFETAL", nombre: "El Cafetal", activo: true },
-        { id: 8, municipio_id: 2, codigo: "LAS_MINAS", nombre: "Las Minas", activo: true },
-        { id: 9, municipio_id: 3, codigo: "CHACAO", nombre: "Chacao", activo: true },
+        { id: 1, codigo: "ENFERMEDAD", nombre: "Enfermedad común", activo: true },
+        { id: 2, codigo: "ACCIDENTE_LABORAL", nombre: "Accidente laboral", activo: true },
+        { id: 3, codigo: "POST_QUIRURGICO", nombre: "Post-quirúrgico", activo: true },
+        { id: 4, codigo: "MATERNIDAD", nombre: "Maternidad", activo: true },
+        { id: 5, codigo: "PATERNIDAD", nombre: "Paternidad", activo: true },
+      ];
+    case base === "/catalogos/tipos-ayuda":
+      return [
+        { id: 1, codigo: "MEDICA", nombre: "Asistencia médica", activo: true },
+        { id: 2, codigo: "FUNERARIA", nombre: "Funeraria", activo: true },
+        { id: 3, codigo: "EDUCATIVA", nombre: "Educativa", activo: true },
+        { id: 4, codigo: "VIVIENDA", nombre: "Vivienda", activo: true },
+        { id: 5, codigo: "ALIMENTARIA", nombre: "Alimentaria", activo: true },
+      ];
+    case base === "/catalogos/tipos-carnet":
+      return [
+        { id: 1, codigo: "BRIGADISTA", nombre: "Brigadista", activo: true },
+        { id: 2, codigo: "INSTITUCIONAL", nombre: "Institucional", activo: true },
+        { id: 3, codigo: "OPERATIVO", nombre: "Operativo", activo: true },
+      ];
+    case base === "/catalogos/tipos-proteccion":
+      return [
+        { id: 1, codigo: "CASCO", nombre: "Casco estructural", activo: true },
+        { id: 2, codigo: "CHAQUETA", nombre: "Chaqueta de proximidad", activo: true },
+        { id: 3, codigo: "PANTALON", nombre: "Pantalón estructural", activo: true },
+        { id: 4, codigo: "BOTAS", nombre: "Botas bomberiles", activo: true },
+        { id: 5, codigo: "GUANTES", nombre: "Guantes estructurales", activo: true },
+        { id: 6, codigo: "SCBA", nombre: "Equipo de respiración autónoma", activo: true },
+        { id: 7, codigo: "CAPUZ", nombre: "Capuz Nomex", activo: true },
       ];
 
-    case base === "/dashboard":
+    case base === "/dashboard": {
+      const totalesEstatus = FUNCIONARIOS.reduce<Record<string, number>>((acc, f) => {
+        acc[f.estatus] = (acc[f.estatus] ?? 0) + 1;
+        return acc;
+      }, {});
+      const porJerarquiaMap = FUNCIONARIOS.reduce<Record<number, number>>((acc, f) => {
+        acc[f.jerarquia_id] = (acc[f.jerarquia_id] ?? 0) + 1;
+        return acc;
+      }, {});
+      const porJerarquia = Object.entries(porJerarquiaMap)
+        .map(([jid, total]) => ({
+          jerarquia_id: Number(jid),
+          jerarquia: JERARQUIAS.find((j) => j.id === Number(jid))?.nombre ?? "—",
+          total,
+        }))
+        .sort((a, b) => b.total - a.total)
+        .slice(0, 5);
+      const ahora = new Date().getFullYear();
+      const promedioAnios = Math.round(
+        FUNCIONARIOS.reduce((s, f) => s + (ahora - Number(f.fecha_primer_ingreso.slice(0, 4))), 0) /
+          FUNCIONARIOS.length,
+      );
+      const diasReposoMes = REPOSOS.reduce((s, r) => s + (r.dias ?? 0), 0);
+      const ascensosAnio = ASCENSOS.filter((a) => a.fecha_efectiva.startsWith("2026")).length;
+      const cursosAnio = CURSOS.filter((c) => c.fecha_inicio.startsWith("2026") && c.aprobado).length;
+      const vacacionesPendientes = VACACIONES.filter((v) => v.estado === "PROGRAMADA").length;
       return {
-        personal_activo: FUNCIONARIOS.filter((f) => f.estatus === "ACTIVO").length,
-        personal_jubilado: FUNCIONARIOS.filter((f) => f.estatus === "JUBILADO").length,
-        personal_reposo: FUNCIONARIOS.filter((f) => f.estatus === "REPOSO").length,
-        personal_comision: FUNCIONARIOS.filter((f) => f.estatus === "COMISION").length,
-        personal_pre_jubilado: FUNCIONARIOS.filter((f) => f.estatus === "PRE_JUBILADO").length,
-        personal_fallecido: 0,
-        hombres: 35,
-        mujeres: 15,
+        // Métricas legacy (mantener compatibilidad con tarjetas existentes)
+        personal_activo: totalesEstatus["ACTIVO"] ?? 0,
+        personal_jubilado: totalesEstatus["JUBILADO"] ?? 0,
+        personal_reposo: totalesEstatus["REPOSO"] ?? 0,
+        personal_comision: totalesEstatus["COMISION"] ?? 0,
+        personal_pre_jubilado: totalesEstatus["PRE_JUBILADO"] ?? 0,
+        personal_fallecido: totalesEstatus["FALLECIDO"] ?? 0,
+        personal_egresado: totalesEstatus["EGRESADO"] ?? 0,
+        hombres: Math.round(FUNCIONARIOS.length * 0.7),
+        mujeres: Math.round(FUNCIONARIOS.length * 0.3),
         reposos_vigentes: REPOSOS.length,
         vacaciones_en_curso: VACACIONES.filter((v) => v.estado === "EN_CURSO").length,
-        permisos_hoy: 3,
-        postulados_pendientes: 5,
+        permisos_hoy: PERMISOS.filter((p) => p.autorizado).length,
+        postulados_pendientes: 12,
         ayudas_pendientes: AYUDAS.filter((a) =>
           ["SOLICITADO", "EN_REVISION"].includes(a.estatus),
         ).length,
+        // Métricas enriquecidas
+        totales: {
+          activos: totalesEstatus["ACTIVO"] ?? 0,
+          jubilados: totalesEstatus["JUBILADO"] ?? 0,
+          reposo: totalesEstatus["REPOSO"] ?? 0,
+          comision: totalesEstatus["COMISION"] ?? 0,
+          pre_jubilados: totalesEstatus["PRE_JUBILADO"] ?? 0,
+          egresados: totalesEstatus["EGRESADO"] ?? 0,
+          total: FUNCIONARIOS.length,
+        },
+        por_jerarquia: porJerarquia,
+        promedio_anios_servicio: promedioAnios,
+        reposos_mes: diasReposoMes,
+        ascensos_anio: ascensosAnio,
+        cursos_completados_anio: cursosAnio,
+        vacaciones_pendientes: vacacionesPendientes,
+        comisiones_activas: COMISIONES.filter((c) => c.activo).length,
+        faltas_anio: FALTAS.length,
+        ayudas_aprobadas_mes: AYUDAS.filter((a) => ["APROBADO", "PAGADO"].includes(a.estatus)).length,
+        carnets_por_vencer: 18,
       };
+    }
     case base === "/dashboard/distribucion-zona":
       return ZONAS.flatMap((z) =>
         JERARQUIAS.slice(0, 6).map((j) => ({
@@ -1460,9 +2130,25 @@ export function demoResolve(path: string, rolActivo: string = "ADMIN"): unknown 
     case base === "/admin/auditoria":
       return paginate(AUDITORIA, page, page_size);
     case base === "/equipo/radios":
+    case base === "/equipo/radios/inventario":
       if (funcionario_id !== undefined)
         return paginate(generarRadiosAsignadasPara(funcionario_id), page, page_size);
       return paginate(RADIOS, page, page_size);
+    case base === "/equipo/radios/asignaciones":
+      if (funcionario_id !== undefined)
+        return paginate(generarRadiosAsignadasPara(funcionario_id), page, page_size);
+      return paginate(
+        RADIOS.filter((r) => r.estatus === "ASIGNADO").map((r, i) => ({
+          id: i + 1,
+          radio_id: r.id,
+          funcionario_id: 1 + (i % TOTAL_FUNCIONARIOS),
+          fecha_asignacion: r.fecha_adquisicion,
+          fecha_devolucion: null,
+          observaciones: null,
+        })),
+        page,
+        page_size,
+      );
 
     case base === "/beneficios/ayudas":
       if (funcionario_id !== undefined)
@@ -1523,3 +2209,7 @@ const MODULOS_DEMO = [
   { id: 13, codigo: "catalogos",     nombre: "Catálogos",        descripcion: "Lectura de catálogos",              icono: "book",      orden: 13, activo: true },
   { id: 14, codigo: "admin",         nombre: "Administración",   descripcion: "Usuarios, roles, módulos",          icono: "settings",  orden: 14, activo: true },
 ];
+
+// Catch-all para evitar tree-shake del helper `cat` (lo dejamos por si algún
+// fixture futuro lo necesita para tablas auxiliares triviales).
+void cat;
