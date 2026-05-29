@@ -3,7 +3,9 @@
 import { useEffect, useState } from "react";
 import { User } from "lucide-react";
 import { api } from "@/lib/api";
+import { isDemoMode } from "@/lib/demo-fixtures";
 import { formatDate } from "@/lib/utils";
+import DocumentoUpload from "../DocumentoUpload";
 import { SectionShell, Card, EmptyState } from "./_shared";
 
 interface Page<T> {
@@ -75,7 +77,35 @@ function BadgeVigencia({ fecha }: { fecha: string | null }) {
   return <span className="badge badge-success">VIGENTE</span>;
 }
 
-export default function SeccionDocumentos({ funcionario: f }: Props) {
+type TipoBiometrico = "huella" | "firma";
+
+async function subirDocumento(
+  funcionarioId: number,
+  tipo: TipoBiometrico,
+  file: File,
+): Promise<string> {
+  const formData = new FormData();
+  formData.append("file", file);
+  const res = await fetch(`/api/funcionarios/${funcionarioId}/${tipo}`, {
+    method: "POST",
+    body: formData,
+    credentials: "include",
+  });
+  if (!res.ok) {
+    let detalle = `Error ${res.status}`;
+    try {
+      const body = (await res.json()) as { detail?: string };
+      if (body?.detail) detalle = body.detail;
+    } catch {
+      // respuesta sin JSON; conservar mensaje genérico
+    }
+    throw new Error(detalle);
+  }
+  const body = (await res.json()) as Record<string, string>;
+  return body[`${tipo}_url`] ?? "";
+}
+
+export default function SeccionDocumentos({ funcionario: f, userRoles }: Props) {
   const fotoSrc =
     f.foto_url && (f.foto_url.startsWith("/") || f.foto_url.startsWith("http"))
       ? f.foto_url
@@ -83,8 +113,60 @@ export default function SeccionDocumentos({ funcionario: f }: Props) {
         ? `/api/funcionarios/${f.id}/foto`
         : null;
 
+  const puedeEditar =
+    Array.isArray(userRoles) &&
+    userRoles.some((r) => r === "RRHH" || r === "ADMIN");
+
   const [data, setData] = useState<Datos | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const [huellaUrl, setHuellaUrl] = useState<string | null>(f.huella_url ?? null);
+  const [firmaUrl, setFirmaUrl] = useState<string | null>(f.firma_url ?? null);
+  const [huellaError, setHuellaError] = useState<string | null>(null);
+  const [firmaError, setFirmaError] = useState<string | null>(null);
+  const [huellaSubiendo, setHuellaSubiendo] = useState(false);
+  const [firmaSubiendo, setFirmaSubiendo] = useState(false);
+
+  useEffect(() => {
+    setHuellaUrl(f.huella_url ?? null);
+  }, [f.huella_url]);
+  useEffect(() => {
+    setFirmaUrl(f.firma_url ?? null);
+  }, [f.firma_url]);
+
+  async function manejarUpload(
+    tipo: TipoBiometrico,
+    file: File | null,
+  ): Promise<void> {
+    const setUrl = tipo === "huella" ? setHuellaUrl : setFirmaUrl;
+    const setErr = tipo === "huella" ? setHuellaError : setFirmaError;
+    const setSubiendo =
+      tipo === "huella" ? setHuellaSubiendo : setFirmaSubiendo;
+
+    setErr(null);
+    if (file === null) {
+      // Sin endpoint DELETE en backend para huella/firma — solo limpiamos UI.
+      setUrl(null);
+      return;
+    }
+
+    // Modo demo: no llamar al backend. Conservar preview local (createObjectURL)
+    // y forzar la URL como blob para que la <img> siga mostrando algo.
+    if (isDemoMode()) {
+      setUrl(URL.createObjectURL(file));
+      return;
+    }
+
+    setSubiendo(true);
+    try {
+      const nuevaUrl = await subirDocumento(f.id, tipo, file);
+      setUrl(nuevaUrl || `/api/funcionarios/${f.id}/${tipo}?t=${Date.now()}`);
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Error al subir el archivo");
+    } finally {
+      setSubiendo(false);
+    }
+  }
 
   useEffect(() => {
     let alive = true;
@@ -137,16 +219,52 @@ export default function SeccionDocumentos({ funcionario: f }: Props) {
           </div>
         </Card>
         <Card title="Huella">
-          <EmptyState
-            title="Sin huella registrada"
-            hint="Subida disponible en módulo de documentos (próximamente)."
-          />
+          <div className="flex flex-col gap-2">
+            <DocumentoUpload
+              tipo="huella"
+              url={huellaUrl}
+              funcionarioId={f.id}
+              onChange={(file) => {
+                void manejarUpload("huella", file);
+              }}
+              disabled={!puedeEditar || huellaSubiendo}
+            />
+            {huellaSubiendo && (
+              <p className="text-[11px] text-muted-foreground">Subiendo…</p>
+            )}
+            {huellaError && (
+              <p
+                role="alert"
+                className="max-w-[12rem] text-[11px] leading-tight text-destructive"
+              >
+                {huellaError}
+              </p>
+            )}
+          </div>
         </Card>
         <Card title="Firma">
-          <EmptyState
-            title="Sin firma registrada"
-            hint="Subida disponible en módulo de documentos (próximamente)."
-          />
+          <div className="flex flex-col gap-2">
+            <DocumentoUpload
+              tipo="firma"
+              url={firmaUrl}
+              funcionarioId={f.id}
+              onChange={(file) => {
+                void manejarUpload("firma", file);
+              }}
+              disabled={!puedeEditar || firmaSubiendo}
+            />
+            {firmaSubiendo && (
+              <p className="text-[11px] text-muted-foreground">Subiendo…</p>
+            )}
+            {firmaError && (
+              <p
+                role="alert"
+                className="max-w-[12rem] text-[11px] leading-tight text-destructive"
+              >
+                {firmaError}
+              </p>
+            )}
+          </div>
         </Card>
       </div>
 

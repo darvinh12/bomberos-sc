@@ -1586,3 +1586,187 @@ async def listar_historico_carnets(
         )
     ).scalars().all()
     return [HistoricoCarnetOut.model_validate(r) for r in rows]
+
+
+# =============================================================================
+# DOCUMENTOS BIOMÉTRICOS: HUELLA Y FIRMA
+# =============================================================================
+# Mismo patrón que /foto:
+#   - Tipos MIME aceptados: jpeg, png, webp
+#   - Tamaño máximo: 5 MB
+#   - Path en storage: funcionarios/{id}/<tipo><ext>
+#   - Persiste el path en el campo correspondiente del modelo Funcionario
+#   - POST exige rol RRHH/ADMIN; GET solo requiere autenticación
+#   - Audit context obligatorio en POST
+
+
+@router.post(
+    "/{funcionario_id}/huella",
+    dependencies=[Depends(require_role("RRHH", "ADMIN"))],
+)
+async def subir_huella(
+    funcionario_id: int,
+    file: UploadFile,
+    db: DbSession,
+    user: CurrentUser,
+    request: Request,
+) -> dict[str, str]:
+    """Sube la huella del funcionario al storage local y persiste `huella_url`."""
+    ext = _FOTO_CONTENT_TYPES.get((file.content_type or "").lower())
+    if ext is None:
+        raise HTTPException(
+            status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+            detail="Formato no soportado. Use JPEG, PNG o WebP.",
+        )
+
+    content = await file.read()
+    if len(content) > _FOTO_MAX_BYTES:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail="La huella no debe exceder 5 MB.",
+        )
+    if not content:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Archivo vacío.",
+        )
+
+    funcionario = await db.scalar(
+        select(Funcionario).where(Funcionario.id == funcionario_id)
+    )
+    if funcionario is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Funcionario no encontrado"
+        )
+    await assert_scope_funcionario(db, user, funcionario)
+
+    await _set_audit_ctx(db, user.id, _client_ip(request))
+
+    storage = get_storage()
+    rel_path = f"funcionarios/{funcionario_id}/huella{ext}"
+    saved_path = await storage.save(rel_path, content, file.content_type or "application/octet-stream")
+
+    funcionario.huella_url = saved_path
+    funcionario.updated_by = user.id
+    await db.flush()
+
+    return {"huella_url": saved_path}
+
+
+@router.get("/{funcionario_id}/huella")
+async def obtener_huella(
+    funcionario_id: int,
+    db: DbSession,
+    user: CurrentUser,
+) -> Response:
+    """Devuelve la huella del funcionario directamente como bytes."""
+    funcionario = await db.scalar(
+        select(Funcionario).where(Funcionario.id == funcionario_id)
+    )
+    if funcionario is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Funcionario no encontrado"
+        )
+    await assert_scope_funcionario(db, user, funcionario)
+
+    if not funcionario.huella_url:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Funcionario sin huella registrada"
+        )
+
+    storage = get_storage()
+    try:
+        data, content_type = await storage.read(funcionario.huella_url)
+    except FileNotFoundError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Archivo de huella no encontrado en el storage",
+        ) from e
+
+    return Response(content=data, media_type=content_type)
+
+
+@router.post(
+    "/{funcionario_id}/firma",
+    dependencies=[Depends(require_role("RRHH", "ADMIN"))],
+)
+async def subir_firma(
+    funcionario_id: int,
+    file: UploadFile,
+    db: DbSession,
+    user: CurrentUser,
+    request: Request,
+) -> dict[str, str]:
+    """Sube la firma del funcionario al storage local y persiste `firma_url`."""
+    ext = _FOTO_CONTENT_TYPES.get((file.content_type or "").lower())
+    if ext is None:
+        raise HTTPException(
+            status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+            detail="Formato no soportado. Use JPEG, PNG o WebP.",
+        )
+
+    content = await file.read()
+    if len(content) > _FOTO_MAX_BYTES:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail="La firma no debe exceder 5 MB.",
+        )
+    if not content:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Archivo vacío.",
+        )
+
+    funcionario = await db.scalar(
+        select(Funcionario).where(Funcionario.id == funcionario_id)
+    )
+    if funcionario is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Funcionario no encontrado"
+        )
+    await assert_scope_funcionario(db, user, funcionario)
+
+    await _set_audit_ctx(db, user.id, _client_ip(request))
+
+    storage = get_storage()
+    rel_path = f"funcionarios/{funcionario_id}/firma{ext}"
+    saved_path = await storage.save(rel_path, content, file.content_type or "application/octet-stream")
+
+    funcionario.firma_url = saved_path
+    funcionario.updated_by = user.id
+    await db.flush()
+
+    return {"firma_url": saved_path}
+
+
+@router.get("/{funcionario_id}/firma")
+async def obtener_firma(
+    funcionario_id: int,
+    db: DbSession,
+    user: CurrentUser,
+) -> Response:
+    """Devuelve la firma del funcionario directamente como bytes."""
+    funcionario = await db.scalar(
+        select(Funcionario).where(Funcionario.id == funcionario_id)
+    )
+    if funcionario is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Funcionario no encontrado"
+        )
+    await assert_scope_funcionario(db, user, funcionario)
+
+    if not funcionario.firma_url:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Funcionario sin firma registrada"
+        )
+
+    storage = get_storage()
+    try:
+        data, content_type = await storage.read(funcionario.firma_url)
+    except FileNotFoundError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Archivo de firma no encontrado en el storage",
+        ) from e
+
+    return Response(content=data, media_type=content_type)
