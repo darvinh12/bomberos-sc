@@ -1,13 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Trash2, User } from "lucide-react";
+import { RotateCcw, Trash2, User } from "lucide-react";
 import { api } from "@/lib/api";
 import { isDemoMode } from "@/lib/demo-fixtures";
 import { formatDate } from "@/lib/utils";
 import ConfirmarBorrado from "../ConfirmarBorrado";
 import DocumentoUpload from "../DocumentoUpload";
-import { borrarCarnet } from "./actions";
+import { borrarCarnet, restaurarCarnet } from "./actions";
 import { SectionShell, Card, EmptyState } from "./_shared";
 import type { NivelAcceso } from "@/lib/permisos-funcionario";
 
@@ -28,6 +28,9 @@ interface Carnet {
   fecha_vencimiento: string | null;
   brigadista: boolean | null;
   observaciones: string | null;
+  deleted_at?: string | null;
+  deleted_by?: number | null;
+  delete_reason?: string | null;
 }
 
 interface CarnetHistorico {
@@ -109,7 +112,11 @@ async function subirDocumento(
   return body[`${tipo}_url`] ?? "";
 }
 
-export default function SeccionDocumentos({ funcionario: f, nivelAcceso }: Props) {
+export default function SeccionDocumentos({
+  funcionario: f,
+  userRoles,
+  nivelAcceso,
+}: Props) {
   const fotoSrc =
     f.foto_url && (f.foto_url.startsWith("/") || f.foto_url.startsWith("http"))
       ? f.foto_url
@@ -119,10 +126,15 @@ export default function SeccionDocumentos({ funcionario: f, nivelAcceso }: Props
 
   const puedeEditar = nivelAcceso === "edit";
   const soloLectura = nivelAcceso === "view";
+  const esAdmin = userRoles.includes("ADMIN");
 
   const [data, setData] = useState<Datos | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [borrandoCarnet, setBorrandoCarnet] = useState<Carnet | null>(null);
+  const [mostrarBorradosCarnets, setMostrarBorradosCarnets] = useState(false);
+  const [restaurandoCarnetId, setRestaurandoCarnetId] = useState<number | null>(
+    null,
+  );
 
   const [huellaUrl, setHuellaUrl] = useState<string | null>(f.huella_url ?? null);
   const [firmaUrl, setFirmaUrl] = useState<string | null>(f.firma_url ?? null);
@@ -137,11 +149,54 @@ export default function SeccionDocumentos({ funcionario: f, nivelAcceso }: Props
   ): Promise<void> {
     const res = await borrarCarnet(f.id, cnId, motivo);
     if (!res.ok) throw new Error(res.error);
-    setData((prev) =>
-      prev === null
-        ? prev
-        : { ...prev, carnets: prev.carnets.filter((c) => c.id !== cnId) },
-    );
+    setData((prev) => {
+      if (prev === null) return prev;
+      if (mostrarBorradosCarnets) {
+        return {
+          ...prev,
+          carnets: prev.carnets.map((c) =>
+            c.id === cnId
+              ? {
+                  ...c,
+                  deleted_at: new Date().toISOString(),
+                  delete_reason: motivo,
+                }
+              : c,
+          ),
+        };
+      }
+      return { ...prev, carnets: prev.carnets.filter((c) => c.id !== cnId) };
+    });
+  }
+
+  async function restaurarCarnetItem(cnId: number) {
+    setRestaurandoCarnetId(cnId);
+    try {
+      const res = await restaurarCarnet(f.id, cnId);
+      if (!res.ok) {
+        setError(res.error);
+        return;
+      }
+      setData((prev) =>
+        prev === null
+          ? prev
+          : {
+              ...prev,
+              carnets: prev.carnets.map((c) =>
+                c.id === cnId
+                  ? {
+                      ...c,
+                      deleted_at: null,
+                      deleted_by: null,
+                      delete_reason: null,
+                    }
+                  : c,
+              ),
+            },
+      );
+    } finally {
+      setRestaurandoCarnetId(null);
+    }
   }
 
   useEffect(() => {
@@ -189,9 +244,12 @@ export default function SeccionDocumentos({ funcionario: f, nivelAcceso }: Props
     let alive = true;
     (async () => {
       try {
+        const qs = mostrarBorradosCarnets ? "&incluir_borrados=true" : "";
         const [c, h] = await Promise.all([
           api
-            .get<Page<Carnet>>(`/funcionarios/${f.id}/carnets?page_size=100`)
+            .get<Page<Carnet>>(
+              `/funcionarios/${f.id}/carnets?page_size=100${qs}`,
+            )
             .catch(() => ({ items: [] }) as Page<Carnet>),
           api
             .get<Page<CarnetHistorico>>(
@@ -212,7 +270,7 @@ export default function SeccionDocumentos({ funcionario: f, nivelAcceso }: Props
     return () => {
       alive = false;
     };
-  }, [f.id]);
+  }, [f.id, mostrarBorradosCarnets]);
 
   return (
     <SectionShell
@@ -296,12 +354,33 @@ export default function SeccionDocumentos({ funcionario: f, nivelAcceso }: Props
       )}
 
       <Card title="Carnets activos">
+        {esAdmin && (
+          <div className="mb-3 flex justify-end">
+            <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={mostrarBorradosCarnets}
+                onChange={(e) => setMostrarBorradosCarnets(e.target.checked)}
+                className="rounded border-input"
+              />
+              Mostrar borrados
+            </label>
+          </div>
+        )}
         {!data ? (
           <p className="text-sm text-muted-foreground">Cargando…</p>
         ) : data.carnets.length === 0 ? (
           <EmptyState
-            title="Sin carnets registrados"
-            hint="No hay carnets activos para este funcionario."
+            title={
+              mostrarBorradosCarnets
+                ? "Sin carnets borrados"
+                : "Sin carnets registrados"
+            }
+            hint={
+              mostrarBorradosCarnets
+                ? undefined
+                : "No hay carnets activos para este funcionario."
+            }
           />
         ) : (
           <div className="overflow-x-auto">
@@ -329,6 +408,11 @@ export default function SeccionDocumentos({ funcionario: f, nivelAcceso }: Props
                   <th scope="col" className="text-left p-2 font-medium">
                     Observaciones
                   </th>
+                  {mostrarBorradosCarnets && (
+                    <th scope="col" className="text-left p-2 font-medium">
+                      Motivo borrado
+                    </th>
+                  )}
                   {puedeEditar && (
                     <th
                       scope="col"
@@ -339,44 +423,78 @@ export default function SeccionDocumentos({ funcionario: f, nivelAcceso }: Props
                 </tr>
               </thead>
               <tbody>
-                {data.carnets.map((c) => (
-                  <tr key={c.id} className="border-t border-border">
-                    <td className="p-2 font-medium">{c.tipo}</td>
-                    <td className="p-2 font-mono text-xs">{c.numero ?? "—"}</td>
-                    <td className="p-2 text-muted-foreground">
-                      {formatDate(c.fecha_emision)}
-                    </td>
-                    <td className="p-2 text-muted-foreground">
-                      {formatDate(c.fecha_vencimiento)}
-                    </td>
-                    <td className="p-2">
-                      <BadgeVigencia fecha={c.fecha_vencimiento} />
-                    </td>
-                    <td className="p-2 text-muted-foreground">
-                      {c.brigadista === null
-                        ? "—"
-                        : c.brigadista
-                          ? "Sí"
-                          : "No"}
-                    </td>
-                    <td className="p-2 text-muted-foreground">
-                      {c.observaciones ?? "—"}
-                    </td>
-                    {puedeEditar && (
-                      <td className="p-2 text-right whitespace-nowrap">
-                        <button
-                          type="button"
-                          onClick={() => setBorrandoCarnet(c)}
-                          className="inline-flex items-center gap-1 rounded border border-destructive/30 bg-destructive/5 px-2 py-1 text-xs font-medium text-destructive hover:bg-destructive/10"
-                          title="Eliminar"
-                        >
-                          <Trash2 className="w-3 h-3" aria-hidden="true" />
-                          Eliminar
-                        </button>
+                {data.carnets.map((c) => {
+                  const borrado = Boolean(c.deleted_at);
+                  return (
+                    <tr
+                      key={c.id}
+                      className={`border-t border-border ${borrado ? "opacity-50 line-through" : ""}`}
+                    >
+                      <td className="p-2 font-medium">{c.tipo}</td>
+                      <td className="p-2 font-mono text-xs">
+                        {c.numero ?? "—"}
                       </td>
-                    )}
-                  </tr>
-                ))}
+                      <td className="p-2 text-muted-foreground">
+                        {formatDate(c.fecha_emision)}
+                      </td>
+                      <td className="p-2 text-muted-foreground">
+                        {formatDate(c.fecha_vencimiento)}
+                      </td>
+                      <td className="p-2">
+                        <BadgeVigencia fecha={c.fecha_vencimiento} />
+                      </td>
+                      <td className="p-2 text-muted-foreground">
+                        {c.brigadista === null
+                          ? "—"
+                          : c.brigadista
+                            ? "Sí"
+                            : "No"}
+                      </td>
+                      <td className="p-2 text-muted-foreground">
+                        {c.observaciones ?? "—"}
+                      </td>
+                      {mostrarBorradosCarnets && (
+                        <td className="p-2 text-xs text-muted-foreground">
+                          {c.delete_reason ?? "—"}
+                        </td>
+                      )}
+                      {puedeEditar && (
+                        <td className="p-2 text-right whitespace-nowrap">
+                          {borrado ? (
+                            esAdmin ? (
+                              <button
+                                type="button"
+                                onClick={() => restaurarCarnetItem(c.id)}
+                                disabled={restaurandoCarnetId === c.id}
+                                className="inline-flex items-center gap-1 rounded border border-input bg-background px-2 py-1 text-xs font-medium hover:bg-muted disabled:opacity-60"
+                                title="Restaurar"
+                              >
+                                <RotateCcw
+                                  className="w-3 h-3"
+                                  aria-hidden="true"
+                                />
+                                Restaurar
+                              </button>
+                            ) : null
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => setBorrandoCarnet(c)}
+                              className="inline-flex items-center gap-1 rounded border border-destructive/30 bg-destructive/5 px-2 py-1 text-xs font-medium text-destructive hover:bg-destructive/10"
+                              title="Eliminar"
+                            >
+                              <Trash2
+                                className="w-3 h-3"
+                                aria-hidden="true"
+                              />
+                              Eliminar
+                            </button>
+                          )}
+                        </td>
+                      )}
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

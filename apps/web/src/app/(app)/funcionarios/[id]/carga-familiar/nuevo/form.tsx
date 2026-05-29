@@ -3,24 +3,13 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
+import type { Catalogo } from "@/lib/catalogos";
 import { crearFamiliar } from "./actions";
 
 interface Props {
   funcionarioId: number;
+  parentescos: Catalogo[];
 }
-
-const PARENTESCOS = [
-  "CONYUGE",
-  "HIJO",
-  "HIJA",
-  "PADRE",
-  "MADRE",
-  "HERMANO",
-  "HERMANA",
-  "ABUELO",
-  "ABUELA",
-  "OTRO",
-];
 
 const CONDICIONES = [
   { value: "TITULAR", label: "Titular" },
@@ -28,7 +17,7 @@ const CONDICIONES = [
   { value: "NINGUNA", label: "Ninguna" },
 ];
 
-export default function NuevoFamiliarForm({ funcionarioId }: Props) {
+export default function NuevoFamiliarForm({ funcionarioId, parentescos }: Props) {
   const router = useRouter();
   const [parentesco, setParentesco] = useState("");
   const [nacionalidad, setNacionalidad] = useState("V");
@@ -98,10 +87,10 @@ export default function NuevoFamiliarForm({ funcionarioId }: Props) {
             className={selectClass}
             required
           >
-            <option value="">Seleccione…</option>
-            {PARENTESCOS.map((p) => (
-              <option key={p} value={p}>
-                {p}
+            <option value="">— Seleccionar —</option>
+            {parentescos.map((p) => (
+              <option key={p.id} value={p.codigo}>
+                {p.nombre}
               </option>
             ))}
           </select>

@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { api, ApiError } from "@/lib/api";
 import { requireAuth } from "@/lib/session";
 import { puedeEditarSeccion } from "@/lib/permisos-funcionario";
+import type { Catalogo } from "@/lib/catalogos";
 import NuevoFamiliarForm from "./form";
 
 interface FuncionarioMin {
@@ -38,6 +39,10 @@ export default async function NuevoFamiliarPage({
     throw e;
   }
 
+  const parentescos = await api
+    .get<Catalogo[]>("/catalogos/parentescos", token)
+    .catch(() => [] as Catalogo[]);
+
   const nombre =
     funcionario.nombre_completo ||
     `${funcionario.apellidos ?? ""} ${funcionario.nombres ?? ""}`.trim();
@@ -56,7 +61,7 @@ export default async function NuevoFamiliarPage({
           Para: <span className="font-semibold">{nombre}</span>
         </p>
       </div>
-      <NuevoFamiliarForm funcionarioId={fid} />
+      <NuevoFamiliarForm funcionarioId={fid} parentescos={parentescos} />
     </div>
   );
 }

@@ -1,11 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Trash2 } from "lucide-react";
+import { RotateCcw, Trash2 } from "lucide-react";
 import { api } from "@/lib/api";
 import { formatDate } from "@/lib/utils";
 import ConfirmarBorrado from "../ConfirmarBorrado";
-import { borrarActividad, borrarHabilidad } from "./actions";
+import {
+  borrarActividad,
+  borrarHabilidad,
+  restaurarActividad,
+  restaurarHabilidad,
+} from "./actions";
 import { SectionShell, Card, EmptyState } from "./_shared";
 import type { NivelAcceso } from "@/lib/permisos-funcionario";
 
@@ -23,6 +28,9 @@ interface Habilidad {
   nombre: string;
   descripcion: string | null;
   fecha_registro: string | null;
+  deleted_at?: string | null;
+  deleted_by?: number | null;
+  delete_reason?: string | null;
 }
 
 interface Actividad {
@@ -31,11 +39,9 @@ interface Actividad {
   tipo: string;
   actividad: string;
   observaciones: string | null;
-}
-
-interface Datos {
-  habilidades: Habilidad[];
-  actividades: Actividad[];
+  deleted_at?: string | null;
+  deleted_by?: number | null;
+  delete_reason?: string | null;
 }
 
 interface Props {
@@ -59,35 +65,34 @@ type ObjetivoBorrado =
 
 export default function SeccionHabilidades({
   funcionarioId,
+  userRoles,
   nivelAcceso,
 }: Props) {
-  const [data, setData] = useState<Datos | null>(null);
+  const [habilidades, setHabilidades] = useState<Habilidad[] | null>(null);
+  const [actividades, setActividades] = useState<Actividad[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [borrando, setBorrando] = useState<ObjetivoBorrado | null>(null);
+  const [restaurandoHabilidad, setRestaurandoHabilidad] = useState<number | null>(null);
+  const [restaurandoActividad, setRestaurandoActividad] = useState<number | null>(null);
+  const [mostrarBorradosHab, setMostrarBorradosHab] = useState(false);
+  const [mostrarBorradosAct, setMostrarBorradosAct] = useState(false);
+
   const puedeEditar = nivelAcceso === "edit";
   const soloLectura = nivelAcceso === "view";
+  const esAdmin = userRoles.includes("ADMIN");
 
   useEffect(() => {
     let alive = true;
     (async () => {
       try {
-        const [hab, act] = await Promise.all([
-          api
-            .get<Page<Habilidad>>(
-              `/funcionarios/${funcionarioId}/habilidades?page_size=100`,
-            )
-            .catch(() => ({ items: [] }) as Page<Habilidad>),
-          api
-            .get<Page<Actividad>>(
-              `/funcionarios/${funcionarioId}/actividades?page_size=100`,
-            )
-            .catch(() => ({ items: [] }) as Page<Actividad>),
-        ]);
+        const qs = mostrarBorradosHab ? "&incluir_borrados=true" : "";
+        const res = await api
+          .get<Page<Habilidad>>(
+            `/funcionarios/${funcionarioId}/habilidades?page_size=100${qs}`,
+          )
+          .catch(() => ({ items: [] }) as Page<Habilidad>);
         if (!alive) return;
-        setData({
-          habilidades: hab.items ?? [],
-          actividades: act.items ?? [],
-        });
+        setHabilidades(res.items ?? []);
       } catch (e) {
         if (!alive) return;
         setError(e instanceof Error ? e.message : "Error de carga");
@@ -96,7 +101,29 @@ export default function SeccionHabilidades({
     return () => {
       alive = false;
     };
-  }, [funcionarioId]);
+  }, [funcionarioId, mostrarBorradosHab]);
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const qs = mostrarBorradosAct ? "&incluir_borrados=true" : "";
+        const res = await api
+          .get<Page<Actividad>>(
+            `/funcionarios/${funcionarioId}/actividades?page_size=100${qs}`,
+          )
+          .catch(() => ({ items: [] }) as Page<Actividad>);
+        if (!alive) return;
+        setActividades(res.items ?? []);
+      } catch (e) {
+        if (!alive) return;
+        setError(e instanceof Error ? e.message : "Error de carga");
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [funcionarioId, mostrarBorradosAct]);
 
   async function ejecutarBorrado(
     objetivo: ObjetivoBorrado,
@@ -107,19 +134,93 @@ export default function SeccionHabilidades({
         ? await borrarHabilidad(funcionarioId, objetivo.id, motivo)
         : await borrarActividad(funcionarioId, objetivo.id, motivo);
     if (!res.ok) throw new Error(res.error);
-    setData((prev) => {
-      if (prev === null) return prev;
-      if (objetivo.tipo === "habilidad") {
-        return {
-          ...prev,
-          habilidades: prev.habilidades.filter((h) => h.id !== objetivo.id),
-        };
+    if (objetivo.tipo === "habilidad") {
+      setHabilidades((prev) => {
+        if (prev === null) return prev;
+        if (mostrarBorradosHab) {
+          return prev.map((h) =>
+            h.id === objetivo.id
+              ? {
+                  ...h,
+                  deleted_at: new Date().toISOString(),
+                  delete_reason: motivo,
+                }
+              : h,
+          );
+        }
+        return prev.filter((h) => h.id !== objetivo.id);
+      });
+    } else {
+      setActividades((prev) => {
+        if (prev === null) return prev;
+        if (mostrarBorradosAct) {
+          return prev.map((a) =>
+            a.id === objetivo.id
+              ? {
+                  ...a,
+                  deleted_at: new Date().toISOString(),
+                  delete_reason: motivo,
+                }
+              : a,
+          );
+        }
+        return prev.filter((a) => a.id !== objetivo.id);
+      });
+    }
+  }
+
+  async function restaurarHab(id: number) {
+    setRestaurandoHabilidad(id);
+    try {
+      const res = await restaurarHabilidad(funcionarioId, id);
+      if (!res.ok) {
+        setError(res.error);
+        return;
       }
-      return {
-        ...prev,
-        actividades: prev.actividades.filter((a) => a.id !== objetivo.id),
-      };
-    });
+      setHabilidades((prev) =>
+        prev === null
+          ? prev
+          : prev.map((h) =>
+              h.id === id
+                ? {
+                    ...h,
+                    deleted_at: null,
+                    deleted_by: null,
+                    delete_reason: null,
+                  }
+                : h,
+            ),
+      );
+    } finally {
+      setRestaurandoHabilidad(null);
+    }
+  }
+
+  async function restaurarAct(id: number) {
+    setRestaurandoActividad(id);
+    try {
+      const res = await restaurarActividad(funcionarioId, id);
+      if (!res.ok) {
+        setError(res.error);
+        return;
+      }
+      setActividades((prev) =>
+        prev === null
+          ? prev
+          : prev.map((a) =>
+              a.id === id
+                ? {
+                    ...a,
+                    deleted_at: null,
+                    deleted_by: null,
+                    delete_reason: null,
+                  }
+                : a,
+            ),
+      );
+    } finally {
+      setRestaurandoActividad(null);
+    }
   }
 
   if (error) {
@@ -135,7 +236,7 @@ export default function SeccionHabilidades({
     );
   }
 
-  if (!data) {
+  if (habilidades === null || actividades === null) {
     return (
       <SectionShell title="Habilidades y actividades" soloLectura={soloLectura}>
         <p className="text-sm text-muted-foreground">Cargando…</p>
@@ -150,11 +251,28 @@ export default function SeccionHabilidades({
       soloLectura={soloLectura}
     >
       <Card title="Habilidades">
-        {data.habilidades.length === 0 ? (
+        {esAdmin && (
+          <div className="mb-3 flex justify-end">
+            <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={mostrarBorradosHab}
+                onChange={(e) => setMostrarBorradosHab(e.target.checked)}
+                className="rounded border-input"
+              />
+              Mostrar borrados
+            </label>
+          </div>
+        )}
+        {habilidades.length === 0 ? (
           <EmptyState
-            title="Sin habilidades registradas"
+            title={
+              mostrarBorradosHab
+                ? "Sin habilidades borradas"
+                : "Sin habilidades registradas"
+            }
             hint={
-              puedeEditar
+              !mostrarBorradosHab && puedeEditar
                 ? "Usa el botón Nueva habilidad para agregar el primer registro."
                 : undefined
             }
@@ -173,6 +291,11 @@ export default function SeccionHabilidades({
                   <th scope="col" className="text-left p-2 font-medium">
                     Fecha registro
                   </th>
+                  {mostrarBorradosHab && (
+                    <th scope="col" className="text-left p-2 font-medium">
+                      Motivo borrado
+                    </th>
+                  )}
                   {puedeEditar && (
                     <th
                       scope="col"
@@ -183,41 +306,73 @@ export default function SeccionHabilidades({
                 </tr>
               </thead>
               <tbody>
-                {data.habilidades.map((h) => (
-                  <tr key={h.id} className="border-t border-border">
-                    <td className="p-2 font-medium">{h.nombre}</td>
-                    <td className="p-2 text-muted-foreground">
-                      {h.descripcion ?? "—"}
-                    </td>
-                    <td className="p-2 text-muted-foreground">
-                      {formatDate(h.fecha_registro)}
-                    </td>
-                    {puedeEditar && (
-                      <td className="p-2 text-right whitespace-nowrap">
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setBorrando({
-                              tipo: "habilidad",
-                              id: h.id,
-                              nombre: h.nombre,
-                            })
-                          }
-                          className="inline-flex items-center gap-1 rounded border border-destructive/30 bg-destructive/5 px-2 py-1 text-xs font-medium text-destructive hover:bg-destructive/10"
-                          title="Eliminar"
-                        >
-                          <Trash2 className="w-3 h-3" aria-hidden="true" />
-                          Eliminar
-                        </button>
+                {habilidades.map((h) => {
+                  const borrado = Boolean(h.deleted_at);
+                  return (
+                    <tr
+                      key={h.id}
+                      className={`border-t border-border ${borrado ? "opacity-50 line-through" : ""}`}
+                    >
+                      <td className="p-2 font-medium">{h.nombre}</td>
+                      <td className="p-2 text-muted-foreground">
+                        {h.descripcion ?? "—"}
                       </td>
-                    )}
-                  </tr>
-                ))}
+                      <td className="p-2 text-muted-foreground">
+                        {formatDate(h.fecha_registro)}
+                      </td>
+                      {mostrarBorradosHab && (
+                        <td className="p-2 text-xs text-muted-foreground">
+                          {h.delete_reason ?? "—"}
+                        </td>
+                      )}
+                      {puedeEditar && (
+                        <td className="p-2 text-right whitespace-nowrap">
+                          {borrado ? (
+                            esAdmin ? (
+                              <button
+                                type="button"
+                                onClick={() => restaurarHab(h.id)}
+                                disabled={restaurandoHabilidad === h.id}
+                                className="inline-flex items-center gap-1 rounded border border-input bg-background px-2 py-1 text-xs font-medium hover:bg-muted disabled:opacity-60"
+                                title="Restaurar"
+                              >
+                                <RotateCcw
+                                  className="w-3 h-3"
+                                  aria-hidden="true"
+                                />
+                                Restaurar
+                              </button>
+                            ) : null
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setBorrando({
+                                  tipo: "habilidad",
+                                  id: h.id,
+                                  nombre: h.nombre,
+                                })
+                              }
+                              className="inline-flex items-center gap-1 rounded border border-destructive/30 bg-destructive/5 px-2 py-1 text-xs font-medium text-destructive hover:bg-destructive/10"
+                              title="Eliminar"
+                            >
+                              <Trash2
+                                className="w-3 h-3"
+                                aria-hidden="true"
+                              />
+                              Eliminar
+                            </button>
+                          )}
+                        </td>
+                      )}
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
         )}
-        {puedeEditar && (
+        {puedeEditar && !mostrarBorradosHab && (
           <div className="mt-3 text-right">
             <a
               href={`/funcionarios/${funcionarioId}/habilidades/nuevo`}
@@ -230,11 +385,28 @@ export default function SeccionHabilidades({
       </Card>
 
       <Card title="Actividades">
-        {data.actividades.length === 0 ? (
+        {esAdmin && (
+          <div className="mb-3 flex justify-end">
+            <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={mostrarBorradosAct}
+                onChange={(e) => setMostrarBorradosAct(e.target.checked)}
+                className="rounded border-input"
+              />
+              Mostrar borrados
+            </label>
+          </div>
+        )}
+        {actividades.length === 0 ? (
           <EmptyState
-            title="Sin actividades registradas"
+            title={
+              mostrarBorradosAct
+                ? "Sin actividades borradas"
+                : "Sin actividades registradas"
+            }
             hint={
-              puedeEditar
+              !mostrarBorradosAct && puedeEditar
                 ? "Usa el botón Nueva actividad para agregar el primer registro."
                 : undefined
             }
@@ -253,6 +425,11 @@ export default function SeccionHabilidades({
                   <th scope="col" className="text-left p-2 font-medium">
                     Observaciones
                   </th>
+                  {mostrarBorradosAct && (
+                    <th scope="col" className="text-left p-2 font-medium">
+                      Motivo borrado
+                    </th>
+                  )}
                   {puedeEditar && (
                     <th
                       scope="col"
@@ -263,47 +440,79 @@ export default function SeccionHabilidades({
                 </tr>
               </thead>
               <tbody>
-                {data.actividades.map((a) => (
-                  <tr key={a.id} className="border-t border-border">
-                    <td className="p-2">
-                      <span
-                        className={
-                          TIPO_ACTIVIDAD_BADGE[a.tipo] ?? "badge badge-neutral"
-                        }
-                      >
-                        {a.tipo}
-                      </span>
-                    </td>
-                    <td className="p-2 font-medium">{a.actividad}</td>
-                    <td className="p-2 text-muted-foreground">
-                      {a.observaciones ?? "—"}
-                    </td>
-                    {puedeEditar && (
-                      <td className="p-2 text-right whitespace-nowrap">
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setBorrando({
-                              tipo: "actividad",
-                              id: a.id,
-                              nombre: a.actividad,
-                            })
+                {actividades.map((a) => {
+                  const borrado = Boolean(a.deleted_at);
+                  return (
+                    <tr
+                      key={a.id}
+                      className={`border-t border-border ${borrado ? "opacity-50 line-through" : ""}`}
+                    >
+                      <td className="p-2">
+                        <span
+                          className={
+                            TIPO_ACTIVIDAD_BADGE[a.tipo] ?? "badge badge-neutral"
                           }
-                          className="inline-flex items-center gap-1 rounded border border-destructive/30 bg-destructive/5 px-2 py-1 text-xs font-medium text-destructive hover:bg-destructive/10"
-                          title="Eliminar"
                         >
-                          <Trash2 className="w-3 h-3" aria-hidden="true" />
-                          Eliminar
-                        </button>
+                          {a.tipo}
+                        </span>
                       </td>
-                    )}
-                  </tr>
-                ))}
+                      <td className="p-2 font-medium">{a.actividad}</td>
+                      <td className="p-2 text-muted-foreground">
+                        {a.observaciones ?? "—"}
+                      </td>
+                      {mostrarBorradosAct && (
+                        <td className="p-2 text-xs text-muted-foreground">
+                          {a.delete_reason ?? "—"}
+                        </td>
+                      )}
+                      {puedeEditar && (
+                        <td className="p-2 text-right whitespace-nowrap">
+                          {borrado ? (
+                            esAdmin ? (
+                              <button
+                                type="button"
+                                onClick={() => restaurarAct(a.id)}
+                                disabled={restaurandoActividad === a.id}
+                                className="inline-flex items-center gap-1 rounded border border-input bg-background px-2 py-1 text-xs font-medium hover:bg-muted disabled:opacity-60"
+                                title="Restaurar"
+                              >
+                                <RotateCcw
+                                  className="w-3 h-3"
+                                  aria-hidden="true"
+                                />
+                                Restaurar
+                              </button>
+                            ) : null
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setBorrando({
+                                  tipo: "actividad",
+                                  id: a.id,
+                                  nombre: a.actividad,
+                                })
+                              }
+                              className="inline-flex items-center gap-1 rounded border border-destructive/30 bg-destructive/5 px-2 py-1 text-xs font-medium text-destructive hover:bg-destructive/10"
+                              title="Eliminar"
+                            >
+                              <Trash2
+                                className="w-3 h-3"
+                                aria-hidden="true"
+                              />
+                              Eliminar
+                            </button>
+                          )}
+                        </td>
+                      )}
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
         )}
-        {puedeEditar && (
+        {puedeEditar && !mostrarBorradosAct && (
           <div className="mt-3 text-right">
             <a
               href={`/funcionarios/${funcionarioId}/actividades/nuevo`}
