@@ -7,7 +7,6 @@ import {
   Award,
   ShieldCheck,
   HeartPulse,
-  HardHat,
   HandCoins,
   Users,
   Sparkles,
@@ -23,7 +22,6 @@ import SeccionDatos from "./secciones-detalle/SeccionDatos";
 import SeccionCarrera from "./secciones-detalle/SeccionCarrera";
 import SeccionOperativo from "./secciones-detalle/SeccionOperativo";
 import SeccionSalud from "./secciones-detalle/SeccionSalud";
-import SeccionEquipos from "./secciones-detalle/SeccionEquipos";
 import SeccionBeneficios from "./secciones-detalle/SeccionBeneficios";
 import SeccionFamilia from "./secciones-detalle/SeccionFamilia";
 import SeccionHabilidades from "./secciones-detalle/SeccionHabilidades";
@@ -54,7 +52,6 @@ const SECCIONES: SeccionConPermiso[] = [
   { id: "carrera", permisoId: "carrera", label: "Carrera", icon: Award },
   { id: "operativo", permisoId: "operativo", label: "Operativo", icon: ShieldCheck },
   { id: "salud", permisoId: "salud", label: "Salud", icon: HeartPulse },
-  { id: "equipos", permisoId: "equipos", label: "Equipos", icon: HardHat },
   { id: "beneficios", permisoId: "beneficios", label: "Beneficios", icon: HandCoins },
   { id: "familia", permisoId: "familia", label: "Familia", icon: Users },
   { id: "habilidades", permisoId: "habilidades", label: "Habilidades", icon: Sparkles },
@@ -173,15 +170,6 @@ export default function FichaFuncionarioCliente({
                 funcionarioId={funcionario.id}
                 userRoles={userRoles}
                 nivelAcceso={niveles.salud}
-              />
-            </Panel>
-          )}
-          {puedeVerSeccion("equipos", userRoles) && (
-            <Panel id="equipos" activa={activa}>
-              <SeccionEquipos
-                funcionarioId={funcionario.id}
-                userRoles={userRoles}
-                nivelAcceso={niveles.equipos}
               />
             </Panel>
           )}

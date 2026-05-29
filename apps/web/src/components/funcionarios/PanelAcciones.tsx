@@ -11,8 +11,6 @@ import {
   PlayCircle,
   TrendingUp,
   ArrowRightLeft,
-  Shield,
-  Radio,
   FileClock,
   LogOut,
   Minus,
@@ -32,10 +30,6 @@ import FormSuspender from "./acciones/FormSuspender";
 import FormReactivar from "./acciones/FormReactivar";
 import FormAscender from "./acciones/FormAscender";
 import FormTrasladar from "./acciones/FormTrasladar";
-import FormAsignarProteccion, {
-  type ItemProteccion,
-} from "./acciones/FormAsignarProteccion";
-import FormAsignarRadio, { type ItemRadio } from "./acciones/FormAsignarRadio";
 import FormPreJubilar from "./acciones/FormPreJubilar";
 import FormJubilar from "./acciones/FormJubilar";
 import FormFallecimiento from "./acciones/FormFallecimiento";
@@ -51,8 +45,6 @@ export type AccionKey =
   | "reactivar"
   | "ascender"
   | "trasladar"
-  | "proteccion"
-  | "radio"
   | "pre-jubilar"
   | "jubilar"
   | "fallecimiento"
@@ -150,23 +142,6 @@ export const ACCIONES_DEF: AccionDef[] = [
     visible: (s) => ["ACTIVO", "REPOSO", "COMISION"].includes(s),
     roles: ["RRHH"],
   },
-  // Equipo
-  {
-    key: "proteccion",
-    label: "Asignar protección",
-    short: "Protección",
-    Icon: Shield,
-    visible: (s) => ["ACTIVO", "REPOSO", "COMISION"].includes(s),
-    roles: ["LOGISTICA"],
-  },
-  {
-    key: "radio",
-    label: "Asignar radio",
-    short: "Radio",
-    Icon: Radio,
-    visible: (s) => ["ACTIVO", "REPOSO", "COMISION"].includes(s),
-    roles: ["LOGISTICA"],
-  },
   // Egresos
   {
     key: "pre-jubilar",
@@ -212,8 +187,6 @@ export interface CatalogosAcciones {
   divisiones: Catalogo[];
   areas: Catalogo[];
   tiposReposo: Catalogo[];
-  inventarioProteccion: ItemProteccion[];
-  radios: ItemRadio[];
 }
 
 interface Props {
@@ -340,15 +313,6 @@ function renderForm(
           areas={ctx.catalogos.areas}
         />
       );
-    case "proteccion":
-      return (
-        <FormAsignarProteccion
-          {...base}
-          inventario={ctx.catalogos.inventarioProteccion}
-        />
-      );
-    case "radio":
-      return <FormAsignarRadio {...base} radios={ctx.catalogos.radios} />;
     case "pre-jubilar":
       return <FormPreJubilar {...base} />;
     case "jubilar":

@@ -8,21 +8,6 @@ import type {
 } from "@/lib/catalogos";
 import FichaFuncionarioCliente from "@/components/funcionarios/FichaFuncionarioCliente";
 import type { CatalogosAcciones } from "@/components/funcionarios/PanelAcciones";
-import type { ItemProteccion } from "@/components/funcionarios/acciones/FormAsignarProteccion";
-import type { ItemRadio } from "@/components/funcionarios/acciones/FormAsignarRadio";
-
-interface PagedItems<T> {
-  items?: T[];
-  data?: T[];
-}
-
-function unwrap<T>(r: T[] | PagedItems<T> | null | undefined): T[] {
-  if (!r) return [];
-  if (Array.isArray(r)) return r;
-  if (Array.isArray(r.items)) return r.items;
-  if (Array.isArray(r.data)) return r.data;
-  return [];
-}
 
 export default async function FuncionarioDetailPage({
   params,
@@ -52,8 +37,6 @@ export default async function FuncionarioDetailPage({
     divisiones,
     areas,
     tiposReposo,
-    inventarioProteccion,
-    radios,
   ] = await Promise.all([
     api.get<Catalogo[]>("/catalogos/jerarquias", token).catch(() => [] as Catalogo[]),
     api.get<Catalogo[]>("/catalogos/zonas", token).catch(() => [] as Catalogo[]),
@@ -63,18 +46,6 @@ export default async function FuncionarioDetailPage({
     api.get<Catalogo[]>("/catalogos/divisiones", token).catch(() => [] as Catalogo[]),
     api.get<Catalogo[]>("/catalogos/areas", token).catch(() => [] as Catalogo[]),
     api.get<Catalogo[]>("/catalogos/tipos-reposo", token).catch(() => [] as Catalogo[]),
-    api
-      .get<ItemProteccion[] | PagedItems<ItemProteccion>>(
-        "/equipo/proteccion/inventario?page=1&page_size=200",
-        token,
-      )
-      .catch(() => [] as ItemProteccion[]),
-    api
-      .get<ItemRadio[] | PagedItems<ItemRadio>>(
-        "/equipo/radios/inventario?page=1&page_size=200",
-        token,
-      )
-      .catch(() => [] as ItemRadio[]),
   ]);
 
   const catalogosAcciones: CatalogosAcciones = {
@@ -84,8 +55,6 @@ export default async function FuncionarioDetailPage({
     divisiones,
     areas,
     tiposReposo,
-    inventarioProteccion: unwrap(inventarioProteccion),
-    radios: unwrap(radios),
   };
 
   return (

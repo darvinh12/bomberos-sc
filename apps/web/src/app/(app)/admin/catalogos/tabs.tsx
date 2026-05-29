@@ -66,21 +66,25 @@ export default function CatalogosTabs({
 
   return (
     <div className="space-y-4">
-      <div className="border-b flex gap-1 overflow-x-auto">
-        {TABS.map((t) => (
-          <button
-            key={t.key}
-            type="button"
-            onClick={() => setActive(t.key)}
-            className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition whitespace-nowrap ${
-              active === t.key
-                ? "border-primary text-primary"
-                : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {t.label} ({data[t.key]?.length ?? 0})
-          </button>
-        ))}
+      <div className="flex items-center gap-3 flex-wrap">
+        <label htmlFor="catalogo-selector" className="text-sm font-medium text-muted-foreground">
+          Catálogo:
+        </label>
+        <select
+          id="catalogo-selector"
+          value={active}
+          onChange={(e) => setActive(e.target.value as EntidadCat)}
+          className="rounded-md border border-input bg-background px-3 py-2 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring min-w-[260px]"
+        >
+          {TABS.map((t) => (
+            <option key={t.key} value={t.key}>
+              {t.label} ({data[t.key]?.length ?? 0})
+            </option>
+          ))}
+        </select>
+        <span className="text-xs text-muted-foreground">
+          {TABS.length} catálogos disponibles
+        </span>
       </div>
       <TablaCat
         key={active}

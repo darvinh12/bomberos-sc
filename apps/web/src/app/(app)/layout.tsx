@@ -45,8 +45,6 @@ const NAV_OPERATIVO: NavItem[] = [
 
 const NAV_GESTION: NavItem[] = [
   { href: "/carrera",           label: "Carrera",    Icon: Award },
-  { href: "/equipo/proteccion", label: "Protección", Icon: HardHat },
-  { href: "/equipo/radios",     label: "Radios",     Icon: Radio },
   { href: "/beneficios",        label: "Beneficios", Icon: HandCoins },
   { href: "/egresos",           label: "Egresos",    Icon: DoorOpen },
 ];
