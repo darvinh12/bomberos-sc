@@ -258,7 +258,7 @@ export default async function DashboardPage() {
                     <td className="px-4 py-3 text-muted-foreground">{row.jerarquia ?? "—"}</td>
                     <td className="px-4 py-3 text-right tabular-nums">{row.total}</td>
                     <td className="px-4 py-3 text-right tabular-nums">{row.activos}</td>
-                    <td className="px-4 py-3 text-right tabular-nums text-amber-300">{row.en_reposo}</td>
+                    <td className="px-4 py-3 text-right tabular-nums text-amber-700 dark:text-amber-300">{row.en_reposo}</td>
                     <td className="px-4 py-3 text-right tabular-nums">{row.en_comision}</td>
                   </tr>
                 ))}

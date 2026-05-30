@@ -144,8 +144,8 @@ export default function GuardiaPanel({
                           aria-label="Marcar como asistió"
                           className={`inline-flex items-center justify-center w-7 h-7 text-xs rounded border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                             a.asistio === true
-                              ? "bg-emerald-900/40 border-emerald-700/50 text-emerald-300"
-                              : "border-border text-muted-foreground hover:bg-emerald-900/30 hover:text-emerald-300"
+                              ? "bg-emerald-50 border-emerald-300 text-emerald-800 dark:bg-emerald-900/40 dark:border-emerald-700/50 dark:text-emerald-300"
+                              : "border-border text-muted-foreground hover:bg-emerald-50 hover:text-emerald-800 dark:hover:bg-emerald-900/30 dark:hover:text-emerald-300"
                           }`}
                           title="Marcar como asistió"
                         >
@@ -158,8 +158,8 @@ export default function GuardiaPanel({
                           aria-label="Marcar como NO asistió"
                           className={`inline-flex items-center justify-center w-7 h-7 text-xs rounded border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                             a.asistio === false
-                              ? "bg-red-900/40 border-red-700/50 text-red-300"
-                              : "border-border text-muted-foreground hover:bg-red-900/30 hover:text-red-300"
+                              ? "bg-red-50 border-red-300 text-red-800 dark:bg-red-900/40 dark:border-red-700/50 dark:text-red-300"
+                              : "border-border text-muted-foreground hover:bg-red-50 hover:text-red-800 dark:hover:bg-red-900/30 dark:hover:text-red-300"
                           }`}
                           title="Marcar como NO asistió"
                         >
@@ -167,12 +167,12 @@ export default function GuardiaPanel({
                         </button>
                       </div>
                     ) : a.asistio === true ? (
-                      <span className="inline-flex items-center gap-1 text-emerald-300">
+                      <span className="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-300">
                         <Check className="w-3.5 h-3.5" aria-hidden="true" />
                         Asistió
                       </span>
                     ) : a.asistio === false ? (
-                      <span className="inline-flex items-center gap-1 text-red-300">
+                      <span className="inline-flex items-center gap-1 text-red-700 dark:text-red-300">
                         <X className="w-3.5 h-3.5" aria-hidden="true" />
                         No asistió
                       </span>

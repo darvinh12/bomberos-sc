@@ -158,7 +158,6 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         {me && (
           <div className="shrink-0 border-t border-border px-3 pt-3 pb-3 space-y-2">
             <RoleSwitcher currentRoles={roles} />
-            <ThemeToggle />
             <div className="px-1">
               <div className="text-[13px] font-medium text-foreground truncate">
                 {me.nombre_completo}
@@ -184,6 +183,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
       {/* ── Main column ── */}
       <div className="flex-1 flex flex-col overflow-hidden">
+
+        {/* Desktop topbar — solo visible en md+ */}
+        <div className="hidden md:flex h-12 items-center justify-end gap-3 px-6 border-b border-border shrink-0 bg-background">
+          <ThemeToggle variant="icon" />
+        </div>
 
         {/* Mobile topbar */}
         <div className="md:hidden h-14 flex items-center gap-3 px-3 border-b border-border shrink-0 bg-card">

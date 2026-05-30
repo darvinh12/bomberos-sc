@@ -56,7 +56,7 @@ export default function CamposForm() {
         </div>
       )}
       {state.ok && (
-        <div role="status" className="rounded border border-emerald-700/50 bg-emerald-900/30 p-3 text-sm text-emerald-200">
+        <div role="status" className="rounded border border-emerald-300 bg-emerald-50 p-3 text-sm text-emerald-800 dark:border-emerald-700/50 dark:bg-emerald-900/30 dark:text-emerald-200">
           Campo creado correctamente. Refresca para verlo en la lista.
         </div>
       )}

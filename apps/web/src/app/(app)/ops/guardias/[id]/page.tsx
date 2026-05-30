@@ -57,7 +57,7 @@ export default async function GuardiaDetallePage({ params }: { params: { id: str
         <div className="flex gap-2 items-center mt-1 text-sm">
           <span className="text-muted-foreground">Estación #{guardia.estacion_id}</span>
           <span className="text-muted-foreground">·</span>
-          <span className="inline-block px-2 py-0.5 rounded-full text-xs bg-blue-900/40 text-blue-400 border border-blue-700/50">
+          <span className="inline-block px-2 py-0.5 rounded-full text-xs bg-blue-50 text-blue-800 border border-blue-300 dark:bg-blue-900/40 dark:text-blue-400 dark:border-blue-700/50">
             {guardia.turno}
           </span>
           {guardia.seccion && (
@@ -71,7 +71,7 @@ export default async function GuardiaDetallePage({ params }: { params: { id: str
               Cerrada
             </span>
           ) : (
-            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-emerald-900/40 text-emerald-300 border border-emerald-700/50">
+            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-emerald-50 text-emerald-800 border border-emerald-300 dark:bg-emerald-900/40 dark:text-emerald-300 dark:border-emerald-700/50">
               En curso
             </span>
           )}

@@ -23,7 +23,7 @@ export default function PerfilForm({ okFlag }: { okFlag: boolean }) {
   return (
     <form action={action} className="rounded-xl border bg-card p-6 space-y-5 max-w-lg">
       {okFlag && !state.error && (
-        <div role="status" className="rounded border border-emerald-700/50 bg-emerald-900/30 p-3 text-sm text-emerald-200">
+        <div role="status" className="rounded border border-emerald-300 bg-emerald-50 p-3 text-sm text-emerald-800 dark:border-emerald-700/50 dark:bg-emerald-900/30 dark:text-emerald-200">
           Contraseña actualizada correctamente.
         </div>
       )}
