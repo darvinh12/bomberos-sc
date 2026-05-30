@@ -3,8 +3,52 @@
 @tailwind utilities;
 
 @layer base {
+  /* ===========================================
+     MODO CLARO (default) — Editorial cálido
+     Fondo casi blanco, texto navy oscuro, primary burdeos
+     =========================================== */
   :root {
-    /* Deep navy + dark burgundy theme */
+    --background: 0 0% 99%;           /* #fcfcfc — casi blanco, sin frío */
+    --foreground: 220 28% 14%;        /* #1c2231 — navy oscuro para texto */
+
+    --card: 0 0% 100%;                /* #ffffff — cards blancas puras */
+    --card-foreground: 220 28% 14%;
+
+    --primary: 355 75% 38%;           /* #aa2129 — burdeos sólido con buen contraste sobre blanco */
+    --primary-foreground: 0 0% 100%;  /* blanco puro */
+
+    --secondary: 220 14% 96%;         /* #f1f3f5 — secundario gris muy claro */
+    --secondary-foreground: 220 28% 14%;
+
+    --muted: 220 14% 95%;             /* #eef0f3 */
+    --muted-foreground: 220 12% 42%;  /* #5d6878 — gris medio legible sobre blanco */
+
+    --accent: 220 14% 93%;            /* #e7eaef — hover */
+    --accent-foreground: 220 28% 14%;
+
+    --destructive: 0 72% 48%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Estados semánticos — calibrados para fondo claro */
+    --success:            152 56% 32%;
+    --success-foreground: 152 70% 22%;
+    --warning:             32 90% 42%;
+    --warning-foreground:  32 90% 28%;
+    --info:               215 70% 44%;
+    --info-foreground:    215 80% 32%;
+
+    --border: 220 14% 88%;            /* #d8dde4 — bordes sutiles */
+    --input: 0 0% 100%;               /* inputs blancos */
+    --ring: 355 75% 50%;              /* #c92632 — focus burdeos visible */
+
+    --radius: 0.25rem;
+  }
+
+  /* ===========================================
+     MODO OSCURO — Deep navy + dark burgundy
+     (El theme original que ya estaba antes)
+     =========================================== */
+  .dark {
     --background: 218 28% 7%;         /* #0c0f15 */
     --foreground: 213 20% 88%;        /* #dce3f0 */
 
@@ -26,7 +70,6 @@
     --destructive: 0 72% 52%;
     --destructive-foreground: 0 0% 100%;
 
-    /* Estados semánticos — calibrados para fondo navy oscuro */
     --success:            152 50% 32%;
     --success-foreground: 152 60% 75%;
     --warning:             38 70% 42%;
@@ -34,11 +77,9 @@
     --info:               215 55% 42%;
     --info-foreground:    215 80% 80%;
 
-    --border: 220 28% 17%;            /* #1e2433 */
-    --input: 220 24% 12%;             /* #131720 */
-    --ring: 355 75% 55%;              /* #d44856 — focus burdeos visible */
-
-    --radius: 0.25rem;
+    --border: 220 28% 17%;
+    --input: 220 24% 12%;
+    --ring: 355 75% 55%;
   }
 
   body {
@@ -100,21 +141,25 @@
            focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
   }
 
-  /* Badges de estado — todos calibrados para fondo navy oscuro */
+  /* Badges de estado — dual mode (claro/oscuro) */
   .badge {
     @apply inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium border whitespace-nowrap;
   }
   .badge-success {
-    @apply border-emerald-700/50 bg-emerald-900/40 text-emerald-300;
+    @apply border-emerald-300 bg-emerald-50 text-emerald-800
+           dark:border-emerald-700/50 dark:bg-emerald-900/40 dark:text-emerald-300;
   }
   .badge-warning {
-    @apply border-amber-700/50 bg-amber-900/40 text-amber-300;
+    @apply border-amber-300 bg-amber-50 text-amber-800
+           dark:border-amber-700/50 dark:bg-amber-900/40 dark:text-amber-300;
   }
   .badge-info {
-    @apply border-sky-700/50 bg-sky-900/40 text-sky-300;
+    @apply border-sky-300 bg-sky-50 text-sky-800
+           dark:border-sky-700/50 dark:bg-sky-900/40 dark:text-sky-300;
   }
   .badge-danger {
-    @apply border-red-700/50 bg-red-900/40 text-red-300;
+    @apply border-red-300 bg-red-50 text-red-800
+           dark:border-red-700/50 dark:bg-red-900/40 dark:text-red-300;
   }
   .badge-neutral {
     @apply border-border bg-muted text-muted-foreground;
@@ -123,9 +168,11 @@
     @apply border-border bg-muted/60 text-muted-foreground;
   }
   .badge-primary {
-    @apply border-primary/40 bg-primary/15 text-primary-foreground/85;
+    @apply border-primary/30 bg-primary/10 text-primary
+           dark:border-primary/40 dark:bg-primary/15 dark:text-primary-foreground/85;
   }
   .badge-violet {
-    @apply border-violet-700/50 bg-violet-900/40 text-violet-300;
+    @apply border-violet-300 bg-violet-50 text-violet-800
+           dark:border-violet-700/50 dark:bg-violet-900/40 dark:text-violet-300;
   }
 }

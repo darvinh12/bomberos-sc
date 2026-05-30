@@ -21,14 +21,14 @@ interface FuncionarioHeader {
 }
 
 const ESTATUS_STYLE: Record<string, string> = {
-  ACTIVO: "bg-emerald-900/40 text-emerald-300 border-emerald-700/50",
-  REPOSO: "bg-amber-900/40 text-amber-300 border-amber-700/50",
-  COMISION: "bg-sky-900/40 text-sky-300 border-sky-700/50",
-  PRE_JUBILADO: "bg-violet-900/40 text-violet-300 border-violet-700/50",
+  ACTIVO: "bg-emerald-50 text-emerald-800 border-emerald-300 dark:bg-emerald-900/40 dark:text-emerald-300 dark:border-emerald-700/50",
+  REPOSO: "bg-amber-50 text-amber-800 border-amber-300 dark:bg-amber-900/40 dark:text-amber-300 dark:border-amber-700/50",
+  COMISION: "bg-sky-50 text-sky-800 border-sky-300 dark:bg-sky-900/40 dark:text-sky-300 dark:border-sky-700/50",
+  PRE_JUBILADO: "bg-violet-50 text-violet-800 border-violet-300 dark:bg-violet-900/40 dark:text-violet-300 dark:border-violet-700/50",
   JUBILADO: "bg-muted text-muted-foreground border-border",
   EGRESADO: "bg-muted/60 text-muted-foreground border-border",
   FALLECIDO: "bg-muted/80 text-foreground border-border",
-  SUSPENDIDO: "bg-red-900/40 text-red-300 border-red-700/50",
+  SUSPENDIDO: "bg-red-50 text-red-800 border-red-300 dark:bg-red-900/40 dark:text-red-300 dark:border-red-700/50",
 };
 
 export default function HeaderFuncionario({

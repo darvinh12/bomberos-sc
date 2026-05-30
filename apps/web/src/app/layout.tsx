@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { ThemeProvider } from "@/components/theme/ThemeProvider";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -14,10 +15,30 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
+// Script no-flash: aplica la clase `dark` ANTES de que React hidrate, evitando
+// el flash blanco al cargar la página si el usuario tiene tema oscuro guardado.
+const noFlashScript = `
+(function() {
+  try {
+    var t = localStorage.getItem('bomberos-theme');
+    if (t === 'dark' || (t !== 'light' && true)) {
+      document.documentElement.classList.add('dark');
+    }
+  } catch (e) {
+    document.documentElement.classList.add('dark');
+  }
+})();
+`;
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="es" className={inter.variable} suppressHydrationWarning>
-      <body>{children}</body>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: noFlashScript }} />
+      </head>
+      <body>
+        <ThemeProvider>{children}</ThemeProvider>
+      </body>
     </html>
   );
 }

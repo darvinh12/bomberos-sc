@@ -13,6 +13,7 @@ import LogoutButton from "@/components/layout/LogoutButton";
 import RoleSwitcher from "@/components/layout/RoleSwitcher";
 import GlobalSearch from "@/components/layout/GlobalSearch";
 import MobileSidebar from "@/components/layout/MobileSidebar";
+import ThemeToggle from "@/components/theme/ThemeToggle";
 
 interface Me {
   id: number;
@@ -157,6 +158,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         {me && (
           <div className="shrink-0 border-t border-border px-3 pt-3 pb-3 space-y-2">
             <RoleSwitcher currentRoles={roles} />
+            <ThemeToggle />
             <div className="px-1">
               <div className="text-[13px] font-medium text-foreground truncate">
                 {me.nombre_completo}
@@ -198,11 +200,14 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             </div>
             <span className="text-foreground text-sm font-semibold">Bomberos Caracas</span>
           </Link>
+          <div className="ml-auto">
+            <ThemeToggle variant="icon" />
+          </div>
         </div>
 
         {/* Password change alert */}
         {me?.debe_cambiar_password && (
-          <div className="shrink-0 bg-amber-950/40 border-b border-amber-800/50 px-6 py-2 text-sm text-amber-300">
+          <div className="shrink-0 bg-amber-100 dark:bg-amber-950/40 border-b border-amber-300 dark:border-amber-800/50 px-6 py-2 text-sm text-amber-900 dark:text-amber-300">
             Su contraseña debe cambiarse.{" "}
             <Link href="/perfil" className="font-semibold underline">
               Cambiar ahora
