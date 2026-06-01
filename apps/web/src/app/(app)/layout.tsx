@@ -9,6 +9,11 @@ import {
 import { requireAuth } from "@/lib/session";
 import { api } from "@/lib/api";
 import { puedeVer } from "@/lib/roles";
+import { cargarPermisosServer } from "@/lib/permisos-funcionario";
+import {
+  getNivelDesdeCache,
+  tieneCache,
+} from "@/lib/permisos-cache";
 import LogoutButton from "@/components/layout/LogoutButton";
 import RoleSwitcher from "@/components/layout/RoleSwitcher";
 import GlobalSearch from "@/components/layout/GlobalSearch";
@@ -28,11 +33,14 @@ interface NavItem {
   href: string;
   label: string;
   Icon: LucideIcon;
+  /** Código de recurso para el sistema de permisos editable. Si está,
+   *  se respeta ese permiso (BD/demo). Si no, se cae a puedeVer(href, roles). */
+  permisoCodigo?: string;
 }
 
 const NAV_GENERAL: NavItem[] = [
-  { href: "/dashboard",   label: "Dashboard", Icon: LayoutDashboard },
-  { href: "/funcionarios",label: "Personal",  Icon: Users },
+  { href: "/dashboard",   label: "Dashboard", Icon: LayoutDashboard, permisoCodigo: "dashboard" },
+  { href: "/funcionarios",label: "Personal",  Icon: Users,           permisoCodigo: "personal" },
 ];
 
 const NAV_OPERATIVO: NavItem[] = [
@@ -45,13 +53,13 @@ const NAV_OPERATIVO: NavItem[] = [
 ];
 
 const NAV_GESTION: NavItem[] = [
-  { href: "/carrera",           label: "Carrera",    Icon: Award },
-  { href: "/beneficios",        label: "Beneficios", Icon: HandCoins },
-  { href: "/egresos",           label: "Egresos",    Icon: DoorOpen },
+  { href: "/carrera",    label: "Carrera",    Icon: Award,     permisoCodigo: "carrera" },
+  { href: "/beneficios", label: "Beneficios", Icon: HandCoins, permisoCodigo: "beneficios" },
+  { href: "/egresos",    label: "Egresos",    Icon: DoorOpen,  permisoCodigo: "egresos" },
 ];
 
 const NAV_REFERENCIA: NavItem[] = [
-  { href: "/catalogos", label: "Catálogos", Icon: BookOpen },
+  { href: "/catalogos", label: "Catálogos", Icon: BookOpen, permisoCodigo: "catalogos" },
 ];
 
 const NAV_ADMIN: NavItem[] = [
@@ -68,7 +76,18 @@ const NAV_ADMIN: NavItem[] = [
 ];
 
 function filtrar(items: NavItem[], roles: string[]) {
-  return items.filter((i) => puedeVer(i.href, roles));
+  // ADMIN ve todo
+  if (roles.includes("ADMIN")) return items;
+  return items.filter((i) => {
+    // Si el item tiene permisoCodigo Y el cache está hidratado,
+    // respetar el permiso configurado desde /admin/permisos
+    if (i.permisoCodigo && tieneCache()) {
+      const nivel = getNivelDesdeCache("sidebar", i.permisoCodigo, roles);
+      if (nivel !== null) return nivel !== "none";
+    }
+    // Fallback al sistema viejo (puedeVer por href)
+    return puedeVer(i.href, roles);
+  });
 }
 
 function NavGroup({ title, items }: { title?: string; items: NavItem[] }) {
@@ -96,6 +115,10 @@ function NavGroup({ title, items }: { title?: string; items: NavItem[] }) {
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const token = await requireAuth();
+  // Hidrata cache de permisos para que filtrar() respete /admin/permisos.
+  // Best-effort: si falla, cae a puedeVer() del sistema viejo.
+  await cargarPermisosServer(token);
+
   let me: Me | null = null;
   try {
     me = await api.get<Me>("/auth/me", token);

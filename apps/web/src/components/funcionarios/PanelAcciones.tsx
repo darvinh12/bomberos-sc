@@ -19,6 +19,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { hasAnyRole, type Rol } from "@/lib/roles";
+import { getNivelDesdeCache, tieneCache } from "@/lib/permisos-cache";
 import type { Catalogo, CatalogoEstacion } from "@/lib/catalogos";
 import ModalAccion from "./acciones/ModalAccion";
 import FormReposo from "./acciones/FormReposo";
@@ -212,8 +213,20 @@ export default function PanelAcciones({
 }: Props) {
   const [abierta, setAbierta] = useState<AccionKey | null>(null);
 
+  // Función de permisos: si hay cache hidratado (BD/demo localStorage),
+  // se respeta el permiso editado desde /admin/permisos. Si no, se cae
+  // al filtrado por rol hardcoded.
+  function tienePermiso(a: AccionDef): boolean {
+    if (userRoles.includes("ADMIN")) return true;
+    if (tieneCache()) {
+      const nivel = getNivelDesdeCache("accion_panel", a.key, userRoles);
+      if (nivel !== null) return nivel !== "none";
+    }
+    return hasAnyRole(userRoles, a.roles);
+  }
+
   const disponibles = ACCIONES_DEF.filter(
-    (a) => a.visible(estatus) && hasAnyRole(userRoles, a.roles),
+    (a) => a.visible(estatus) && tienePermiso(a),
   );
 
   if (disponibles.length === 0) return null;

@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Write(./apps/**)",
+      "Write(./sql/**)",
+      "Write(./docs/**)",
+      "Edit(./apps/**)",
+      "Edit(./sql/**)",
+      "Edit(./docs/**)",
+      "Bash(cd ./apps/web && npx tsc --noEmit*)",
+      "Bash(cd ./apps/api/src && python -m py_compile*)",
+      "Bash(grep:*)",
+      "Bash(ls:*)",
+      "Bash(cat:*)"
+    ]
+  }
+}
