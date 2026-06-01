@@ -45,6 +45,17 @@ export type PermisoKey =
   | "puede_aprobar";
 
 const PERMISOS_COOKIE = "bcd_demo_permisos";
+const ROLES_EXTRA_COOKIE = "bcd_demo_roles_extra";
+
+function readDemoExtraRoles(): Rol[] {
+  const raw = cookies().get(ROLES_EXTRA_COOKIE)?.value;
+  if (!raw) return [];
+  try {
+    return JSON.parse(raw) as Rol[];
+  } catch {
+    return [];
+  }
+}
 
 function readDemoPermisos(): Permiso[] {
   const raw = cookies().get(PERMISOS_COOKIE)?.value;
@@ -71,7 +82,9 @@ export async function cargarMatriz(): Promise<{
   permisos: Permiso[];
 }> {
   if (isDemoMode()) {
-    const roles = await api.get<Rol[]>("/admin/roles", "");
+    const base = await api.get<Rol[]>("/admin/roles", "");
+    const extras = readDemoExtraRoles();
+    const roles = [...base, ...extras];
     const modulos = await api.get<Modulo[]>("/admin/modulos", "");
     const permisos = readDemoPermisos();
     return { roles, modulos, permisos };
@@ -130,7 +143,7 @@ export async function togglePermiso(
 // Permisos por recurso (sección ficha, sidebar, acciones panel)
 // ============================================================
 
-import type { TipoRecurso } from "./recursos-catalogo";
+export type TipoRecurso = "seccion_ficha" | "sidebar" | "accion_panel";
 
 export type NivelAccesoMatriz = "edit" | "view" | "none";
 
@@ -186,14 +199,21 @@ export async function guardarMatrizRecursos(
     for (const p of actuales) {
       mapa.set(`${p.rol_codigo}:${p.recurso_tipo}:${p.recurso_codigo}`, p);
     }
+    // IMPORTANTE: guardamos TODOS los niveles, incluso "none". Si borráramos
+    // las filas con none, el helper de permisos no las encontraría en el
+    // cache y caería al fallback de DEFAULT_MATRIZ (que da acceso por
+    // defecto), efectivamente IGNORANDO la decisión del admin de "sin
+    // acceso". Guardar explícitamente "none" es la única forma de hacer
+    // que se respete.
     for (const c of cambios) {
       const k = `${c.rol_codigo}:${c.recurso_tipo}:${c.recurso_codigo}`;
-      if (c.nivel === "none") mapa.delete(k);
-      else mapa.set(k, c);
+      mapa.set(k, c);
     }
     const final = Array.from(mapa.values());
     writeDemoPermisosRecursos(final);
-    revalidatePath("/admin/permisos");
+    // Revalidar TODAS las rutas del app group para que sidebar y fichas
+    // se re-rendericen con los permisos nuevos (no solo /admin/permisos)
+    revalidatePath("/", "layout");
     return { ok: true, aplicados: cambios.length, estadoActual: final };
   }
 
@@ -204,7 +224,7 @@ export async function guardarMatrizRecursos(
       { cambios },
       token,
     );
-    revalidatePath("/admin/permisos");
+    revalidatePath("/", "layout");
     return { ok: true, aplicados: res.aplicados };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "Error" };

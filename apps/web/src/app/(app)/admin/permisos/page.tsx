@@ -3,7 +3,7 @@ import { api } from "@/lib/api";
 import { requireAuth } from "@/lib/session";
 import { requireRoleOrRedirect } from "@/lib/roles";
 import { cargarMatriz, cargarPermisosRecursos } from "./actions";
-import PermisosTabs from "./permisos-tabs";
+import MatrizCards from "./matriz-cards";
 
 export default async function PermisosPage() {
   const token = await requireAuth();
@@ -12,10 +12,15 @@ export default async function PermisosPage() {
     .catch(() => ({ roles: [] as string[] }));
   requireRoleOrRedirect(me.roles, ["ADMIN"]);
 
-  const [{ roles, modulos, permisos }, permisosRecursos] = await Promise.all([
+  const [{ roles }, permisosRecursos] = await Promise.all([
     cargarMatriz(),
     cargarPermisosRecursos(),
   ]);
+
+  const rolesParaMatriz = roles.map((r) => ({
+    codigo: r.codigo,
+    nombre: r.nombre,
+  }));
 
   return (
     <div className="space-y-6">
@@ -28,17 +33,14 @@ export default async function PermisosPage() {
         </Link>
         <h1 className="text-2xl font-bold mt-1">Matriz de permisos</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Configurá qué puede hacer cada rol en cada recurso del sistema. Los
-          cambios se aplican a todos los usuarios del rol sin necesidad de
-          reabrir sesión.
+          Selecciona un módulo para configurar qué puede hacer cada rol. Los
+          cambios se aplican a todos los usuarios sin reabrir sesión.
         </p>
       </div>
 
-      <PermisosTabs
-        roles={roles}
-        modulos={modulos}
-        permisos={permisos}
-        permisosRecursos={permisosRecursos}
+      <MatrizCards
+        roles={rolesParaMatriz}
+        permisosIniciales={permisosRecursos}
       />
     </div>
   );

@@ -2,14 +2,13 @@
 
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
-import { ROLES_DISPONIBLES } from "@/lib/roles";
+import { rolExiste } from "@/lib/roles-runtime";
 
 const DEMO_ROLE_COOKIE = "bcd_demo_role";
 
 export async function switchDemoRole(formData: FormData): Promise<void> {
   const rol = String(formData.get("rol") ?? "ADMIN");
-  const valido = ROLES_DISPONIBLES.some((r) => r.codigo === rol);
-  if (!valido) return;
+  if (!(await rolExiste(rol))) return;
   cookies().set(DEMO_ROLE_COOKIE, rol, {
     path: "/",
     httpOnly: false,

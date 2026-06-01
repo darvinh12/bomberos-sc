@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { api, ApiError } from "@/lib/api";
 import { requireAuth } from "@/lib/session";
-import { requireRoleOrRedirect, ROLES_DISPONIBLES } from "@/lib/roles";
+import { requireRoleOrRedirect } from "@/lib/roles";
 import { formatDate } from "@/lib/utils";
 import {
   cargarUsuarioConRoles,
@@ -108,7 +108,11 @@ export default async function UsuarioDetallePage({
           </p>
           <RolesEditor
             usuarioId={u.id}
-            rolesDisponibles={ROLES_DISPONIBLES}
+            rolesDisponibles={rolesDB.filter((r) => r.activo).map((r) => ({
+              codigo: r.codigo,
+              nombre: r.nombre,
+              descripcion: r.descripcion,
+            }))}
             rolesAsignados={u.roles}
           />
         </section>

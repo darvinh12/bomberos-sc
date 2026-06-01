@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { api } from "@/lib/api";
 import { requireAuth } from "@/lib/session";
-import { requireRoleOrRedirect, ROLES_DISPONIBLES } from "@/lib/roles";
+import { requireRoleOrRedirect } from "@/lib/roles";
+import { listarRolesUI } from "@/lib/roles-runtime";
 import NuevoForm from "./form";
 
 export default async function NuevoUsuarioPage() {
@@ -10,6 +11,7 @@ export default async function NuevoUsuarioPage() {
     .get<{ roles: string[] }>("/auth/me", token)
     .catch(() => ({ roles: [] as string[] }));
   requireRoleOrRedirect(me.roles, ["ADMIN"]);
+  const rolesDisponibles = await listarRolesUI();
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
@@ -25,7 +27,7 @@ export default async function NuevoUsuarioPage() {
           El usuario será forzado a cambiar el password al primer login.
         </p>
       </div>
-      <NuevoForm rolesDisponibles={ROLES_DISPONIBLES} />
+      <NuevoForm rolesDisponibles={rolesDisponibles} />
     </div>
   );
 }

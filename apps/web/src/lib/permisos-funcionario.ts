@@ -157,11 +157,19 @@ const DEFAULT_MATRIZ: Record<SeccionFuncionario, Partial<Record<Rol, NivelAcceso
 
 /**
  * Devuelve el nivel de acceso más alto que el conjunto de roles tiene sobre
- * la sección dada. ADMIN siempre obtiene "edit".
+ * la sección dada.
  *
- * Lee primero del cache global (si está hidratado desde backend / demo
- * localStorage). Si el cache no tiene el recurso o no está hidratado,
- * fallback a DEFAULT_MATRIZ.
+ * Reglas:
+ *  - ADMIN siempre obtiene "edit" (no se puede revocar)
+ *  - Cualquier otro rol: lee del cache global. Si NO tiene permiso
+ *    explícito en el cache, devuelve "none" (sin acceso).
+ *
+ * No hay fallback a matriz hardcoded — los permisos los configura el ADMIN
+ * desde /admin/permisos. Un rol sin configuración no ve nada.
+ *
+ * Solo cuando el cache no está hidratado (caso edge antes de la primera
+ * carga server-side) cae al fallback DEFAULT_MATRIZ para evitar pantalla
+ * en blanco al primer render.
  */
 export function accesoSeccion(
   seccion: SeccionFuncionario,
@@ -171,9 +179,13 @@ export function accesoSeccion(
 
   if (tieneCache()) {
     const nivel = getNivelDesdeCache("seccion_ficha", seccion, roles);
-    if (nivel !== null) return nivel;
+    // null en cache hidratado significa "no configurado" = sin acceso
+    return nivel ?? "none";
   }
 
+  // Cache no hidratado todavía: usar matriz por defecto como fallback de
+  // emergencia. Esto solo aplica en el primer render antes de que el
+  // server hidrate el cache. Una vez hidratado, el cache toma el control.
   let mejor: NivelAcceso = "none";
   for (const rol of roles) {
     const nivel = DEFAULT_MATRIZ[seccion]?.[rol as Rol];
@@ -194,23 +206,42 @@ export function accesoSeccion(
  * como fallback.
  */
 export async function cargarPermisosServer(token: string): Promise<void> {
-  if (
+  const esDemo =
     typeof process !== "undefined" &&
-    process.env.NEXT_PUBLIC_DEMO_MODE === "1"
-  ) {
+    process.env.NEXT_PUBLIC_DEMO_MODE === "1";
+
+  if (esDemo) {
+    // Leer cookie demo (escrita por guardarMatrizRecursos en actions.ts)
+    try {
+      const { cookies } = await import("next/headers");
+      const raw = cookies().get("bcd_demo_permisos_recursos")?.value;
+      if (raw) {
+        const items = JSON.parse(raw) as PermisoRecurso[];
+        setPermisosCache(items);
+        return;
+      }
+    } catch {
+      // ignorar (next/headers no disponible o JSON inválido)
+    }
+    // Sin cookie: dejar cache vacío para que se use DEFAULT_MATRIZ
+    setPermisosCache([]);
     return;
   }
+
   try {
     const baseUrl = process.env.API_INTERNAL_URL ?? process.env.NEXT_PUBLIC_API_URL ?? "";
     const res = await fetch(`${baseUrl}/admin/permisos-recursos`, {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
-      next: { revalidate: 30 },
+      cache: "no-store",
     });
-    if (!res.ok) return;
+    if (!res.ok) {
+      setPermisosCache([]);
+      return;
+    }
     const items = (await res.json()) as PermisoRecurso[];
     setPermisosCache(items);
   } catch {
-    // Silencioso — usa DEFAULT_MATRIZ
+    setPermisosCache([]);
   }
 }
 

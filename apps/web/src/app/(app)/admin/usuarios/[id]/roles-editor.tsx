@@ -6,7 +6,7 @@ import { toggleRol } from "./actions";
 interface RolDef {
   codigo: string;
   nombre: string;
-  descripcion: string;
+  descripcion: string | null;
 }
 
 export default function RolesEditor({

@@ -2,9 +2,19 @@
 
 import { useTransition } from "react";
 import { switchDemoRole } from "@/app/actions/demo";
-import { ROLES_DISPONIBLES } from "@/lib/roles";
 
-export default function RoleSwitcher({ currentRoles }: { currentRoles: string[] }) {
+interface RolOption {
+  codigo: string;
+  nombre: string;
+  descripcion: string | null;
+}
+
+interface Props {
+  currentRoles: string[];
+  roles: RolOption[];
+}
+
+export default function RoleSwitcher({ currentRoles, roles }: Props) {
   const [pending, start] = useTransition();
   const current = currentRoles[0] ?? "ADMIN";
 
@@ -31,8 +41,8 @@ export default function RoleSwitcher({ currentRoles }: { currentRoles: string[] 
                    focus:outline-none focus-visible:ring-2 focus-visible:ring-ring
                    transition-colors"
       >
-        {ROLES_DISPONIBLES.map((r) => (
-          <option key={r.codigo} value={r.codigo} title={r.descripcion}>
+        {roles.map((r) => (
+          <option key={r.codigo} value={r.codigo} title={r.descripcion ?? undefined}>
             {r.nombre}
           </option>
         ))}

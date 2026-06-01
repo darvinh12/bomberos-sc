@@ -10,6 +10,7 @@ import { requireAuth } from "@/lib/session";
 import { api } from "@/lib/api";
 import { puedeVer } from "@/lib/roles";
 import { cargarPermisosServer } from "@/lib/permisos-funcionario";
+import { listarRolesUI } from "@/lib/roles-runtime";
 import {
   getNivelDesdeCache,
   tieneCache,
@@ -76,17 +77,24 @@ const NAV_ADMIN: NavItem[] = [
 ];
 
 function filtrar(items: NavItem[], roles: string[]) {
-  // ADMIN ve todo
+  // ADMIN ve todo siempre
   if (roles.includes("ADMIN")) return items;
+
   return items.filter((i) => {
-    // Si el item tiene permisoCodigo Y el cache está hidratado,
-    // respetar el permiso configurado desde /admin/permisos
+    // Regla principal: si el item tiene permisoCodigo y el cache está
+    // hidratado, respetar el permiso configurado desde /admin/permisos.
+    // null en cache hidratado = "no configurado" = SIN ACCESO.
     if (i.permisoCodigo && tieneCache()) {
       const nivel = getNivelDesdeCache("sidebar", i.permisoCodigo, roles);
-      if (nivel !== null) return nivel !== "none";
+      return nivel !== null && nivel !== "none";
     }
-    // Fallback al sistema viejo (puedeVer por href)
-    return puedeVer(i.href, roles);
+    // Fallback al sistema viejo SOLO si el cache no está hidratado (caso
+    // edge antes del primer render server-side). Cualquier otro caso, el
+    // cache es la verdad — sin permiso = sin acceso.
+    if (!tieneCache()) {
+      return puedeVer(i.href, roles);
+    }
+    return false;
   });
 }
 
@@ -126,6 +134,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     me = null;
   }
   const roles = me?.roles ?? [];
+  const rolesDisponibles = await listarRolesUI();
 
   const general    = filtrar(NAV_GENERAL, roles);
   const operativo  = filtrar(NAV_OPERATIVO, roles);
@@ -180,7 +189,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         {/* User footer */}
         {me && (
           <div className="shrink-0 border-t border-border px-3 pt-3 pb-3 space-y-2">
-            <RoleSwitcher currentRoles={roles} />
+            <RoleSwitcher currentRoles={roles} roles={rolesDisponibles} />
             <div className="px-1">
               <div className="text-[13px] font-medium text-foreground truncate">
                 {me.nombre_completo}

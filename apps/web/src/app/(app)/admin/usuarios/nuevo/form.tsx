@@ -8,7 +8,7 @@ import { crearUsuario, type NuevoUsuarioState } from "./actions";
 interface RolDef {
   codigo: string;
   nombre: string;
-  descripcion: string;
+  descripcion: string | null;
 }
 
 const initial: NuevoUsuarioState = {};
