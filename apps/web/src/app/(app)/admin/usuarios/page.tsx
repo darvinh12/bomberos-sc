@@ -144,7 +144,7 @@ export default async function UsuariosAdminPage({ searchParams }: SearchProps) {
                         href={`/admin/usuarios/${u.id}`}
                         className="text-primary hover:underline text-xs font-medium"
                       >
-                        Editar roles →
+                        Editar →
                       </Link>
                     </td>
                   </tr>
@@ -167,10 +167,8 @@ export default async function UsuariosAdminPage({ searchParams }: SearchProps) {
 
       <div className="rounded-xl border bg-muted/30 p-4 text-xs text-muted-foreground">
         <p>
-          Clic en <strong>Editar roles</strong> para asignar o revocar permisos
-          a cada usuario. La creación de nuevos usuarios y reset de password se
-          hace via API (<code className="font-mono">/admin/usuarios</code>) — la
-          UI de creación llega pronto.
+          Clic en <strong>Editar</strong> para gestionar el correo, contraseña,
+          estado, bloqueo y roles de cada usuario.
         </p>
       </div>
     </div>
