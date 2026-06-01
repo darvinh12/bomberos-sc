@@ -70,6 +70,7 @@ from bomberos_api.models.salud import (
     Medico,
     Reposo,
 )
+from bomberos_api.models.permiso_recurso import PermisoRecurso
 from bomberos_api.models.usuario import Rol, Usuario, UsuarioRol
 
 __all__ = [
@@ -119,6 +120,7 @@ __all__ = [
     "Estacion",
     "Zona",
     # seguridad
+    "PermisoRecurso",
     "Rol",
     "Usuario",
     "UsuarioRol",

@@ -2,8 +2,8 @@ import Link from "next/link";
 import { api } from "@/lib/api";
 import { requireAuth } from "@/lib/session";
 import { requireRoleOrRedirect } from "@/lib/roles";
-import { cargarMatriz } from "./actions";
-import MatrizPermisos from "./matriz";
+import { cargarMatriz, cargarPermisosRecursos } from "./actions";
+import PermisosTabs from "./permisos-tabs";
 
 export default async function PermisosPage() {
   const token = await requireAuth();
@@ -12,7 +12,10 @@ export default async function PermisosPage() {
     .catch(() => ({ roles: [] as string[] }));
   requireRoleOrRedirect(me.roles, ["ADMIN"]);
 
-  const { roles, modulos, permisos } = await cargarMatriz();
+  const [{ roles, modulos, permisos }, permisosRecursos] = await Promise.all([
+    cargarMatriz(),
+    cargarPermisosRecursos(),
+  ]);
 
   return (
     <div className="space-y-6">
@@ -25,12 +28,18 @@ export default async function PermisosPage() {
         </Link>
         <h1 className="text-2xl font-bold mt-1">Matriz de permisos</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Elegí un rol y marcá qué puede hacer en cada módulo. Cada cambio se
-          guarda al instante.
+          Configurá qué puede hacer cada rol en cada recurso del sistema. Los
+          cambios se aplican a todos los usuarios del rol sin necesidad de
+          reabrir sesión.
         </p>
       </div>
 
-      <MatrizPermisos roles={roles} modulos={modulos} permisos={permisos} />
+      <PermisosTabs
+        roles={roles}
+        modulos={modulos}
+        permisos={permisos}
+        permisosRecursos={permisosRecursos}
+      />
     </div>
   );
 }

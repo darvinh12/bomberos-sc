@@ -12,7 +12,7 @@ export type Rol =
   | "LOGISTICA"
   | "OPERADOR"
   | "INSPECTOR"
-  | "LECTURA";
+  | "CONSULTA";
 
 export const ROLES_DISPONIBLES: { codigo: Rol; nombre: string; descripcion: string }[] = [
   { codigo: "ADMIN", nombre: "Administrador", descripcion: "Acceso total al sistema" },
@@ -21,7 +21,7 @@ export const ROLES_DISPONIBLES: { codigo: Rol; nombre: string; descripcion: stri
   { codigo: "LOGISTICA", nombre: "Logística", descripcion: "Equipo de protección y radios" },
   { codigo: "OPERADOR", nombre: "Operador", descripcion: "Guardias y permisos" },
   { codigo: "INSPECTOR", nombre: "Inspector", descripcion: "Faltas y comisiones" },
-  { codigo: "LECTURA", nombre: "Solo lectura", descripcion: "Visualización general" },
+  { codigo: "CONSULTA", nombre: "Solo lectura", descripcion: "Visualización general" },
 ];
 
 /**
@@ -29,8 +29,8 @@ export const ROLES_DISPONIBLES: { codigo: Rol; nombre: string; descripcion: stri
  * Para escritura, los gates están en el backend con require_role(...).
  */
 export const ACCESO_MODULOS: Record<string, Rol[]> = {
-  "/dashboard":          ["ADMIN", "RRHH", "SUPERVISOR", "LOGISTICA", "OPERADOR", "INSPECTOR", "LECTURA"],
-  "/funcionarios":       ["ADMIN", "RRHH", "SUPERVISOR", "LOGISTICA", "OPERADOR", "INSPECTOR", "LECTURA"],
+  "/dashboard":          ["ADMIN", "RRHH", "SUPERVISOR", "LOGISTICA", "OPERADOR", "INSPECTOR", "CONSULTA"],
+  "/funcionarios":       ["ADMIN", "RRHH", "SUPERVISOR", "LOGISTICA", "OPERADOR", "INSPECTOR", "CONSULTA"],
   "/funcionarios/nuevo": ["ADMIN", "RRHH"],
   "/salud":              ["ADMIN", "RRHH", "SUPERVISOR"],
   "/ops/guardias":       ["ADMIN", "RRHH", "SUPERVISOR", "OPERADOR"],
@@ -42,7 +42,7 @@ export const ACCESO_MODULOS: Record<string, Rol[]> = {
   "/equipo":             ["ADMIN", "LOGISTICA"],
   "/beneficios":         ["ADMIN", "RRHH"],
   "/egresos":            ["ADMIN", "RRHH"],
-  "/catalogos":          ["ADMIN", "RRHH", "SUPERVISOR", "LOGISTICA", "OPERADOR", "INSPECTOR", "LECTURA"],
+  "/catalogos":          ["ADMIN", "RRHH", "SUPERVISOR", "LOGISTICA", "OPERADOR", "INSPECTOR", "CONSULTA"],
   "/admin":              ["ADMIN"],
 };
 

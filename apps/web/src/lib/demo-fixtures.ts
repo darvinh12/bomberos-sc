@@ -1689,7 +1689,7 @@ export function demoMe(rol: string = "ADMIN") {
     LOGISTICA: "Carmen Torres (Logística DEMO)",
     OPERADOR: "José Martínez (Operador DEMO)",
     INSPECTOR: "Pedro López (Inspector DEMO)",
-    LECTURA: "Visitante DEMO",
+    CONSULTA: "Visitante DEMO",
   };
   return {
     id: 1,
@@ -2298,7 +2298,7 @@ const ROLES_DEMO = [
   { id: 4, codigo: "LOGISTICA",  nombre: "Logística",      descripcion: "Equipo y radios",             es_sistema: true,  activo: true },
   { id: 5, codigo: "OPERADOR",   nombre: "Operador",       descripcion: "Operaciones día a día",       es_sistema: true,  activo: true },
   { id: 6, codigo: "INSPECTOR",  nombre: "Inspector",      descripcion: "Faltas y comisiones",         es_sistema: true,  activo: true },
-  { id: 7, codigo: "LECTURA",    nombre: "Solo lectura",   descripcion: "Visualización general",       es_sistema: true,  activo: true },
+  { id: 7, codigo: "CONSULTA",    nombre: "Solo lectura",   descripcion: "Visualización general",       es_sistema: true,  activo: true },
 ];
 
 const MODULOS_DEMO = [

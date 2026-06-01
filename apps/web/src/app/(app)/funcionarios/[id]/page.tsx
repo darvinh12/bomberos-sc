@@ -8,6 +8,7 @@ import type {
 } from "@/lib/catalogos";
 import FichaFuncionarioCliente from "@/components/funcionarios/FichaFuncionarioCliente";
 import type { CatalogosAcciones } from "@/components/funcionarios/PanelAcciones";
+import { cargarPermisosServer } from "@/lib/permisos-funcionario";
 
 export default async function FuncionarioDetailPage({
   params,
@@ -15,6 +16,8 @@ export default async function FuncionarioDetailPage({
   params: { id: string };
 }) {
   const token = await requireAuth();
+  // Hidratar cache de permisos en server (no falla si backend cae)
+  await cargarPermisosServer(token);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let f: any;
   try {

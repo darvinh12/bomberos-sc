@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
+import QueryProvider from "@/components/QueryProvider";
+import PermisosSync from "@/components/PermisosSync";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -37,7 +39,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script dangerouslySetInnerHTML={{ __html: noFlashScript }} />
       </head>
       <body>
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          <QueryProvider>
+            <PermisosSync />
+            {children}
+          </QueryProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

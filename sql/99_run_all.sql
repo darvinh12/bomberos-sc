@@ -30,5 +30,8 @@
 \echo '=== 11_soft_delete_expediente.sql ==='
 \i 11_soft_delete_expediente.sql
 
+\echo '=== 12_permisos_recursos.sql ==='
+\i 12_permisos_recursos.sql
+
 \echo ''
 \echo 'Instalación completa.'

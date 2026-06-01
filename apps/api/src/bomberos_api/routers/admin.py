@@ -4,13 +4,16 @@ from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.exc import IntegrityError
 import re
 
 from bomberos_api.core.crud import client_ip, integrity_409, not_found, paginate, set_audit_ctx
 from bomberos_api.core.deps import CurrentUser, DbSession, require_role
+from bomberos_api.core.permisos_cache import get_permisos_cached, invalidar_cache
 from bomberos_api.core.security import hash_password
+from bomberos_api.models.permiso_recurso import PermisoRecurso
 from bomberos_api.models.usuario import (
     Modulo,
     Rol,
@@ -21,6 +24,11 @@ from bomberos_api.models.usuario import (
     UsuarioScope,
 )
 from bomberos_api.schemas.common import Page
+from bomberos_api.schemas.permiso_recurso import (
+    MatrizUpdate,
+    PermisoRecursoOut,
+    TipoRecurso,
+)
 
 router = APIRouter(
     prefix="/admin",
@@ -744,8 +752,6 @@ async def borrar_rol_scope(
     db: DbSession,
     user: CurrentUser,
 ) -> None:
-    from sqlalchemy import delete
-
     await set_audit_ctx(db, user.id, client_ip(request))
     await db.execute(
         delete(UsuarioRolScope).where(
@@ -753,3 +759,80 @@ async def borrar_rol_scope(
             UsuarioRolScope.usuario_id == usuario_id,
         )
     )
+
+
+# =============================================================================
+# Permisos granulares rol × recurso (seccion_ficha / sidebar / accion_panel)
+# Complementa la matriz rol × módulo. La ausencia de fila = nivel 'none'.
+# =============================================================================
+
+
+@router.get("/permisos-recursos", response_model=list[PermisoRecursoOut])
+async def listar_permisos_recursos(
+    db: DbSession,
+    _: CurrentUser,
+    tipo: TipoRecurso | None = Query(default=None),
+) -> list[PermisoRecursoOut]:
+    """Lista todos los permisos granulares, opcionalmente filtrados por tipo.
+
+    Se sirve del caché en memoria (TTL 60s). Tras un PUT se invalida.
+    """
+    todos = await get_permisos_cached(db)
+    if tipo is None:
+        return todos
+    return [p for p in todos if p.recurso_tipo == tipo]
+
+
+@router.put("/permisos-recursos")
+async def actualizar_permisos_recursos(
+    request: Request,
+    payload: MatrizUpdate,
+    db: DbSession,
+    user: CurrentUser,
+) -> dict[str, int]:
+    """Bulk upsert. ADMIN guarda la matriz con N cambios en una sola transacción.
+
+    Reglas:
+      - nivel='none' → borra la fila (la ausencia equivale al default).
+      - nivel='edit'|'view' → upsert con ON CONFLICT.
+      - rol_codigo inexistente → cambio se ignora silenciosamente.
+    """
+    await set_audit_ctx(db, user.id, client_ip(request))
+
+    # Resolver rol_codigo → rol_id una sola vez.
+    roles_rows = (await db.execute(select(Rol.id, Rol.codigo))).all()
+    roles_map: dict[str, int] = {r.codigo: r.id for r in roles_rows}
+
+    aplicados = 0
+    for cambio in payload.cambios:
+        rol_id = roles_map.get(cambio.rol_codigo)
+        if rol_id is None:
+            continue
+
+        if cambio.nivel == "none":
+            await db.execute(
+                delete(PermisoRecurso).where(
+                    PermisoRecurso.rol_id == rol_id,
+                    PermisoRecurso.recurso_tipo == cambio.recurso_tipo,
+                    PermisoRecurso.recurso_codigo == cambio.recurso_codigo,
+                )
+            )
+        else:
+            stmt = (
+                pg_insert(PermisoRecurso)
+                .values(
+                    rol_id=rol_id,
+                    recurso_tipo=cambio.recurso_tipo,
+                    recurso_codigo=cambio.recurso_codigo,
+                    nivel=cambio.nivel,
+                )
+                .on_conflict_do_update(
+                    index_elements=["rol_id", "recurso_tipo", "recurso_codigo"],
+                    set_={"nivel": cambio.nivel, "updated_at": func.now()},
+                )
+            )
+            await db.execute(stmt)
+        aplicados += 1
+
+    invalidar_cache()
+    return {"aplicados": aplicados}

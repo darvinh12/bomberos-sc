@@ -125,3 +125,88 @@ export async function togglePermiso(
     return { ok: false, error: e instanceof Error ? e.message : "Error" };
   }
 }
+
+// ============================================================
+// Permisos por recurso (sección ficha, sidebar, acciones panel)
+// ============================================================
+
+import type { TipoRecurso } from "./recursos-catalogo";
+
+export type NivelAccesoMatriz = "edit" | "view" | "none";
+
+export interface PermisoRecursoMatriz {
+  rol_codigo: string;
+  recurso_tipo: TipoRecurso;
+  recurso_codigo: string;
+  nivel: NivelAccesoMatriz;
+}
+
+const PERMISOS_RECURSOS_COOKIE = "bcd_demo_permisos_recursos";
+
+function readDemoPermisosRecursos(): PermisoRecursoMatriz[] {
+  const raw = cookies().get(PERMISOS_RECURSOS_COOKIE)?.value;
+  if (!raw) return [];
+  try {
+    return JSON.parse(raw) as PermisoRecursoMatriz[];
+  } catch {
+    return [];
+  }
+}
+
+function writeDemoPermisosRecursos(items: PermisoRecursoMatriz[]) {
+  cookies().set(PERMISOS_RECURSOS_COOKIE, JSON.stringify(items), {
+    path: "/",
+    httpOnly: false,
+    sameSite: "lax",
+    maxAge: 60 * 60 * 24 * 30,
+  });
+}
+
+export async function cargarPermisosRecursos(): Promise<PermisoRecursoMatriz[]> {
+  if (isDemoMode()) {
+    return readDemoPermisosRecursos();
+  }
+  const token = await requireAuth();
+  try {
+    return await api.get<PermisoRecursoMatriz[]>(
+      "/admin/permisos-recursos",
+      token,
+    );
+  } catch {
+    return [];
+  }
+}
+
+export async function guardarMatrizRecursos(
+  cambios: PermisoRecursoMatriz[],
+): Promise<{ ok: boolean; error?: string; aplicados?: number; estadoActual?: PermisoRecursoMatriz[] }> {
+  if (isDemoMode()) {
+    const actuales = readDemoPermisosRecursos();
+    const mapa = new Map<string, PermisoRecursoMatriz>();
+    for (const p of actuales) {
+      mapa.set(`${p.rol_codigo}:${p.recurso_tipo}:${p.recurso_codigo}`, p);
+    }
+    for (const c of cambios) {
+      const k = `${c.rol_codigo}:${c.recurso_tipo}:${c.recurso_codigo}`;
+      if (c.nivel === "none") mapa.delete(k);
+      else mapa.set(k, c);
+    }
+    const final = Array.from(mapa.values());
+    writeDemoPermisosRecursos(final);
+    revalidatePath("/admin/permisos");
+    return { ok: true, aplicados: cambios.length, estadoActual: final };
+  }
+
+  const token = await requireAuth();
+  try {
+    const res = await api.put<{ aplicados: number }>(
+      "/admin/permisos-recursos",
+      { cambios },
+      token,
+    );
+    revalidatePath("/admin/permisos");
+    return { ok: true, aplicados: res.aplicados };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Error" };
+  }
+}
