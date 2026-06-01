@@ -9,6 +9,7 @@ import {
   type UsuarioDetalle,
 } from "./actions";
 import RolesEditor from "./roles-editor";
+import CuentaEditor from "./cuenta-editor";
 import { listarScopes } from "./scope-actions";
 import ScopeEditor from "./scope-editor";
 import { listarRolScopes } from "./rol-scope-actions";
@@ -70,20 +71,7 @@ export default async function UsuarioDetallePage({
       <div className="grid md:grid-cols-2 gap-6">
         <section className="rounded-xl border bg-card p-5">
           <h2 className="font-semibold mb-4">Estado de la cuenta</h2>
-          <div className="space-y-3 text-sm">
-            <Row label="Correo" value={u.correo ?? "—"} />
-            <Row
-              label="Estado"
-              value={
-                u.bloqueado ? (
-                  <span className="badge badge-danger">Bloqueado</span>
-                ) : u.activo ? (
-                  <span className="badge badge-success">Activo</span>
-                ) : (
-                  <span className="badge badge-neutral">Inactivo</span>
-                )
-              }
-            />
+          <div className="space-y-2 text-sm mb-4">
             <Row label="MFA activo" value={u.mfa_activo ? "Sí" : "No"} />
             <Row
               label="Cambio password forzado"
@@ -94,10 +82,14 @@ export default async function UsuarioDetallePage({
               label="Último acceso"
               value={u.ultimo_acceso ? formatDate(u.ultimo_acceso) : "Nunca"}
             />
-            {u.bloqueado && u.motivo_bloqueo && (
-              <Row label="Motivo bloqueo" value={u.motivo_bloqueo} />
-            )}
           </div>
+          <CuentaEditor
+            usuarioId={u.id}
+            correoActual={u.correo}
+            activo={u.activo}
+            bloqueado={u.bloqueado}
+            motivoBloqueo={u.motivo_bloqueo}
+          />
         </section>
 
         <section className="rounded-xl border bg-card p-5">
