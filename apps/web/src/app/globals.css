@@ -8,28 +8,28 @@
      Fondo casi blanco, texto navy oscuro, primary burdeos
      =========================================== */
   :root {
-    --background: 0 0% 99%;           /* #fcfcfc — casi blanco, sin frío */
+    --background: 36 30% 96%;         /* #f8f2e7 — papel cálido editorial */
     --foreground: 220 28% 14%;        /* #1c2231 — navy oscuro para texto */
 
-    --card: 0 0% 100%;                /* #ffffff — cards blancas puras */
+    --card: 36 40% 99%;               /* #fdfaf3 — apenas más claro que el fondo */
     --card-foreground: 220 28% 14%;
 
-    --primary: 355 75% 38%;           /* #aa2129 — burdeos sólido con buen contraste sobre blanco */
+    --primary: 355 75% 38%;           /* #aa2129 — burdeos sólido con buen contraste */
     --primary-foreground: 0 0% 100%;  /* blanco puro */
 
-    --secondary: 220 14% 96%;         /* #f1f3f5 — secundario gris muy claro */
+    --secondary: 36 22% 92%;          /* #ece4d4 — secundario crema */
     --secondary-foreground: 220 28% 14%;
 
-    --muted: 220 14% 95%;             /* #eef0f3 */
-    --muted-foreground: 220 12% 42%;  /* #5d6878 — gris medio legible sobre blanco */
+    --muted: 36 22% 92%;              /* #ece4d4 — mismo nivel que secondary */
+    --muted-foreground: 220 12% 42%;  /* #5d6878 — gris medio se mantiene */
 
-    --accent: 220 14% 93%;            /* #e7eaef — hover */
+    --accent: 36 26% 89%;             /* #e4d8c2 — hover crema más definido */
     --accent-foreground: 220 28% 14%;
 
     --destructive: 0 72% 48%;
     --destructive-foreground: 0 0% 100%;
 
-    /* Estados semánticos — calibrados para fondo claro */
+    /* Estados semánticos — calibrados para fondo cálido */
     --success:            152 56% 32%;
     --success-foreground: 152 70% 22%;
     --warning:             32 90% 42%;
@@ -37,8 +37,8 @@
     --info:               215 70% 44%;
     --info-foreground:    215 80% 32%;
 
-    --border: 220 14% 88%;            /* #d8dde4 — bordes sutiles */
-    --input: 0 0% 100%;               /* inputs blancos */
+    --border: 36 20% 85%;             /* #d9cfb9 — bordes cálidos sutiles */
+    --input: 36 40% 99%;              /* inputs como cards */
     --ring: 355 75% 50%;              /* #c92632 — focus burdeos visible */
 
     --radius: 0.25rem;
