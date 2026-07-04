@@ -17,6 +17,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from bomberos_api.models.permiso_recurso import PermisoRecurso
+from bomberos_api.models.usuario import Rol
 from bomberos_api.schemas.permiso_recurso import PermisoRecursoOut
 
 TTL_SECONDS: float = 60.0
@@ -31,14 +32,27 @@ async def get_permisos_cached(db: AsyncSession) -> list[PermisoRecursoOut]:
         return _cache.get("all", [])
     rows = (
         await db.execute(
-            select(PermisoRecurso).order_by(
+            select(PermisoRecurso, Rol.codigo)
+            .join(Rol, Rol.id == PermisoRecurso.rol_id)
+            .order_by(
                 PermisoRecurso.rol_id,
                 PermisoRecurso.recurso_tipo,
                 PermisoRecurso.recurso_codigo,
             )
         )
-    ).scalars().all()
-    _cache["all"] = [PermisoRecursoOut.model_validate(r) for r in rows]
+    ).all()
+    _cache["all"] = [
+        PermisoRecursoOut(
+            id=p.id,
+            rol_id=p.rol_id,
+            rol_codigo=codigo,
+            recurso_tipo=p.recurso_tipo,
+            recurso_codigo=p.recurso_codigo,
+            nivel=p.nivel,
+            updated_at=p.updated_at,
+        )
+        for p, codigo in rows
+    ]
     _cache_ts = time.monotonic()
     return _cache["all"]
 

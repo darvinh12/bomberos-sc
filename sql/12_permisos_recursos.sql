@@ -78,8 +78,9 @@ CREATE INDEX IF NOT EXISTS ix_permisos_recursos_tipo
 --    para no romper comportamiento existente.
 --
 --    ADMIN se omite (el helper de roles le da edit a todo automáticamente).
---    Roles que no existen en seguridad.roles (ej. LECTURA) no producen filas
---    gracias al INNER JOIN con seguridad.roles.
+--    Roles que no existen en seguridad.roles no producen filas gracias al
+--    INNER JOIN con seguridad.roles (el rol de solo lectura es CONSULTA,
+--    tal como lo siembra 04_seed.sql).
 -- =============================================================================
 
 -- ----- 3.1 seccion_ficha -----------------------------------------------------
@@ -91,47 +92,47 @@ WITH datos (rol_codigo, recurso_codigo, nivel) AS (
         ('LOGISTICA',  'resumen',                'view'),
         ('OPERADOR',   'resumen',                'view'),
         ('INSPECTOR',  'resumen',                'view'),
-        ('LECTURA',    'resumen',                'view'),
+        ('CONSULTA',    'resumen',                'view'),
 
         -- datos
         ('RRHH',       'datos',                  'edit'),
         ('SUPERVISOR', 'datos',                  'view'),
-        ('LECTURA',    'datos',                  'view'),
+        ('CONSULTA',    'datos',                  'view'),
 
         -- carrera
         ('RRHH',       'carrera',                'edit'),
         ('SUPERVISOR', 'carrera',                'view'),
-        ('LECTURA',    'carrera',                'view'),
+        ('CONSULTA',    'carrera',                'view'),
 
         -- operativo (padre)
         ('RRHH',       'operativo',              'edit'),
         ('SUPERVISOR', 'operativo',              'edit'),
         ('OPERADOR',   'operativo',              'edit'),
         ('INSPECTOR',  'operativo',              'view'),
-        ('LECTURA',    'operativo',              'view'),
+        ('CONSULTA',    'operativo',              'view'),
 
         -- operativo:guardias
         ('RRHH',       'operativo:guardias',     'edit'),
         ('SUPERVISOR', 'operativo:guardias',     'edit'),
         ('OPERADOR',   'operativo:guardias',     'edit'),
-        ('LECTURA',    'operativo:guardias',     'view'),
+        ('CONSULTA',    'operativo:guardias',     'view'),
 
         -- operativo:vacaciones
         ('RRHH',       'operativo:vacaciones',   'edit'),
         ('SUPERVISOR', 'operativo:vacaciones',   'edit'),
-        ('LECTURA',    'operativo:vacaciones',   'view'),
+        ('CONSULTA',    'operativo:vacaciones',   'view'),
 
         -- operativo:permisos
         ('RRHH',       'operativo:permisos',     'edit'),
         ('SUPERVISOR', 'operativo:permisos',     'edit'),
         ('OPERADOR',   'operativo:permisos',     'edit'),
-        ('LECTURA',    'operativo:permisos',     'view'),
+        ('CONSULTA',    'operativo:permisos',     'view'),
 
         -- operativo:comisiones
         ('RRHH',       'operativo:comisiones',   'edit'),
         ('SUPERVISOR', 'operativo:comisiones',   'edit'),
         ('INSPECTOR',  'operativo:comisiones',   'view'),
-        ('LECTURA',    'operativo:comisiones',   'view'),
+        ('CONSULTA',    'operativo:comisiones',   'view'),
 
         -- operativo:faltas
         ('RRHH',       'operativo:faltas',       'view'),
@@ -146,7 +147,7 @@ WITH datos (rol_codigo, recurso_codigo, nivel) AS (
         ('RRHH',       'equipos',                'view'),
         ('SUPERVISOR', 'equipos',                'view'),
         ('LOGISTICA',  'equipos',                'edit'),
-        ('LECTURA',    'equipos',                'view'),
+        ('CONSULTA',    'equipos',                'view'),
 
         -- beneficios
         ('RRHH',       'beneficios',             'edit'),
@@ -154,17 +155,17 @@ WITH datos (rol_codigo, recurso_codigo, nivel) AS (
         -- familia
         ('RRHH',       'familia',                'edit'),
         ('SUPERVISOR', 'familia',                'view'),
-        ('LECTURA',    'familia',                'view'),
+        ('CONSULTA',    'familia',                'view'),
 
         -- habilidades
         ('RRHH',       'habilidades',            'edit'),
         ('SUPERVISOR', 'habilidades',            'view'),
-        ('LECTURA',    'habilidades',            'view'),
+        ('CONSULTA',    'habilidades',            'view'),
 
         -- documentos
         ('RRHH',       'documentos',             'edit'),
         ('SUPERVISOR', 'documentos',             'view'),
-        ('LECTURA',    'documentos',             'view'),
+        ('CONSULTA',    'documentos',             'view'),
 
         -- auditoria
         ('RRHH',       'auditoria',              'view')
@@ -185,7 +186,7 @@ WITH datos (rol_codigo, recurso_codigo, nivel) AS (
         ('OPERADOR',   'dashboard',  'view'),
         ('INSPECTOR',  'dashboard',  'view'),
         ('LOGISTICA',  'dashboard',  'view'),
-        ('LECTURA',    'dashboard',  'view'),
+        ('CONSULTA',    'dashboard',  'view'),
 
         -- personal → RRHH edit, resto view
         ('RRHH',       'personal',   'edit'),
@@ -193,7 +194,7 @@ WITH datos (rol_codigo, recurso_codigo, nivel) AS (
         ('OPERADOR',   'personal',   'view'),
         ('INSPECTOR',  'personal',   'view'),
         ('LOGISTICA',  'personal',   'view'),
-        ('LECTURA',    'personal',   'view'),
+        ('CONSULTA',    'personal',   'view'),
 
         -- carrera → RRHH edit, resto view
         ('RRHH',       'carrera',    'edit'),
@@ -201,7 +202,7 @@ WITH datos (rol_codigo, recurso_codigo, nivel) AS (
         ('OPERADOR',   'carrera',    'view'),
         ('INSPECTOR',  'carrera',    'view'),
         ('LOGISTICA',  'carrera',    'view'),
-        ('LECTURA',    'carrera',    'view'),
+        ('CONSULTA',    'carrera',    'view'),
 
         -- beneficios → solo RRHH/ADMIN
         ('RRHH',       'beneficios', 'edit'),
@@ -215,7 +216,7 @@ WITH datos (rol_codigo, recurso_codigo, nivel) AS (
         ('OPERADOR',   'catalogos',  'view'),
         ('INSPECTOR',  'catalogos',  'view'),
         ('LOGISTICA',  'catalogos',  'view'),
-        ('LECTURA',    'catalogos',  'view')
+        ('CONSULTA',    'catalogos',  'view')
 )
 INSERT INTO seguridad.permisos_recursos (rol_id, recurso_tipo, recurso_codigo, nivel)
 SELECT r.id, 'sidebar'::seguridad.tipo_recurso_permiso, d.recurso_codigo,

@@ -13,6 +13,7 @@ class PermisoRecursoOut(BaseModel):
 
     id: int
     rol_id: int
+    rol_codigo: str
     recurso_tipo: TipoRecurso
     recurso_codigo: str
     nivel: NivelAcceso

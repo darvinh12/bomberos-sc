@@ -36,6 +36,11 @@ router = APIRouter(
     dependencies=[Depends(require_role("ADMIN"))],
 )
 
+# Router hermano SIN guard de rol: rutas bajo /admin que cualquier usuario
+# autenticado necesita (la matriz de permisos la consulta el frontend en cada
+# sesión para decidir qué renderizar, sea cual sea el rol).
+router_autenticado = APIRouter(prefix="/admin", tags=["admin"])
+
 
 def _strong_password(v: str) -> str:
     if len(v) < 10:
@@ -767,7 +772,7 @@ async def borrar_rol_scope(
 # =============================================================================
 
 
-@router.get("/permisos-recursos", response_model=list[PermisoRecursoOut])
+@router_autenticado.get("/permisos-recursos", response_model=list[PermisoRecursoOut])
 async def listar_permisos_recursos(
     db: DbSession,
     _: CurrentUser,
@@ -775,6 +780,8 @@ async def listar_permisos_recursos(
 ) -> list[PermisoRecursoOut]:
     """Lista todos los permisos granulares, opcionalmente filtrados por tipo.
 
+    Accesible a cualquier usuario autenticado: el frontend la necesita para
+    decidir qué módulos/secciones/acciones renderizar según el rol de sesión.
     Se sirve del caché en memoria (TTL 60s). Tras un PUT se invalida.
     """
     todos = await get_permisos_cached(db)

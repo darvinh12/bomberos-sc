@@ -81,6 +81,7 @@ def create_app() -> FastAPI:
     app.include_router(egresos.router)
     app.include_router(dashboard.router)
     app.include_router(admin.router)
+    app.include_router(admin.router_autenticado)
     app.include_router(admin_organizacion.router)
     app.include_router(admin_catalogos.router)
     app.include_router(admin_parametros.router)

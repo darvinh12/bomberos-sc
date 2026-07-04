@@ -104,7 +104,7 @@ def upgrade() -> None:
 
     # -------------------------------------------------------------------------
     # 3. Seeds — espejo de la matriz frontend (excl. ADMIN)
-    #    Roles inexistentes (ej. LECTURA) no producen filas gracias al INNER JOIN.
+    #    Roles inexistentes no producen filas (el rol de solo lectura es CONSULTA) gracias al INNER JOIN.
     # -------------------------------------------------------------------------
 
     # 3.1 seccion_ficha
@@ -116,40 +116,40 @@ def upgrade() -> None:
                 ('LOGISTICA','resumen','view'),
                 ('OPERADOR','resumen','view'),
                 ('INSPECTOR','resumen','view'),
-                ('LECTURA','resumen','view'),
+                ('CONSULTA','resumen','view'),
 
                 ('RRHH','datos','edit'),
                 ('SUPERVISOR','datos','view'),
-                ('LECTURA','datos','view'),
+                ('CONSULTA','datos','view'),
 
                 ('RRHH','carrera','edit'),
                 ('SUPERVISOR','carrera','view'),
-                ('LECTURA','carrera','view'),
+                ('CONSULTA','carrera','view'),
 
                 ('RRHH','operativo','edit'),
                 ('SUPERVISOR','operativo','edit'),
                 ('OPERADOR','operativo','edit'),
                 ('INSPECTOR','operativo','view'),
-                ('LECTURA','operativo','view'),
+                ('CONSULTA','operativo','view'),
 
                 ('RRHH','operativo:guardias','edit'),
                 ('SUPERVISOR','operativo:guardias','edit'),
                 ('OPERADOR','operativo:guardias','edit'),
-                ('LECTURA','operativo:guardias','view'),
+                ('CONSULTA','operativo:guardias','view'),
 
                 ('RRHH','operativo:vacaciones','edit'),
                 ('SUPERVISOR','operativo:vacaciones','edit'),
-                ('LECTURA','operativo:vacaciones','view'),
+                ('CONSULTA','operativo:vacaciones','view'),
 
                 ('RRHH','operativo:permisos','edit'),
                 ('SUPERVISOR','operativo:permisos','edit'),
                 ('OPERADOR','operativo:permisos','edit'),
-                ('LECTURA','operativo:permisos','view'),
+                ('CONSULTA','operativo:permisos','view'),
 
                 ('RRHH','operativo:comisiones','edit'),
                 ('SUPERVISOR','operativo:comisiones','edit'),
                 ('INSPECTOR','operativo:comisiones','view'),
-                ('LECTURA','operativo:comisiones','view'),
+                ('CONSULTA','operativo:comisiones','view'),
 
                 ('RRHH','operativo:faltas','view'),
                 ('SUPERVISOR','operativo:faltas','edit'),
@@ -161,21 +161,21 @@ def upgrade() -> None:
                 ('RRHH','equipos','view'),
                 ('SUPERVISOR','equipos','view'),
                 ('LOGISTICA','equipos','edit'),
-                ('LECTURA','equipos','view'),
+                ('CONSULTA','equipos','view'),
 
                 ('RRHH','beneficios','edit'),
 
                 ('RRHH','familia','edit'),
                 ('SUPERVISOR','familia','view'),
-                ('LECTURA','familia','view'),
+                ('CONSULTA','familia','view'),
 
                 ('RRHH','habilidades','edit'),
                 ('SUPERVISOR','habilidades','view'),
-                ('LECTURA','habilidades','view'),
+                ('CONSULTA','habilidades','view'),
 
                 ('RRHH','documentos','edit'),
                 ('SUPERVISOR','documentos','view'),
-                ('LECTURA','documentos','view'),
+                ('CONSULTA','documentos','view'),
 
                 ('RRHH','auditoria','view')
         )
@@ -199,21 +199,21 @@ def upgrade() -> None:
                 ('OPERADOR','dashboard','view'),
                 ('INSPECTOR','dashboard','view'),
                 ('LOGISTICA','dashboard','view'),
-                ('LECTURA','dashboard','view'),
+                ('CONSULTA','dashboard','view'),
 
                 ('RRHH','personal','edit'),
                 ('SUPERVISOR','personal','view'),
                 ('OPERADOR','personal','view'),
                 ('INSPECTOR','personal','view'),
                 ('LOGISTICA','personal','view'),
-                ('LECTURA','personal','view'),
+                ('CONSULTA','personal','view'),
 
                 ('RRHH','carrera','edit'),
                 ('SUPERVISOR','carrera','view'),
                 ('OPERADOR','carrera','view'),
                 ('INSPECTOR','carrera','view'),
                 ('LOGISTICA','carrera','view'),
-                ('LECTURA','carrera','view'),
+                ('CONSULTA','carrera','view'),
 
                 ('RRHH','beneficios','edit'),
 
@@ -224,7 +224,7 @@ def upgrade() -> None:
                 ('OPERADOR','catalogos','view'),
                 ('INSPECTOR','catalogos','view'),
                 ('LOGISTICA','catalogos','view'),
-                ('LECTURA','catalogos','view')
+                ('CONSULTA','catalogos','view')
         )
         INSERT INTO seguridad.permisos_recursos
             (rol_id, recurso_tipo, recurso_codigo, nivel)
