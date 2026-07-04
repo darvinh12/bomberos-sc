@@ -41,7 +41,12 @@ async function request<T>(
   }
   if (token) headers.set("Authorization", `Bearer ${token}`);
 
-  const res = await fetch(`${BASE}${path}`, {
+  // En el navegador no hay token (cookie HttpOnly) y el backend exige
+  // Bearer: se enruta por el proxy BFF de Next, que lo adjunta server-side.
+  const esCliente = typeof window !== "undefined";
+  const url = esCliente && !token ? `/api/backend${path}` : `${BASE}${path}`;
+
+  const res = await fetch(url, {
     ...init,
     headers,
     credentials: "include",
