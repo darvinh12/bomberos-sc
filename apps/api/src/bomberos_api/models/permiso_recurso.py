@@ -1,7 +1,7 @@
-"""Permisos granulares rol × recurso para tres tipos de recursos que no son
+"""Permisos granulares rol x recurso para tres tipos de recursos que no son
 módulos (seccion_ficha, sidebar, accion_panel).
 
-Complementa seguridad.rol_permisos (matriz rol × módulo) sin alterarla.
+Complementa seguridad.rol_permisos (matriz rol x módulo) sin alterarla.
 La ausencia de fila para una combinación (rol, tipo, codigo) equivale a
 nivel = 'none'.
 """

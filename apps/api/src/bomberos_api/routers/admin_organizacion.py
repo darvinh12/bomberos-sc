@@ -5,11 +5,12 @@ Solo accesible por ADMIN. Las queries de lectura siguen disponibles en
 puedan llenar dropdowns.
 """
 
+import re
+
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
-import re
 
 from bomberos_api.core.crud import client_ip, integrity_409, not_found, set_audit_ctx
 from bomberos_api.core.deps import CurrentUser, DbSession, require_role
@@ -250,10 +251,10 @@ class OrgUpdate(BaseModel):
 
 def _serialize_org(obj: object, parent_attr: str | None) -> OrgOut:
     return OrgOut(
-        id=getattr(obj, "id"),
-        codigo=getattr(obj, "codigo"),
-        nombre=getattr(obj, "nombre"),
-        activo=getattr(obj, "activo"),
+        id=obj.id,
+        codigo=obj.codigo,
+        nombre=obj.nombre,
+        activo=obj.activo,
         parent_id=getattr(obj, parent_attr) if parent_attr else None,
     )
 

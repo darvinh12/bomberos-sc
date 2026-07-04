@@ -133,7 +133,7 @@ function FormularioCrear({ onDone }: { onDone: () => void }) {
             className="mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm font-mono uppercase"
           />
           <span className="text-[10px] text-muted-foreground">
-            Mayúsculas, dígitos o '_'. Empieza con letra.
+            Mayúsculas, dígitos o &apos;_&apos;. Empieza con letra.
           </span>
         </label>
         <label className="block">
@@ -278,7 +278,7 @@ function ConfirmarBorrar({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
       <div className="bg-card rounded-xl shadow-xl p-6 max-w-md w-full mx-4 space-y-4">
-        <h3 className="font-semibold">¿Borrar el rol "{rol.nombre}"?</h3>
+        <h3 className="font-semibold">¿Borrar el rol &quot;{rol.nombre}&quot;?</h3>
         <p className="text-sm text-muted-foreground">
           Si el rol tiene usuarios asignados, no se puede borrar. Desasignalos
           primero.

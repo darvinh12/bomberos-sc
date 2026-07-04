@@ -10,7 +10,6 @@ from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-
 # Conjunto de campos restringidos a RRHH/ADMIN. El router los filtra silenciosamente
 # del payload si el usuario no tiene rol suficiente.
 CAMPOS_BIENESTAR: frozenset[str] = frozenset(

@@ -13,7 +13,6 @@ from datetime import date, datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
-
 # Valores válidos para core.tipo_actividad
 _TIPO_ACTIVIDAD = r"^(CULTURAL|DEPORTIVA|MUSICAL|CIENTIFICA|LABORAL|ACADEMICA)$"
 

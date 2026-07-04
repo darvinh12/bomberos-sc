@@ -32,7 +32,6 @@ from sqlalchemy.orm import Mapped, mapped_column
 from bomberos_api.models.base import Base
 from bomberos_api.models.mixins import SoftDeleteMixin
 
-
 # =============================================================================
 # CARGA FAMILIAR
 # =============================================================================

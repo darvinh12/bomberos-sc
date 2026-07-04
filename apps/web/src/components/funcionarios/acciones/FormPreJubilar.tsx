@@ -62,7 +62,7 @@ export default function FormPreJubilar({
 
       <WarningBanner>
         Esto inicia el trámite de jubilación. El funcionario pasa a estatus{" "}
-        <strong>PRE_JUBILADO</strong> hasta que se complete con la acción "Jubilar".
+        <strong>PRE_JUBILADO</strong> hasta que se complete con la acción &quot;Jubilar&quot;.
       </WarningBanner>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

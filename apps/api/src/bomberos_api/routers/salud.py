@@ -132,14 +132,14 @@ async def crear_lesion(
     request: Request, payload: LesionCreate, db: DbSession, user: CurrentUser
 ) -> LesionOut:
     await set_audit_ctx(db, user.id, client_ip(request))
-    l = Lesion(**payload.model_dump())
-    db.add(l)
+    lesion = Lesion(**payload.model_dump())
+    db.add(lesion)
     try:
         await db.flush()
     except IntegrityError as e:
         raise integrity_409(e) from e
-    await db.refresh(l)
-    return LesionOut.model_validate(l)
+    await db.refresh(lesion)
+    return LesionOut.model_validate(lesion)
 
 
 # ---------------- Evaluación física ----------------

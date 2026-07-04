@@ -7,7 +7,7 @@ Si `sensible=true`, el valor se enmascara al listarlo.
 Cualquier cambio queda registrado en aud.log_cambios automáticamente.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError

@@ -3,7 +3,8 @@ from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, UploadFile, status
 from fastapi.responses import Response
-from sqlalchemy import and_, func, or_, select, text, update as sql_update
+from sqlalchemy import and_, func, or_, select, text
+from sqlalchemy import update as sql_update
 from sqlalchemy.exc import IntegrityError
 
 from bomberos_api.core.deps import CurrentUser, DbSession, require_role
@@ -13,8 +14,8 @@ from bomberos_api.models.catalogos import Cargo, Condicion, Jerarquia
 from bomberos_api.models.direccion import Direccion
 from bomberos_api.models.expediente import (
     Actividad,
-    Carnet,
     CargaFamiliar,
+    Carnet,
     Habilidad,
     HistoricoCarnet,
     HistoricoJerarquia,
@@ -35,12 +36,12 @@ from bomberos_api.schemas.expediente import (
     ActividadCreate,
     ActividadOut,
     ActividadUpdate,
-    CarnetCreate,
-    CarnetOut,
-    CarnetUpdate,
     CargaFamiliarCreate,
     CargaFamiliarOut,
     CargaFamiliarUpdate,
+    CarnetCreate,
+    CarnetOut,
+    CarnetUpdate,
     HabilidadCreate,
     HabilidadOut,
     HabilidadUpdate,

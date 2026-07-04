@@ -30,7 +30,7 @@ from bomberos_api.models.catalogos import (
     TipoPersonal,
     TipoVivienda,
 )
-from bomberos_api.models.geografia import Estado, Municipio, Parroquia
+from bomberos_api.models.direccion import Direccion
 from bomberos_api.models.egresos import Fallecimiento, Jubilado, SolicitudJubilacion
 from bomberos_api.models.equipo import (
     ProteccionAsignacion,
@@ -39,11 +39,10 @@ from bomberos_api.models.equipo import (
     RadioAsignacion,
     TipoProteccion,
 )
-from bomberos_api.models.direccion import Direccion
 from bomberos_api.models.expediente import (
     Actividad,
-    Carnet,
     CargaFamiliar,
+    Carnet,
     Habilidad,
     HistoricoCarnet,
     HistoricoJerarquia,
@@ -51,6 +50,7 @@ from bomberos_api.models.expediente import (
     TiempoAdmPublica,
 )
 from bomberos_api.models.funcionario import Funcionario, FuncionarioIdioma, PeriodoServicio
+from bomberos_api.models.geografia import Estado, Municipio, Parroquia
 from bomberos_api.models.ops import (
     ComisionServicio,
     Falta,
@@ -60,6 +60,7 @@ from bomberos_api.models.ops import (
     Vacaciones,
 )
 from bomberos_api.models.org import Area, Dependencia, Division, Estacion, Zona
+from bomberos_api.models.permiso_recurso import PermisoRecurso
 from bomberos_api.models.salud import (
     HCM,
     CentroMedico,
@@ -70,96 +71,95 @@ from bomberos_api.models.salud import (
     Medico,
     Reposo,
 )
-from bomberos_api.models.permiso_recurso import PermisoRecurso
 from bomberos_api.models.usuario import Rol, Usuario, UsuarioRol
 
 __all__ = [
-    "Base",
-    # personal
-    "Direccion",
-    "Funcionario",
-    "FuncionarioIdioma",
-    "PeriodoServicio",
-    # expediente
-    "CargaFamiliar",
-    "HistoricoJerarquia",
-    "HistoricoUbicacion",
-    "TiempoAdmPublica",
-    "Habilidad",
+    "HCM",
     "Actividad",
-    "Carnet",
-    "HistoricoCarnet",
-    # catalogos
-    "Banco",
-    "Cargo",
-    "Condicion",
-    "Especialidad",
-    "EstadoCivil",
-    "EstatusFuncionario",
-    "GrupoSanguineo",
-    "Idioma",
-    "InstitucionFormadora",
-    "Jerarquia",
-    "NivelEducativo",
-    "Pais",
-    "Parentesco",
-    "SeccionFuncionario",
-    "TenenciaVivienda",
-    "TipoLicencia",
-    "TipoNacionalizacion",
-    "TipoPersonal",
-    "TipoVivienda",
-    # geografia
-    "Estado",
-    "Municipio",
-    "Parroquia",
     # org
     "Area",
-    "Dependencia",
-    "Division",
-    "Estacion",
-    "Zona",
-    # seguridad
-    "PermisoRecurso",
-    "Rol",
-    "Usuario",
-    "UsuarioRol",
-    # salud
-    "Diagnostico",
-    "GrupoDiagnostico",
-    "Medico",
+    "Ascenso",
+    # beneficios
+    "Ayuda",
+    # catalogos
+    "Banco",
+    "Base",
+    # expediente
+    "CargaFamiliar",
+    "Cargo",
+    "Carnet",
     "CentroMedico",
-    "Reposo",
-    "Lesion",
-    "EvaluacionFisica",
-    "HCM",
-    # ops
-    "Guardia",
-    "GuardiaFuncionario",
-    "Permiso",
-    "Vacaciones",
     "ComisionServicio",
-    "Falta",
+    "Condicion",
     # carrera
     "Curso",
     "CursoRealizado",
-    "PeriodoEvaluacion",
+    "Dependencia",
+    # salud
+    "Diagnostico",
+    # personal
+    "Direccion",
+    "Division",
+    "Entrega",
+    "Especialidad",
+    "Estacion",
+    # geografia
+    "Estado",
+    "EstadoCivil",
+    "EstatusFuncionario",
     "Evaluacion",
-    "Ascenso",
-    "Reconocimiento",
+    "EvaluacionFisica",
+    "Fallecimiento",
+    "Falta",
+    "Funcionario",
+    "FuncionarioIdioma",
+    "GrupoDiagnostico",
+    "GrupoSanguineo",
+    # ops
+    "Guardia",
+    "GuardiaFuncionario",
+    "Habilidad",
+    "HistoricoCarnet",
+    "HistoricoJerarquia",
+    "HistoricoUbicacion",
+    "Idioma",
+    "InstitucionFormadora",
+    "Jerarquia",
+    "Jubilado",
+    "Lesion",
+    "Medico",
     "Merito",
-    # equipo
-    "TipoProteccion",
-    "ProteccionInventario",
+    "Municipio",
+    "NivelEducativo",
+    "Pais",
+    "Parentesco",
+    "Parroquia",
+    "PeriodoEvaluacion",
+    "PeriodoServicio",
+    "Permiso",
+    # seguridad
+    "PermisoRecurso",
     "ProteccionAsignacion",
+    "ProteccionInventario",
     "Radio",
     "RadioAsignacion",
-    # beneficios
-    "Ayuda",
-    "TipoBeneficio",
-    "Entrega",
+    "Reconocimiento",
+    "Reposo",
+    "Rol",
+    "SeccionFuncionario",
     # egresos
     "SolicitudJubilacion",
-    "Jubilado",
-    "Fallecimiento",
+    "TenenciaVivienda",
+    "TiempoAdmPublica",
+    "TipoBeneficio",
+    "TipoLicencia",
+    "TipoNacionalizacion",
+    "TipoPersonal",
+    # equipo
+    "TipoProteccion",
+    "TipoVivienda",
+    "Usuario",
+    "UsuarioRol",
+    "Vacaciones",
+    "Zona",
 ]

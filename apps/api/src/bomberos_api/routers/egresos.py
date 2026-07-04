@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Query, Request, status
 from sqlalchemy import select, text
 from sqlalchemy.exc import IntegrityError
 
-from bomberos_api.core.crud import client_ip, integrity_409, not_found, paginate, set_audit_ctx
+from bomberos_api.core.crud import client_ip, integrity_409, paginate, set_audit_ctx
 from bomberos_api.core.deps import CurrentUser, DbSession, require_role
 from bomberos_api.models.egresos import Fallecimiento, Jubilado, SolicitudJubilacion
 from bomberos_api.schemas.common import Page

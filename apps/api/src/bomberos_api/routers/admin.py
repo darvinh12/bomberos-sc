@@ -1,13 +1,13 @@
 """Gestión de usuarios y roles. Solo accesible por ADMIN."""
 
-from datetime import UTC, datetime
+import re
+from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 from sqlalchemy import delete, func, select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.exc import IntegrityError
-import re
 
 from bomberos_api.core.crud import client_ip, integrity_409, not_found, paginate, set_audit_ctx
 from bomberos_api.core.deps import CurrentUser, DbSession, require_role
@@ -218,7 +218,7 @@ async def asignar_rol(
         await db.flush()
     except IntegrityError as e:
         if "duplicate" in str(e.orig).lower():
-            raise HTTPException(status_code=409, detail="Rol ya asignado")
+            raise HTTPException(status_code=409, detail="Rol ya asignado") from e
         raise integrity_409(e) from e
 
 
@@ -513,7 +513,7 @@ async def borrar_modulo(
 
 
 # =============================================================================
-# Matriz de permisos rol × módulo
+# Matriz de permisos rol x módulo
 # =============================================================================
 
 
@@ -767,8 +767,8 @@ async def borrar_rol_scope(
 
 
 # =============================================================================
-# Permisos granulares rol × recurso (seccion_ficha / sidebar / accion_panel)
-# Complementa la matriz rol × módulo. La ausencia de fila = nivel 'none'.
+# Permisos granulares rol x recurso (seccion_ficha / sidebar / accion_panel)
+# Complementa la matriz rol x módulo. La ausencia de fila = nivel 'none'.
 # =============================================================================
 
 

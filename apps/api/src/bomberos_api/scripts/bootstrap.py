@@ -21,7 +21,6 @@ import asyncpg
 from bomberos_api.config import get_settings
 from bomberos_api.core.security import hash_password
 
-
 _HERE = Path(__file__).resolve()
 # bootstrap.py: src/bomberos_api/scripts/bootstrap.py
 # Repo root: parents[5] (scripts→bomberos_api→src→api→apps→root)

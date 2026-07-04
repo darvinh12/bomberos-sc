@@ -24,7 +24,7 @@ dev = [
     "pytest>=8.3.0",
     "pytest-asyncio>=0.24.0",
     "httpx>=0.28.0",
-    "ruff>=0.8.0",
+    "ruff>=0.15,<0.16",
     "mypy>=1.13.0",
 ]
 
@@ -42,6 +42,15 @@ target-version = "py311"
 [tool.ruff.lint]
 select = ["E", "F", "I", "N", "W", "B", "UP", "RUF"]
 ignore = ["E501"]
+
+[tool.ruff.lint.per-file-ignores]
+# __table_args__ = {"schema": ...} es el idiom declarativo de SQLAlchemy,
+# no un mutable default real.
+"src/bomberos_api/models/*" = ["RUF012"]
+
+[tool.ruff.lint.flake8-bugbear]
+# Idiom de FastAPI: Query/Depends en defaults de parámetros.
+extend-immutable-calls = ["fastapi.Depends", "fastapi.Query"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

@@ -1,4 +1,4 @@
-"""Schemas Pydantic para permisos granulares rol × recurso."""
+"""Schemas Pydantic para permisos granulares rol x recurso."""
 from datetime import datetime
 from typing import Literal
 

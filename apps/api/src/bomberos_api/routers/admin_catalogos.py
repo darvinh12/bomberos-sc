@@ -8,11 +8,12 @@ Guardrails:
   llenar dropdowns en toda la app.
 """
 
+import re
+
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 from sqlalchemy import delete, func, select, text
 from sqlalchemy.exc import IntegrityError
-import re
 
 from bomberos_api.core.crud import client_ip, integrity_409, not_found, set_audit_ctx
 from bomberos_api.core.deps import CurrentUser, DbSession, require_role
