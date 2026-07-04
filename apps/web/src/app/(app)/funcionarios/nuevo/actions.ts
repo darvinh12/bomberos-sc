@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { api, ApiError } from "@/lib/api";
+import { isDemoMode } from "@/lib/demo-fixtures";
 import { requireAuth } from "@/lib/session";
 
 /**
@@ -188,6 +189,13 @@ export async function crearFuncionario(
     }
 
     payload[k] = s;
+  }
+
+  // En demo el POST no persiste (api.post devuelve undefined) — devolver un
+  // id ficticio evita el TypeError en created.id y deja probar el flujo.
+  if (isDemoMode()) {
+    revalidatePath("/funcionarios");
+    return { ok: true, id: 1 };
   }
 
   let created: { id: number };

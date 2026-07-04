@@ -52,7 +52,7 @@ export function ErrorBanner({ message }: { message: string | null }) {
 
 export function WarningBanner({ children }: { children: ReactNode }) {
   return (
-    <div className="rounded-md bg-amber-950/40 border border-amber-800/50 p-3 text-xs text-amber-300 flex items-start gap-2">
+    <div className="rounded-md bg-amber-50 border border-amber-300 text-amber-900 dark:bg-amber-950/40 dark:border-amber-800/50 dark:text-amber-300 p-3 text-xs flex items-start gap-2">
       <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" aria-hidden="true" />
       <span>{children}</span>
     </div>

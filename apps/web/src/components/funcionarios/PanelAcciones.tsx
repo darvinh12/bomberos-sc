@@ -200,7 +200,7 @@ interface Props {
 const TONE_CLASSES: Record<NonNullable<AccionDef["tone"]>, string> = {
   default: "hover:border-primary/50 hover:bg-primary/5 text-foreground/85",
   warning:
-    "hover:border-amber-700/60 hover:bg-amber-950/30 text-amber-200/90 hover:text-amber-200",
+    "text-amber-700 hover:border-amber-400 hover:bg-amber-50 hover:text-amber-800 dark:text-amber-200/90 dark:hover:border-amber-700/60 dark:hover:bg-amber-950/30 dark:hover:text-amber-200",
   danger:
     "hover:border-destructive/60 hover:bg-destructive/10 text-foreground/80 hover:text-destructive",
 };

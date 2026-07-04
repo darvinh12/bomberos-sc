@@ -2174,6 +2174,33 @@ export function demoResolve(path: string, rolActivo: string = "ADMIN"): unknown 
     case base === "/dashboard/vacaciones-actuales":
       return VACACIONES;
 
+    case /^\/ops\/guardias\/\d+$/.test(base): {
+      const gid = Number(base.split("/")[3]);
+      const g = GUARDIAS.find((x) => x.id === gid);
+      if (!g) return null;
+      const rng = rngFor(gid, 700);
+      const cantidad = 6 + Math.floor(rng() * 6);
+      const funcionarios_asignados = Array.from({ length: cantidad }, (_, i) => ({
+        id: gid * 100 + i + 1,
+        funcionario_id: 1 + Math.floor(rng() * TOTAL_FUNCIONARIOS),
+        rol_guardia: i === 0 ? "JEFE" : ["CONDUCTOR", "OPERADOR", null][i % 3],
+        asistio: g.cerrada ? rng() > 0.1 : null,
+      }));
+      return { ...g, funcionarios_asignados };
+    }
+    case /^\/ops\/permisos\/\d+$/.test(base): {
+      const pid = Number(base.split("/")[3]);
+      return PERMISOS.find((x) => x.id === pid) ?? null;
+    }
+    case /^\/ops\/vacaciones\/\d+$/.test(base): {
+      const vid = Number(base.split("/")[3]);
+      return VACACIONES.find((x) => x.id === vid) ?? null;
+    }
+    case /^\/salud\/reposos\/\d+$/.test(base): {
+      const rid = Number(base.split("/")[3]);
+      return REPOSOS.find((x) => x.id === rid) ?? null;
+    }
+
     case base === "/ops/guardias":
       if (funcionario_id !== undefined)
         return paginate(generarGuardiasPara(funcionario_id), page, page_size);

@@ -45,12 +45,12 @@ const NAV_GENERAL: NavItem[] = [
 ];
 
 const NAV_OPERATIVO: NavItem[] = [
-  { href: "/ops/guardias",   label: "Guardias",   Icon: ShieldCheck },
-  { href: "/ops/vacaciones", label: "Vacaciones", Icon: CalendarDays },
-  { href: "/ops/permisos",   label: "Permisos",   Icon: FileCheck2 },
-  { href: "/ops/comisiones", label: "Comisiones", Icon: Briefcase },
-  { href: "/ops/faltas",     label: "Faltas",     Icon: AlertTriangle },
-  { href: "/salud/reposos",  label: "Reposos",    Icon: HeartPulse },
+  { href: "/ops/guardias",   label: "Guardias",   Icon: ShieldCheck,  permisoCodigo: "operativo" },
+  { href: "/ops/vacaciones", label: "Vacaciones", Icon: CalendarDays, permisoCodigo: "operativo" },
+  { href: "/ops/permisos",   label: "Permisos",   Icon: FileCheck2,   permisoCodigo: "operativo" },
+  { href: "/ops/comisiones", label: "Comisiones", Icon: Briefcase,    permisoCodigo: "operativo" },
+  { href: "/ops/faltas",     label: "Faltas",     Icon: AlertTriangle,permisoCodigo: "operativo" },
+  { href: "/salud/reposos",  label: "Reposos",    Icon: HeartPulse,   permisoCodigo: "operativo" },
 ];
 
 const NAV_GESTION: NavItem[] = [
