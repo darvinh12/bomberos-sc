@@ -96,6 +96,7 @@ class UsuarioOut(BaseModel):
 
 class ResetPasswordRequest(BaseModel):
     password_nuevo: str
+    debe_cambiar_password: bool = True
 
     @field_validator("password_nuevo")
     @classmethod
@@ -191,7 +192,7 @@ async def reset_password(
     if u is None:
         raise not_found("Usuario")
     u.password_hash = hash_password(payload.password_nuevo)
-    u.debe_cambiar_password = True
+    u.debe_cambiar_password = payload.debe_cambiar_password
     u.intentos_fallidos = 0
     u.bloqueado = False
     u.motivo_bloqueo = None
@@ -282,6 +283,29 @@ async def listar_auditoria(
         items=items, total=total, page=page, page_size=page_size,
         pages=(total + page_size - 1) // page_size,
     )
+
+
+class RolAsignadoOut(BaseModel):
+    codigo: str
+    nombre: str
+
+
+@router.get("/usuarios/{usuario_id}/roles", response_model=list[RolAsignadoOut])
+async def roles_de_usuario(
+    usuario_id: int, db: DbSession, _: CurrentUser
+) -> list[RolAsignadoOut]:
+    u = await db.scalar(select(Usuario.id).where(Usuario.id == usuario_id))
+    if u is None:
+        raise not_found("Usuario")
+    rows = (
+        await db.execute(
+            select(Rol.codigo, Rol.nombre)
+            .join(UsuarioRol, UsuarioRol.rol_id == Rol.id)
+            .where(UsuarioRol.usuario_id == usuario_id)
+            .order_by(Rol.codigo)
+        )
+    ).all()
+    return [RolAsignadoOut(codigo=r.codigo, nombre=r.nombre) for r in rows]
 
 
 @router.delete(

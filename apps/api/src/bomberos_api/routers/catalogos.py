@@ -21,6 +21,7 @@ from bomberos_api.models.catalogos import (
     TipoLicencia,
     TipoNacionalizacion,
     TipoPersonal,
+    TipoReposo,
     TipoVivienda,
 )
 from bomberos_api.models.geografia import Estado, Municipio, Parroquia
@@ -84,6 +85,19 @@ async def condiciones(db: DbSession, _: CurrentUser):
         select(Condicion).where(Condicion.activo).order_by(Condicion.nombre)
     )
     return [_CatalogoOut.model_validate(x) for x in res.scalars().all()]
+
+
+class _TipoReposoOut(_CatalogoOut):
+    dias_max: int | None
+    requiere_diagnostico: bool
+
+
+@router.get("/tipos-reposo", response_model=list[_TipoReposoOut])
+async def tipos_reposo(db: DbSession, _: CurrentUser):
+    res = await db.execute(
+        select(TipoReposo).where(TipoReposo.activo).order_by(TipoReposo.nombre)
+    )
+    return [_TipoReposoOut.model_validate(x) for x in res.scalars().all()]
 
 
 @router.get("/niveles-educativos", response_model=list[_CatalogoOut])

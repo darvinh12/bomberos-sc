@@ -43,6 +43,7 @@ async def listar_guardias(
     fecha: date | None = None,
     estacion_id: int | None = None,
     cerradas: bool | None = None,
+    funcionario_id: int | None = None,
     page: int = Query(default=1, ge=1),
     page_size: int = Query(default=25, ge=1, le=200),
 ) -> Page[GuardiaOut]:
@@ -53,6 +54,10 @@ async def listar_guardias(
         stmt = stmt.where(Guardia.estacion_id == estacion_id)
     if cerradas is not None:
         stmt = stmt.where(Guardia.cerrada == cerradas)
+    if funcionario_id is not None:
+        stmt = stmt.join(
+            GuardiaFuncionario, GuardiaFuncionario.guardia_id == Guardia.id
+        ).where(GuardiaFuncionario.funcionario_id == funcionario_id)
     items, total = await paginate(db, stmt, page=page, page_size=page_size)
     return Page[GuardiaOut](
         items=[GuardiaOut.model_validate(i) for i in items],

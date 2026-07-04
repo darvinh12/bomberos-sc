@@ -57,6 +57,15 @@ class Condicion(_CatalogoMixin, Base):
     __table_args__ = {"schema": "core"}
 
 
+class TipoReposo(_CatalogoMixin, Base):
+    __tablename__ = "tipos_reposo"
+    __table_args__ = {"schema": "core"}
+    dias_max: Mapped[int | None] = mapped_column(SmallInteger)
+    requiere_diagnostico: Mapped[bool] = mapped_column(
+        Boolean, default=True, server_default="true"
+    )
+
+
 class Banco(_CatalogoMixin, Base):
     __tablename__ = "bancos"
     __table_args__ = {"schema": "core"}

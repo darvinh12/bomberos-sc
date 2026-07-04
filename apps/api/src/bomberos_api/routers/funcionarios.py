@@ -2153,3 +2153,61 @@ async def reemplazar_idiomas_funcionario(
                 status_code=400, detail=f"Idioma {idioma_id} inválido"
             ) from e
     return sorted(seen)
+
+
+# ---------------------------------------------------------------------------
+# Auditoría por funcionario
+# ---------------------------------------------------------------------------
+
+_OPERACION_LABEL = {"I": "CREAR", "U": "EDITAR", "D": "ELIMINAR"}
+
+
+@router.get("/{funcionario_id}/auditoria")
+async def auditoria_funcionario(
+    funcionario_id: int,
+    db: DbSession,
+    user: CurrentUser,
+    limit: int = Query(default=100, ge=1, le=500),
+) -> list[dict[str, Any]]:
+    """Historial de cambios del funcionario y sus registros relacionados.
+
+    Junta dos orígenes de aud.log_cambios: los cambios sobre la fila del
+    funcionario (registro_id) y los cambios en tablas de dominio cuyo JSONB
+    referencia funcionario_id (reposos, ascensos, cargas familiares, etc.).
+    """
+    funcionario = await db.scalar(
+        select(Funcionario).where(Funcionario.id == funcionario_id)
+    )
+    if funcionario is None:
+        raise HTTPException(status_code=404, detail="Funcionario no encontrado")
+    await assert_scope_funcionario(db, user, funcionario)
+
+    res = await db.execute(
+        text(
+            """SELECT id, table_name, operacion::text AS operacion,
+                      usuario_id, usuario_nombre, ip::text AS ip, fecha
+               FROM aud.log_cambios
+               WHERE (table_name = 'funcionarios' AND registro_id = :fid_txt)
+                  OR (valor_nuevo->>'funcionario_id' = :fid_txt)
+                  OR (valor_anterior->>'funcionario_id' = :fid_txt)
+               ORDER BY fecha DESC
+               LIMIT :limit"""
+        ).bindparams(fid_txt=str(funcionario_id), limit=limit)
+    )
+    eventos: list[dict[str, Any]] = []
+    for r in res:
+        tipo = _OPERACION_LABEL.get(r.operacion, r.operacion)
+        eventos.append(
+            {
+                "id": r.id,
+                "funcionario_id": funcionario_id,
+                "tipo": tipo,
+                "tabla": r.table_name,
+                "usuario_id": r.usuario_id,
+                "usuario_nombre": r.usuario_nombre or "sistema",
+                "fecha": r.fecha.isoformat(),
+                "descripcion": f"{tipo.capitalize()} en {r.table_name}",
+                "ip": r.ip,
+            }
+        )
+    return eventos

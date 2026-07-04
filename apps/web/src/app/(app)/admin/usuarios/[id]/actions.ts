@@ -178,8 +178,8 @@ export async function resetearPassword(
   const token = await requireAuth();
   try {
     await api.post(
-      `/admin/usuarios/${usuarioId}/password`,
-      { password: nuevoPassword, debe_cambiar_password: forzarCambio },
+      `/admin/usuarios/${usuarioId}/reset-password`,
+      { password_nuevo: nuevoPassword, debe_cambiar_password: forzarCambio },
       token,
     );
     revalidatePath(`/admin/usuarios/${usuarioId}`);
