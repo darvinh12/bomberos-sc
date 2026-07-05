@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { api } from "@/lib/api";
 import { requireAuth } from "@/lib/session";
-import { requireRoleOrRedirect } from "@/lib/roles";
+import { requireModuloOrRedirect } from "@/lib/permisos-modulo";
 import EditarForm from "./form";
 
 export default async function EditarPermisoPage({
@@ -13,7 +13,7 @@ export default async function EditarPermisoPage({
   const me = await api
     .get<{ roles: string[] }>("/auth/me", token)
     .catch(() => ({ roles: [] as string[] }));
-  requireRoleOrRedirect(me.roles, ["ADMIN", "RRHH", "SUPERVISOR"]);
+  await requireModuloOrRedirect("operativo", me.roles, token);
 
   const id = Number(params.id);
   const p = await api.get<{

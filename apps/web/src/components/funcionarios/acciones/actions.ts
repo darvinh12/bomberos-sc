@@ -56,11 +56,12 @@ async function ejecutar(
 }
 
 /**
- * Acciones "ficticias" (suspender / reactivar / egresar): no existen como
- * endpoints REST en el backend. En modo real haríamos PATCH a /funcionarios/{id}
- * cambiando estatus y dejando una entrada de auditoría.
+ * Suspender / reactivar / egresar: cambian el estatus vía
+ * POST /funcionarios/{id}/cambiar-estatus, que actualiza el snapshot y deja
+ * el movimiento registrado en ops.movimientos_estatus (motivo, fechas,
+ * resolución, base legal).
  */
-async function ejecutarPatchEstatus(
+async function ejecutarCambioEstatus(
   funcionarioId: number,
   body: Record<string, unknown>,
 ): Promise<AccionResult> {
@@ -70,7 +71,7 @@ async function ejecutarPatchEstatus(
   }
   try {
     const token = await requireAuth();
-    await api.patch(`/funcionarios/${funcionarioId}`, body, token);
+    await api.post(`/funcionarios/${funcionarioId}/cambiar-estatus`, body, token);
     revalidatePath(`/funcionarios/${funcionarioId}`);
     return { ok: true };
   } catch (e: unknown) {
@@ -298,13 +299,13 @@ export async function suspender(
     return { ok: false, error: "El motivo es obligatorio" };
   }
   const body: Record<string, unknown> = {
-    estatus: "SUSPENDIDO",
-    suspension_fecha_inicio: raw.fecha_inicio,
-    suspension_motivo: raw.motivo.trim(),
+    estatus_nuevo: "SUSPENDIDO",
+    fecha_efectiva: raw.fecha_inicio,
+    motivo: raw.motivo.trim(),
   };
-  if (raw.fecha_fin) body.suspension_fecha_fin = raw.fecha_fin;
-  if (reqStr(raw.resolucion)) body.suspension_resolucion = raw.resolucion!.trim();
-  return ejecutarPatchEstatus(funcionarioId, body);
+  if (raw.fecha_fin) body.fecha_fin = raw.fecha_fin;
+  if (reqStr(raw.resolucion)) body.resolucion = raw.resolucion!.trim();
+  return ejecutarCambioEstatus(funcionarioId, body);
 }
 
 // ─── 7. Reactivar ─────────────────────────────────────────────────────────
@@ -323,12 +324,12 @@ export async function reactivar(
     return { ok: false, error: "La fecha efectiva es obligatoria" };
   }
   const body: Record<string, unknown> = {
-    estatus: "ACTIVO",
-    reactivacion_fecha: raw.fecha_efectiva,
+    estatus_nuevo: "ACTIVO",
+    fecha_efectiva: raw.fecha_efectiva,
   };
-  if (reqStr(raw.motivo)) body.reactivacion_motivo = raw.motivo!.trim();
-  if (reqStr(raw.observaciones)) body.reactivacion_observaciones = raw.observaciones!.trim();
-  return ejecutarPatchEstatus(funcionarioId, body);
+  if (reqStr(raw.motivo)) body.motivo = raw.motivo!.trim();
+  if (reqStr(raw.observaciones)) body.observaciones = raw.observaciones!.trim();
+  return ejecutarCambioEstatus(funcionarioId, body);
 }
 
 // ─── 8. Ascender (histórico jerarquías) ───────────────────────────────────
@@ -595,11 +596,11 @@ export async function egresar(
     return { ok: false, error: "Motivo de egreso inválido" };
   }
   const body: Record<string, unknown> = {
-    estatus: "EGRESADO",
-    egreso_fecha: raw.fecha_egreso,
-    egreso_motivo: raw.motivo,
+    estatus_nuevo: "EGRESADO",
+    fecha_efectiva: raw.fecha_egreso,
+    motivo: raw.motivo,
   };
-  if (reqStr(raw.base_legal)) body.egreso_base_legal = raw.base_legal!.trim();
-  if (reqStr(raw.observaciones)) body.egreso_observaciones = raw.observaciones!.trim();
-  return ejecutarPatchEstatus(funcionarioId, body);
+  if (reqStr(raw.base_legal)) body.base_legal = raw.base_legal!.trim();
+  if (reqStr(raw.observaciones)) body.observaciones = raw.observaciones!.trim();
+  return ejecutarCambioEstatus(funcionarioId, body);
 }

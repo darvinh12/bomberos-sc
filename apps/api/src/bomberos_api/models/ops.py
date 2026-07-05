@@ -140,3 +140,23 @@ class Falta(Base):
     apelada: Mapped[bool] = mapped_column(Boolean, default=False)
     resultado_apelacion: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class MovimientoEstatus(Base):
+    __tablename__ = "movimientos_estatus"
+    __table_args__ = {"schema": "ops"}
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    funcionario_id: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("personal.funcionarios.id", ondelete="CASCADE")
+    )
+    tipo: Mapped[str] = mapped_column(String)
+    estatus_anterior: Mapped[str | None] = mapped_column(String)
+    estatus_nuevo: Mapped[str] = mapped_column(String)
+    fecha_efectiva: Mapped[date] = mapped_column(Date)
+    fecha_fin: Mapped[date | None] = mapped_column(Date)
+    motivo: Mapped[str | None] = mapped_column(Text)
+    base_legal: Mapped[str | None] = mapped_column(Text)
+    resolucion: Mapped[str | None] = mapped_column(String)
+    observaciones: Mapped[str | None] = mapped_column(Text)
+    created_by: Mapped[int | None] = mapped_column(BigInteger)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))

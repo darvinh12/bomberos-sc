@@ -1,8 +1,9 @@
 from datetime import UTC, date, datetime
-from typing import Any
+from typing import Any, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, UploadFile, status
 from fastapi.responses import Response
+from pydantic import BaseModel
 from sqlalchemy import and_, func, or_, select, text
 from sqlalchemy import update as sql_update
 from sqlalchemy.exc import IntegrityError
@@ -23,6 +24,7 @@ from bomberos_api.models.expediente import (
     TiempoAdmPublica,
 )
 from bomberos_api.models.funcionario import Funcionario, PeriodoServicio
+from bomberos_api.models.ops import MovimientoEstatus
 from bomberos_api.models.org import Estacion, Zona
 from bomberos_api.models.usuario import Rol, UsuarioRol, UsuarioScope
 from bomberos_api.schemas.common import Page
@@ -2153,6 +2155,117 @@ async def reemplazar_idiomas_funcionario(
                 status_code=400, detail=f"Idioma {idioma_id} inválido"
             ) from e
     return sorted(seen)
+
+
+# ---------------------------------------------------------------------------
+# Cambio de estatus con sustento (suspensión / reactivación / egreso)
+# ---------------------------------------------------------------------------
+
+_TIPO_MOVIMIENTO = {
+    "SUSPENDIDO": "SUSPENSION",
+    "ACTIVO": "REACTIVACION",
+    "EGRESADO": "EGRESO",
+}
+
+
+class CambioEstatusIn(BaseModel):
+    estatus_nuevo: Literal["SUSPENDIDO", "ACTIVO", "EGRESADO"]
+    fecha_efectiva: date | None = None
+    fecha_fin: date | None = None
+    motivo: str | None = None
+    base_legal: str | None = None
+    resolucion: str | None = None
+    observaciones: str | None = None
+
+
+@router.post(
+    "/{funcionario_id}/cambiar-estatus",
+    dependencies=[Depends(require_role("RRHH", "SUPERVISOR", "INSPECTOR", "ADMIN"))],
+)
+async def cambiar_estatus(
+    request: Request,
+    funcionario_id: int,
+    payload: CambioEstatusIn,
+    db: DbSession,
+    user: CurrentUser,
+) -> dict[str, Any]:
+    """Cambia el estatus del funcionario dejando el movimiento registrado en
+    ops.movimientos_estatus (motivo, fechas, resolución, base legal). Sustituye
+    al PATCH pelado que descartaba esos campos en silencio.
+    """
+    funcionario = await db.scalar(
+        select(Funcionario).where(Funcionario.id == funcionario_id)
+    )
+    if funcionario is None:
+        raise HTTPException(status_code=404, detail="Funcionario no encontrado")
+    await assert_scope_funcionario(db, user, funcionario)
+
+    estatus_anterior = funcionario.estatus
+    if estatus_anterior == payload.estatus_nuevo:
+        raise HTTPException(
+            status_code=400,
+            detail=f"El funcionario ya está en estatus {payload.estatus_nuevo}",
+        )
+
+    await _set_audit_ctx(db, user.id, _client_ip(request))
+
+    movimiento = MovimientoEstatus(
+        funcionario_id=funcionario_id,
+        tipo=_TIPO_MOVIMIENTO[payload.estatus_nuevo],
+        estatus_anterior=estatus_anterior,
+        estatus_nuevo=payload.estatus_nuevo,
+        fecha_efectiva=payload.fecha_efectiva or date.today(),
+        fecha_fin=payload.fecha_fin,
+        motivo=payload.motivo,
+        base_legal=payload.base_legal,
+        resolucion=payload.resolucion,
+        observaciones=payload.observaciones,
+        created_by=user.id,
+    )
+    db.add(movimiento)
+    funcionario.estatus = payload.estatus_nuevo
+    await db.flush()
+    return {
+        "id": movimiento.id,
+        "estatus_anterior": estatus_anterior,
+        "estatus_nuevo": payload.estatus_nuevo,
+    }
+
+
+@router.get("/{funcionario_id}/movimientos-estatus")
+async def listar_movimientos_estatus(
+    funcionario_id: int,
+    db: DbSession,
+    user: CurrentUser,
+) -> list[dict[str, Any]]:
+    funcionario = await db.scalar(
+        select(Funcionario).where(Funcionario.id == funcionario_id)
+    )
+    if funcionario is None:
+        raise HTTPException(status_code=404, detail="Funcionario no encontrado")
+    await assert_scope_funcionario(db, user, funcionario)
+    rows = (
+        await db.scalars(
+            select(MovimientoEstatus)
+            .where(MovimientoEstatus.funcionario_id == funcionario_id)
+            .order_by(MovimientoEstatus.fecha_efectiva.desc(), MovimientoEstatus.id.desc())
+        )
+    ).all()
+    return [
+        {
+            "id": m.id,
+            "tipo": m.tipo,
+            "estatus_anterior": m.estatus_anterior,
+            "estatus_nuevo": m.estatus_nuevo,
+            "fecha_efectiva": m.fecha_efectiva.isoformat(),
+            "fecha_fin": m.fecha_fin.isoformat() if m.fecha_fin else None,
+            "motivo": m.motivo,
+            "base_legal": m.base_legal,
+            "resolucion": m.resolucion,
+            "observaciones": m.observaciones,
+        }
+        for m in rows
+    ]
 
 
 # ---------------------------------------------------------------------------

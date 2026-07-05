@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { api } from "@/lib/api";
 import { requireAuth } from "@/lib/session";
-import { requireRoleOrRedirect, hasAnyRole } from "@/lib/roles";
+import { hasAnyRole } from "@/lib/roles";
+import { requireModuloOrRedirect } from "@/lib/permisos-modulo";
 import { formatDate } from "@/lib/utils";
 import Pagination from "@/components/layout/Pagination";
 
@@ -43,7 +44,7 @@ interface SearchProps {
 export default async function BeneficiosPage({ searchParams }: SearchProps) {
   const token = await requireAuth();
   const me = await api.get<{ roles: string[] }>("/auth/me", token).catch(() => ({ roles: [] as string[] }));
-  requireRoleOrRedirect(me.roles, ["ADMIN", "RRHH"]);
+  await requireModuloOrRedirect("beneficios", me.roles, token);
   const puedeEditar = hasAnyRole(me.roles, ["ADMIN", "RRHH"]);
 
   const page = Number(searchParams.page ?? 1);

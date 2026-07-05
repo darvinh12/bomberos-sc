@@ -2,7 +2,8 @@ import Link from "next/link";
 import { Check } from "lucide-react";
 import { api } from "@/lib/api";
 import { requireAuth } from "@/lib/session";
-import { requireRoleOrRedirect, hasAnyRole } from "@/lib/roles";
+import { hasAnyRole } from "@/lib/roles";
+import { requireModuloOrRedirect } from "@/lib/permisos-modulo";
 import { formatDate } from "@/lib/utils";
 import GuardiaPanel from "./panel";
 
@@ -12,7 +13,7 @@ interface Page<T> { items: T[]; total: number }
 export default async function GuardiaDetallePage({ params }: { params: { id: string } }) {
   const token = await requireAuth();
   const me = await api.get<{ roles: string[] }>("/auth/me", token).catch(() => ({ roles: [] as string[] }));
-  requireRoleOrRedirect(me.roles, ["ADMIN", "OPERADOR", "RRHH", "SUPERVISOR"]);
+  await requireModuloOrRedirect("operativo", me.roles, token);
   const puedeEditar = hasAnyRole(me.roles, ["ADMIN", "OPERADOR"]);
 
   const id = Number(params.id);

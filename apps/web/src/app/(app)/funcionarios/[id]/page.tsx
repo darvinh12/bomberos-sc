@@ -9,6 +9,7 @@ import type {
 import FichaFuncionarioCliente from "@/components/funcionarios/FichaFuncionarioCliente";
 import type { CatalogosAcciones } from "@/components/funcionarios/PanelAcciones";
 import { cargarPermisosServer } from "@/lib/permisos-funcionario";
+import { requireModuloOrRedirect } from "@/lib/permisos-modulo";
 
 export default async function FuncionarioDetailPage({
   params,
@@ -29,6 +30,7 @@ export default async function FuncionarioDetailPage({
   const me = await api
     .get<{ roles: string[] }>("/auth/me", token)
     .catch(() => ({ roles: [] as string[] }));
+  await requireModuloOrRedirect("personal", me.roles, token);
   const puedeEditar = hasAnyRole(me.roles, ["ADMIN", "RRHH"]);
 
   // Catálogos para el Panel de Acciones. Cargados en paralelo y degradados

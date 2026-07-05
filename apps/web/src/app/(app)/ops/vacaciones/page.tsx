@@ -3,6 +3,7 @@ import { Check } from "lucide-react";
 import { api } from "@/lib/api";
 import { requireAuth } from "@/lib/session";
 import { hasAnyRole } from "@/lib/roles";
+import { requireModuloOrRedirect } from "@/lib/permisos-modulo";
 import { formatDate } from "@/lib/utils";
 
 interface RowGlobal {
@@ -52,6 +53,7 @@ export default async function VacacionesPage({ searchParams }: SearchProps) {
   const me = await api
     .get<{ roles: string[] }>("/auth/me", token)
     .catch(() => ({ roles: [] as string[] }));
+  await requireModuloOrRedirect("operativo", me.roles, token);
   const puedeEditar = hasAnyRole(me.roles, ["ADMIN", "RRHH"]);
 
   const funcionarioId = searchParams.funcionario_id;

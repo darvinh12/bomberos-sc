@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { api } from "@/lib/api";
 import { requireAuth } from "@/lib/session";
-import { requireRoleOrRedirect } from "@/lib/roles";
+import { requireModuloOrRedirect } from "@/lib/permisos-modulo";
 import Form from "./form";
 
 interface Cat { id: number; codigo: string; nombre: string }
@@ -9,7 +9,7 @@ interface Cat { id: number; codigo: string; nombre: string }
 export default async function NuevaGuardiaPage() {
   const token = await requireAuth();
   const me = await api.get<{ roles: string[] }>("/auth/me", token).catch(() => ({ roles: [] as string[] }));
-  requireRoleOrRedirect(me.roles, ["ADMIN", "OPERADOR"]);
+  await requireModuloOrRedirect("operativo", me.roles, token);
   const estaciones = await api.get<Cat[]>("/catalogos/estaciones", token).catch(() => []);
   return (
     <div className="max-w-2xl mx-auto space-y-6">

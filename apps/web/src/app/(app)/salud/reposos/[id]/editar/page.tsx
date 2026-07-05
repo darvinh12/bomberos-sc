@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { api } from "@/lib/api";
 import { requireAuth } from "@/lib/session";
-import { requireRoleOrRedirect } from "@/lib/roles";
+import { requireModuloOrRedirect } from "@/lib/permisos-modulo";
 import { listarCamposCustom } from "@/app/(app)/admin/campos-custom/actions";
 import EditarForm from "./form";
 
@@ -27,7 +27,7 @@ export default async function EditarReposoPage({
   const me = await api
     .get<{ roles: string[] }>("/auth/me", token)
     .catch(() => ({ roles: [] as string[] }));
-  requireRoleOrRedirect(me.roles, ["ADMIN", "RRHH"]);
+  await requireModuloOrRedirect("operativo", me.roles, token);
 
   const id = Number(params.id);
   const reposo = await api.get<Reposo>(`/salud/reposos/${id}`, token).catch(() => null);

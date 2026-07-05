@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { api, ApiError } from "@/lib/api";
 import { requireAuth } from "@/lib/session";
-import { requireRoleOrRedirect } from "@/lib/roles";
+import { requireModuloOrRedirect } from "@/lib/permisos-modulo";
 import { isDemoMode, demoAyuda } from "@/lib/demo-fixtures";
 import EditarForm from "./form";
 
@@ -30,7 +30,7 @@ export default async function EditarAyudaPage({
   const me = await api
     .get<{ roles: string[] }>("/auth/me", token)
     .catch(() => ({ roles: [] as string[] }));
-  requireRoleOrRedirect(me.roles, ["ADMIN", "RRHH", "SUPERVISOR"]);
+  await requireModuloOrRedirect("beneficios", me.roles, token);
 
   const id = Number(params.id);
   if (!Number.isFinite(id)) notFound();

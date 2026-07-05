@@ -2,6 +2,7 @@ import Link from "next/link";
 import { api } from "@/lib/api";
 import { requireAuth } from "@/lib/session";
 import { hasAnyRole } from "@/lib/roles";
+import { requireModuloOrRedirect } from "@/lib/permisos-modulo";
 import { formatDate } from "@/lib/utils";
 
 interface Row {
@@ -27,6 +28,7 @@ export default async function GuardiasPage() {
   const me = await api
     .get<{ roles: string[] }>("/auth/me", token)
     .catch(() => ({ roles: [] as string[] }));
+  await requireModuloOrRedirect("operativo", me.roles, token);
   const puedeCrear = hasAnyRole(me.roles, ["ADMIN", "OPERADOR"]);
 
   let data: Page<Row> | null = null;

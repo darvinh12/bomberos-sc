@@ -3,6 +3,7 @@ import { Download, Plus } from "lucide-react";
 import { api } from "@/lib/api";
 import { requireAuth } from "@/lib/session";
 import { hasAnyRole } from "@/lib/roles";
+import { requireModuloOrRedirect } from "@/lib/permisos-modulo";
 import { formatCedula, formatDate } from "@/lib/utils";
 import FuncionarioActions from "@/components/funcionarios/FuncionarioActions";
 
@@ -92,6 +93,7 @@ export default async function FuncionariosPage({ searchParams }: SearchProps) {
   const me = await api
     .get<{ roles: string[] }>("/auth/me", token)
     .catch(() => ({ roles: [] as string[] }));
+  await requireModuloOrRedirect("personal", me.roles, token);
   const puedeEditar = hasAnyRole(me.roles, ["ADMIN", "RRHH"]);
 
   const tieneFiltros = q || zonaId || estacionId || jerarquiaId || estatus !== "ACTIVO";

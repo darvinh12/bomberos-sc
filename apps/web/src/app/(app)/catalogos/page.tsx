@@ -1,5 +1,6 @@
 import { api } from "@/lib/api";
 import { requireAuth } from "@/lib/session";
+import { requireModuloOrRedirect } from "@/lib/permisos-modulo";
 
 interface Catalogo {
   id: number;
@@ -38,6 +39,10 @@ const ENDPOINTS = [
 
 export default async function CatalogosPage() {
   const token = await requireAuth();
+  const me = await api
+    .get<{ roles: string[] }>("/auth/me", token)
+    .catch(() => ({ roles: [] as string[] }));
+  await requireModuloOrRedirect("catalogos", me.roles, token);
 
   const results = await Promise.all(
     ENDPOINTS.map(async (e) => {

@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { api, ApiError } from "@/lib/api";
 import { requireAuth } from "@/lib/session";
-import { requireRoleOrRedirect } from "@/lib/roles";
+import { requireModuloOrRedirect } from "@/lib/permisos-modulo";
 import { listarCamposCustom } from "@/app/(app)/admin/campos-custom/actions";
 import {
   cargarCatalogosFuncionario,
@@ -20,7 +20,7 @@ export default async function EditarFuncionarioPage({
 }) {
   const token = await requireAuth();
   const me = await api.get<Me>("/auth/me", token).catch(() => ({ roles: [] as string[] }));
-  requireRoleOrRedirect(me.roles, ["ADMIN", "RRHH"]);
+  await requireModuloOrRedirect("personal", me.roles, token);
 
   const id = Number(params.id);
   if (Number.isNaN(id)) notFound();

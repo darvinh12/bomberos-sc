@@ -2,7 +2,8 @@ import Link from "next/link";
 import { Check, X } from "lucide-react";
 import { api } from "@/lib/api";
 import { requireAuth } from "@/lib/session";
-import { requireRoleOrRedirect, hasAnyRole } from "@/lib/roles";
+import { hasAnyRole } from "@/lib/roles";
+import { requireModuloOrRedirect } from "@/lib/permisos-modulo";
 import { formatDate } from "@/lib/utils";
 
 type Tab = "cursos" | "ascensos" | "reconocimientos" | "meritos";
@@ -71,7 +72,7 @@ interface SearchProps {
 export default async function CarreraPage({ searchParams }: SearchProps) {
   const token = await requireAuth();
   const me = await api.get<{ roles: string[] }>("/auth/me", token).catch(() => ({ roles: [] as string[] }));
-  requireRoleOrRedirect(me.roles, ["ADMIN", "RRHH", "SUPERVISOR"]);
+  await requireModuloOrRedirect("carrera", me.roles, token);
   const puedeCrearCurso = hasAnyRole(me.roles, ["ADMIN", "RRHH", "SUPERVISOR"]);
   const puedeCrearAscenso = hasAnyRole(me.roles, ["ADMIN", "RRHH"]);
 

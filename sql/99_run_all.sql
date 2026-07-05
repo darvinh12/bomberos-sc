@@ -33,5 +33,8 @@
 \echo '=== 12_permisos_recursos.sql ==='
 \i 12_permisos_recursos.sql
 
+\echo '=== 13_movimientos_estatus.sql ==='
+\i 13_movimientos_estatus.sql
+
 \echo ''
 \echo 'Instalación completa.'

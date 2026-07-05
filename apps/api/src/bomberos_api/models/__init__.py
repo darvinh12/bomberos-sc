@@ -56,6 +56,7 @@ from bomberos_api.models.ops import (
     Falta,
     Guardia,
     GuardiaFuncionario,
+    MovimientoEstatus,
     Permiso,
     Vacaciones,
 )
@@ -129,6 +130,7 @@ __all__ = [
     "Lesion",
     "Medico",
     "Merito",
+    "MovimientoEstatus",
     "Municipio",
     "NivelEducativo",
     "Pais",
