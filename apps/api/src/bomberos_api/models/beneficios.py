@@ -41,8 +41,8 @@ class Ayuda(Base):
     banco_id: Mapped[int | None] = mapped_column(SmallInteger)
     cuenta: Mapped[str | None] = mapped_column(String)
     observaciones: Mapped[str | None] = mapped_column(Text)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default="now()")
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default="now()")
     created_by: Mapped[int | None] = mapped_column(BigInteger)
     aprobado_por: Mapped[int | None] = mapped_column(BigInteger)
 
@@ -78,4 +78,4 @@ class Entrega(Base):
     documento_url: Mapped[str | None] = mapped_column(String)
     estatus: Mapped[str] = mapped_column(String, default="PAGADO")
     observaciones: Mapped[str | None] = mapped_column(Text)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default="now()")

@@ -98,5 +98,5 @@ class Direccion(SoftDeleteMixin, Base):
     fecha_registro: Mapped[date] = mapped_column(Date, nullable=False)
     observaciones: Mapped[str | None] = mapped_column(String)
 
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default="now()")
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default="now()")

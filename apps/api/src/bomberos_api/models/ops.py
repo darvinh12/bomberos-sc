@@ -4,6 +4,7 @@ from sqlalchemy import (
     CHAR,
     BigInteger,
     Boolean,
+    Computed,
     Date,
     DateTime,
     ForeignKey,
@@ -37,7 +38,7 @@ class Guardia(Base):
     cerrada: Mapped[bool] = mapped_column(Boolean, default=False)
     cerrada_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     cerrada_por: Mapped[int | None] = mapped_column(BigInteger)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default="now()")
 
 
 class GuardiaFuncionario(Base):
@@ -76,7 +77,7 @@ class Permiso(Base):
     autorizado_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     documento_url: Mapped[str | None] = mapped_column(String)
     observaciones: Mapped[str | None] = mapped_column(Text)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default="now()")
 
 
 class Vacaciones(Base):
@@ -90,7 +91,9 @@ class Vacaciones(Base):
     fecha_inicio: Mapped[date] = mapped_column(Date)
     fecha_fin: Mapped[date] = mapped_column(Date)
     dias_habiles: Mapped[int | None] = mapped_column(SmallInteger)
-    dias_calendario: Mapped[int | None] = mapped_column(SmallInteger)
+    dias_calendario: Mapped[int | None] = mapped_column(
+        SmallInteger, Computed("(fecha_fin - fecha_inicio) + 1", persisted=True)
+    )
     bono_pagado: Mapped[bool] = mapped_column(Boolean, default=False)
     monto_bono: Mapped[float | None] = mapped_column(Numeric(15, 2))
     fecha_pago_bono: Mapped[date | None] = mapped_column(Date)
@@ -99,7 +102,7 @@ class Vacaciones(Base):
     autorizado_por: Mapped[int | None] = mapped_column(BigInteger)
     documento_url: Mapped[str | None] = mapped_column(String)
     observaciones: Mapped[str | None] = mapped_column(Text)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default="now()")
 
 
 class ComisionServicio(Base):
@@ -118,7 +121,7 @@ class ComisionServicio(Base):
     documento_url: Mapped[str | None] = mapped_column(String)
     observaciones: Mapped[str | None] = mapped_column(Text)
     activo: Mapped[bool] = mapped_column(Boolean, default=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default="now()")
 
 
 class Falta(Base):
@@ -139,7 +142,7 @@ class Falta(Base):
     documento_url: Mapped[str | None] = mapped_column(String)
     apelada: Mapped[bool] = mapped_column(Boolean, default=False)
     resultado_apelacion: Mapped[str | None] = mapped_column(Text)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default="now()")
 
 
 class MovimientoEstatus(Base):
@@ -159,4 +162,4 @@ class MovimientoEstatus(Base):
     resolucion: Mapped[str | None] = mapped_column(String)
     observaciones: Mapped[str | None] = mapped_column(Text)
     created_by: Mapped[int | None] = mapped_column(BigInteger)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default="now()")

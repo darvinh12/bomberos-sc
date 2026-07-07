@@ -35,8 +35,8 @@ class Usuario(Base):
     ultimo_ip: Mapped[str | None] = mapped_column(INET)
     token_recuperacion: Mapped[str | None] = mapped_column(String)
     token_expira: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default="now()")
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default="now()")
     created_by: Mapped[int | None] = mapped_column(BigInteger)
     updated_by: Mapped[int | None] = mapped_column(BigInteger)
 

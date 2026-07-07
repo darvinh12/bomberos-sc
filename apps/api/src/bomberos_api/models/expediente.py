@@ -84,8 +84,8 @@ class CargaFamiliar(SoftDeleteMixin, Base):
     fecha_baja: Mapped[date | None] = mapped_column(Date)
     motivo_baja: Mapped[str | None] = mapped_column(String)
     observaciones: Mapped[str | None] = mapped_column(String)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default="now()")
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default="now()")
 
 
 # =============================================================================
@@ -113,7 +113,7 @@ class HistoricoJerarquia(SoftDeleteMixin, Base):
     motivo: Mapped[str | None] = mapped_column(String)
     resolucion: Mapped[str | None] = mapped_column(String)
     documento_url: Mapped[str | None] = mapped_column(String)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default="now()")
 
 
 class HistoricoUbicacion(SoftDeleteMixin, Base):
@@ -145,7 +145,7 @@ class HistoricoUbicacion(SoftDeleteMixin, Base):
     motivo: Mapped[str | None] = mapped_column(String)
     resolucion: Mapped[str | None] = mapped_column(String)
     documento_url: Mapped[str | None] = mapped_column(String)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default="now()")
 
 
 class TiempoAdmPublica(SoftDeleteMixin, Base):
@@ -256,8 +256,8 @@ class Carnet(SoftDeleteMixin, Base):
     activo: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=True, server_default="true"
     )
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default="now()")
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default="now()")
 
 
 class HistoricoCarnet(Base):

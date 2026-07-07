@@ -4,6 +4,7 @@ from sqlalchemy import (
     CHAR,
     BigInteger,
     Boolean,
+    Computed,
     Date,
     DateTime,
     ForeignKey,
@@ -48,7 +49,12 @@ class Funcionario(Base):
     rif: Mapped[str | None] = mapped_column(String)
     apellidos: Mapped[str] = mapped_column(String, nullable=False)
     nombres: Mapped[str] = mapped_column(String, nullable=False)
-    nombre_completo: Mapped[str | None] = mapped_column(String)  # GENERATED en DB
+    # Columna GENERATED STORED en la BD (apellidos || ', ' || nombres). Se marca
+    # como Computed para que SQLAlchemy la excluya de INSERT/UPDATE (si no, PG
+    # rechaza: "cannot insert a non-DEFAULT value into column nombre_completo").
+    nombre_completo: Mapped[str | None] = mapped_column(
+        String, Computed("apellidos || ', ' || nombres", persisted=True)
+    )
     fecha_nacimiento: Mapped[date | None] = mapped_column(Date)
     sexo: Mapped[str | None] = mapped_column(_SEXO_ENUM)
     estado_civil_id: Mapped[int | None] = mapped_column(
@@ -165,8 +171,8 @@ class Funcionario(Base):
     observaciones: Mapped[str | None] = mapped_column(String)
 
     # Auditoría
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default="now()")
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default="now()")
     created_by: Mapped[int | None] = mapped_column(BigInteger)
     updated_by: Mapped[int | None] = mapped_column(BigInteger)
 
@@ -204,8 +210,8 @@ class PeriodoServicio(Base):
     monto_prestaciones: Mapped[float | None] = mapped_column(Numeric(15, 2))
     documento_url: Mapped[str | None] = mapped_column(String)
     observaciones: Mapped[str | None] = mapped_column(String)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default="now()")
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default="now()")
 
     funcionario: Mapped[Funcionario] = relationship(
         "Funcionario", back_populates="periodos", lazy="raise"

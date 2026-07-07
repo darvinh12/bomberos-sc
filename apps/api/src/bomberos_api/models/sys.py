@@ -21,5 +21,5 @@ class Parametro(Base):
     editable: Mapped[bool] = mapped_column(Boolean, default=True)
     sensible: Mapped[bool] = mapped_column(Boolean, default=False)
     grupo: Mapped[str] = mapped_column(String, default="general")
-    created_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    updated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), server_default="now()")
+    updated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), server_default="now()")
