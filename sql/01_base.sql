@@ -142,7 +142,8 @@ CREATE TABLE core.estados_civiles (
 CREATE TABLE core.grupos_sanguineos (
     id          SMALLINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     codigo      TEXT NOT NULL UNIQUE,
-    nombre      TEXT NOT NULL
+    nombre      TEXT NOT NULL,
+    activo      BOOLEAN NOT NULL DEFAULT TRUE
 );
 
 -- Niveles educativos
@@ -150,7 +151,8 @@ CREATE TABLE core.niveles_educativos (
     id          SMALLINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     codigo      TEXT NOT NULL UNIQUE,
     nombre      TEXT NOT NULL,
-    orden       SMALLINT NOT NULL DEFAULT 0
+    orden       SMALLINT NOT NULL DEFAULT 0,
+    activo      BOOLEAN NOT NULL DEFAULT TRUE
 );
 
 -- Tipos de nivel educativo (graduado, cursando, abandonó)
