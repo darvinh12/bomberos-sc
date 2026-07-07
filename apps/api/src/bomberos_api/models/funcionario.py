@@ -13,10 +13,24 @@ from sqlalchemy import (
     String,
     UniqueConstraint,
 )
-from sqlalchemy.dialects.postgresql import CITEXT
+from sqlalchemy.dialects.postgresql import CITEXT, ENUM
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from bomberos_api.models.base import Base
+
+# Enums nativos de Postgres (definidos en sql/01_base.sql). create_type=False:
+# el tipo ya existe en la BD, SQLAlchemy solo lo referencia para emitir el
+# cast correcto (::core.estatus_funcionario) en los filtros.
+_ESTATUS_ENUM = ENUM(
+    "ACTIVO", "REPOSO", "COMISION", "PRE_JUBILADO", "JUBILADO", "EGRESADO",
+    "FALLECIDO", "SUSPENDIDO", "BAJA_DESHONROSA", "PERMISO_LARGO",
+    name="estatus_funcionario", schema="core", create_type=False,
+)
+_SEXO_ENUM = ENUM("M", "F", name="sexo_t", schema="core", create_type=False)
+_TIPO_PERSONAL_ENUM = ENUM(
+    "BOMBERO", "BOMBERO_VOLUNTARIO", "OBRERO", "EMPLEADO", "CONTRATADO", "PASANTE",
+    name="tipo_personal", schema="core", create_type=False,
+)
 
 
 class Funcionario(Base):
@@ -36,7 +50,7 @@ class Funcionario(Base):
     nombres: Mapped[str] = mapped_column(String, nullable=False)
     nombre_completo: Mapped[str | None] = mapped_column(String)  # GENERATED en DB
     fecha_nacimiento: Mapped[date | None] = mapped_column(Date)
-    sexo: Mapped[str | None] = mapped_column(CHAR(1))
+    sexo: Mapped[str | None] = mapped_column(_SEXO_ENUM)
     estado_civil_id: Mapped[int | None] = mapped_column(
         SmallInteger, ForeignKey("core.estados_civiles.id")
     )
@@ -68,12 +82,12 @@ class Funcionario(Base):
     )
 
     # Empleo
-    tipo_personal: Mapped[str] = mapped_column(String, default="BOMBERO")
+    tipo_personal: Mapped[str] = mapped_column(_TIPO_PERSONAL_ENUM, default="BOMBERO")
     numero_empleado: Mapped[str | None] = mapped_column(String, unique=True)
     numero_equipo: Mapped[str | None] = mapped_column(String)
     fecha_primer_ingreso: Mapped[date | None] = mapped_column(Date)
     promocion: Mapped[str | None] = mapped_column(String)
-    estatus: Mapped[str] = mapped_column(String, default="ACTIVO")
+    estatus: Mapped[str] = mapped_column(_ESTATUS_ENUM, default="ACTIVO")
     condicion_id: Mapped[int | None] = mapped_column(
         SmallInteger, ForeignKey("core.condiciones.id")
     )
