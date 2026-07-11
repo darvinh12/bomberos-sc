@@ -17,6 +17,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Mapped, mapped_column
 
+from bomberos_api.models._enums import ESTATUS_FUNCIONARIO
 from bomberos_api.models.base import Base
 
 
@@ -153,8 +154,8 @@ class MovimientoEstatus(Base):
         BigInteger, ForeignKey("personal.funcionarios.id", ondelete="CASCADE")
     )
     tipo: Mapped[str] = mapped_column(String)
-    estatus_anterior: Mapped[str | None] = mapped_column(String)
-    estatus_nuevo: Mapped[str] = mapped_column(String)
+    estatus_anterior: Mapped[str | None] = mapped_column(ESTATUS_FUNCIONARIO)
+    estatus_nuevo: Mapped[str] = mapped_column(ESTATUS_FUNCIONARIO)
     fecha_efectiva: Mapped[date] = mapped_column(Date)
     fecha_fin: Mapped[date | None] = mapped_column(Date)
     motivo: Mapped[str | None] = mapped_column(Text)

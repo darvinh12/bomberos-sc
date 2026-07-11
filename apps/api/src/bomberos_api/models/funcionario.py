@@ -14,24 +14,15 @@ from sqlalchemy import (
     String,
     UniqueConstraint,
 )
-from sqlalchemy.dialects.postgresql import CITEXT, ENUM
+from sqlalchemy.dialects.postgresql import CITEXT
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from bomberos_api.models._enums import (
+    ESTATUS_FUNCIONARIO as _ESTATUS_ENUM,
+    SEXO as _SEXO_ENUM,
+    TIPO_PERSONAL as _TIPO_PERSONAL_ENUM,
+)
 from bomberos_api.models.base import Base
-
-# Enums nativos de Postgres (definidos en sql/01_base.sql). create_type=False:
-# el tipo ya existe en la BD, SQLAlchemy solo lo referencia para emitir el
-# cast correcto (::core.estatus_funcionario) en los filtros.
-_ESTATUS_ENUM = ENUM(
-    "ACTIVO", "REPOSO", "COMISION", "PRE_JUBILADO", "JUBILADO", "EGRESADO",
-    "FALLECIDO", "SUSPENDIDO", "BAJA_DESHONROSA", "PERMISO_LARGO",
-    name="estatus_funcionario", schema="core", create_type=False,
-)
-_SEXO_ENUM = ENUM("M", "F", name="sexo_t", schema="core", create_type=False)
-_TIPO_PERSONAL_ENUM = ENUM(
-    "BOMBERO", "BOMBERO_VOLUNTARIO", "OBRERO", "EMPLEADO", "CONTRATADO", "PASANTE",
-    name="tipo_personal", schema="core", create_type=False,
-)
 
 
 class Funcionario(Base):

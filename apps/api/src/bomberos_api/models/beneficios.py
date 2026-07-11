@@ -15,6 +15,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Mapped, mapped_column
 
+from bomberos_api.models._enums import ESTATUS_SOLICITUD
 from bomberos_api.models.base import Base
 
 
@@ -34,7 +35,7 @@ class Ayuda(Base):
     fecha_pago: Mapped[date | None] = mapped_column(Date)
     motivo: Mapped[str] = mapped_column(Text)
     beneficiario_id: Mapped[int | None] = mapped_column(BigInteger)
-    estatus: Mapped[str] = mapped_column(String, default="PENDIENTE")
+    estatus: Mapped[str] = mapped_column(ESTATUS_SOLICITUD, default="PENDIENTE")
     documento_url: Mapped[str | None] = mapped_column(String)
     soporte_url: Mapped[str | None] = mapped_column(String)
     referencia_pago: Mapped[str | None] = mapped_column(String)
@@ -76,6 +77,6 @@ class Entrega(Base):
     fecha_entrega: Mapped[date] = mapped_column(Date)
     referencia: Mapped[str | None] = mapped_column(String)
     documento_url: Mapped[str | None] = mapped_column(String)
-    estatus: Mapped[str] = mapped_column(String, default="PAGADO")
+    estatus: Mapped[str] = mapped_column(ESTATUS_SOLICITUD, default="PAGADO")
     observaciones: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default="now()")

@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from bomberos_api import __version__
 from bomberos_api.config import get_settings
+from bomberos_api.core.errors import register_exception_handlers
 from bomberos_api.core.middleware import (
     RequestLogMiddleware,
     SecurityHeadersMiddleware,
@@ -86,6 +87,8 @@ def create_app() -> FastAPI:
     app.include_router(admin_catalogos.router)
     app.include_router(admin_parametros.router)
     app.include_router(campos_custom.router)
+
+    register_exception_handlers(app)
 
     return app
 
