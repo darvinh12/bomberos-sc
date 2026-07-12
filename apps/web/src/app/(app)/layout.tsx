@@ -4,6 +4,7 @@ import {
   Briefcase, AlertTriangle, HeartPulse, Award, HardHat, Radio,
   HandCoins, DoorOpen, BookOpen, Settings, UserCog, Lock, Boxes,
   Building2, BookMarked, SlidersHorizontal, LayoutGrid, ClipboardList,
+  Rocket,
   type LucideIcon,
 } from "lucide-react";
 import { requireAuth } from "@/lib/session";
@@ -61,6 +62,11 @@ const NAV_GESTION: NavItem[] = [
 
 const NAV_REFERENCIA: NavItem[] = [
   { href: "/catalogos", label: "Catálogos", Icon: BookOpen, permisoCodigo: "catalogos" },
+];
+
+// Asistente de carga inicial. Visible solo para ADMIN/RRHH (ver render).
+const NAV_PUESTA_MARCHA: NavItem[] = [
+  { href: "/cargar-datos", label: "Cargar datos", Icon: Rocket },
 ];
 
 const NAV_ADMIN: NavItem[] = [
@@ -141,6 +147,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const gestion    = filtrar(NAV_GESTION, roles);
   const referencia = filtrar(NAV_REFERENCIA, roles);
   const admin      = roles.includes("ADMIN") ? NAV_ADMIN : [];
+  const puestaMarcha =
+    roles.includes("ADMIN") || roles.includes("RRHH") ? NAV_PUESTA_MARCHA : [];
 
   return (
     <div className="min-h-screen flex bg-background">
@@ -180,6 +188,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         {/* Nav */}
         <nav className="flex-1 px-2 py-2 overflow-y-auto space-y-0.5">
           <NavGroup items={general} />
+          <NavGroup title="Puesta en marcha" items={puestaMarcha} />
           <NavGroup title="Operativo" items={operativo} />
           <NavGroup title="Gestión" items={gestion} />
           <NavGroup title="Referencia" items={referencia} />
@@ -225,6 +234,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         <div className="md:hidden h-14 flex items-center gap-3 px-3 border-b border-border shrink-0 bg-card">
           <MobileSidebar me={me ? { nombre_completo: me.nombre_completo, usuario: me.usuario, roles } : null}>
             <NavGroup items={general} />
+            {puestaMarcha.length > 0 && <NavGroup title="Puesta en marcha" items={puestaMarcha} />}
             <NavGroup title="Operativo" items={operativo} />
             <NavGroup title="Gestión" items={gestion} />
             <NavGroup title="Referencia" items={referencia} />
