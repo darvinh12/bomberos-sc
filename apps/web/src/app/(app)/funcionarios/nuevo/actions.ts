@@ -220,7 +220,7 @@ export async function crearFuncionario(
     const file = foto.get("file");
     if (file instanceof File && file.size > 0) {
       try {
-        const BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+        const BASE = process.env.API_INTERNAL_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
         const fd = new FormData();
         fd.append("file", file, file.name);
         const res = await fetch(`${BASE}/funcionarios/${created.id}/foto`, {

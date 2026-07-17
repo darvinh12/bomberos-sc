@@ -42,5 +42,33 @@ services:
     ports:
       - "8000:8000"
 
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_DEMO_MODE: ${NEXT_PUBLIC_DEMO_MODE:-0}
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-/sigp-api}
+    container_name: bomberos_web
+    restart: unless-stopped
+    depends_on:
+      - api
+    environment:
+      API_INTERNAL_URL: http://api:8000
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: bomberos_caddy
+    restart: unless-stopped
+    depends_on:
+      - web
+      - api
+    ports:
+      - "80:80"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - bomberos_caddy_data:/data
+
 volumes:
   bomberos_pg_data:
+  bomberos_caddy_data:

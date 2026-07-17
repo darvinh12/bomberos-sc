@@ -7,7 +7,15 @@
  */
 import { DEMO_LOGIN_RESPONSE, isDemoMode, demoResolve } from "./demo-fixtures";
 
-const BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+// Server-side (Node) necesita URL absoluta hacia la API — API_INTERNAL_URL
+// apunta al contenedor (http://api:8000). Client-side usa NEXT_PUBLIC_API_URL,
+// que puede ser relativa (/sigp-api) cuando Caddy enruta en el mismo origen.
+const BASE =
+  typeof window === "undefined"
+    ? process.env.API_INTERNAL_URL ||
+      process.env.NEXT_PUBLIC_API_URL ||
+      "http://localhost:8000"
+    : process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 export class ApiError extends Error {
   constructor(public status: number, message: string, public body?: unknown) {
