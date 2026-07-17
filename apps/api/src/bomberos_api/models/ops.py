@@ -4,6 +4,7 @@ from sqlalchemy import (
     CHAR,
     BigInteger,
     Boolean,
+    Computed,
     Date,
     DateTime,
     ForeignKey,
@@ -13,10 +14,12 @@ from sqlalchemy import (
     Text,
     Time,
     UniqueConstraint,
+    func,
 )
 from sqlalchemy.orm import Mapped, mapped_column
 
 from bomberos_api.models.base import Base
+from bomberos_api.models.enums import ESTATUS_FUNCIONARIO
 
 
 class Guardia(Base):
@@ -37,7 +40,7 @@ class Guardia(Base):
     cerrada: Mapped[bool] = mapped_column(Boolean, default=False)
     cerrada_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     cerrada_por: Mapped[int | None] = mapped_column(BigInteger)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
 class GuardiaFuncionario(Base):
@@ -76,7 +79,7 @@ class Permiso(Base):
     autorizado_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     documento_url: Mapped[str | None] = mapped_column(String)
     observaciones: Mapped[str | None] = mapped_column(Text)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
 class Vacaciones(Base):
@@ -90,7 +93,9 @@ class Vacaciones(Base):
     fecha_inicio: Mapped[date] = mapped_column(Date)
     fecha_fin: Mapped[date] = mapped_column(Date)
     dias_habiles: Mapped[int | None] = mapped_column(SmallInteger)
-    dias_calendario: Mapped[int | None] = mapped_column(SmallInteger)
+    dias_calendario: Mapped[int | None] = mapped_column(
+        SmallInteger, Computed("fecha_fin - fecha_inicio + 1", persisted=True)
+    )
     bono_pagado: Mapped[bool] = mapped_column(Boolean, default=False)
     monto_bono: Mapped[float | None] = mapped_column(Numeric(15, 2))
     fecha_pago_bono: Mapped[date | None] = mapped_column(Date)
@@ -99,7 +104,7 @@ class Vacaciones(Base):
     autorizado_por: Mapped[int | None] = mapped_column(BigInteger)
     documento_url: Mapped[str | None] = mapped_column(String)
     observaciones: Mapped[str | None] = mapped_column(Text)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
 class ComisionServicio(Base):
@@ -118,7 +123,7 @@ class ComisionServicio(Base):
     documento_url: Mapped[str | None] = mapped_column(String)
     observaciones: Mapped[str | None] = mapped_column(Text)
     activo: Mapped[bool] = mapped_column(Boolean, default=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
 class Falta(Base):
@@ -139,7 +144,7 @@ class Falta(Base):
     documento_url: Mapped[str | None] = mapped_column(String)
     apelada: Mapped[bool] = mapped_column(Boolean, default=False)
     resultado_apelacion: Mapped[str | None] = mapped_column(Text)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
 class MovimientoEstatus(Base):
@@ -150,8 +155,8 @@ class MovimientoEstatus(Base):
         BigInteger, ForeignKey("personal.funcionarios.id", ondelete="CASCADE")
     )
     tipo: Mapped[str] = mapped_column(String)
-    estatus_anterior: Mapped[str | None] = mapped_column(String)
-    estatus_nuevo: Mapped[str] = mapped_column(String)
+    estatus_anterior: Mapped[str | None] = mapped_column(ESTATUS_FUNCIONARIO)
+    estatus_nuevo: Mapped[str] = mapped_column(ESTATUS_FUNCIONARIO)
     fecha_efectiva: Mapped[date] = mapped_column(Date)
     fecha_fin: Mapped[date | None] = mapped_column(Date)
     motivo: Mapped[str | None] = mapped_column(Text)
@@ -159,4 +164,4 @@ class MovimientoEstatus(Base):
     resolucion: Mapped[str | None] = mapped_column(String)
     observaciones: Mapped[str | None] = mapped_column(Text)
     created_by: Mapped[int | None] = mapped_column(BigInteger)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

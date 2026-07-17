@@ -21,8 +21,8 @@ services:
 
   api:
     build:
-      context: ./apps/api
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: apps/api/Dockerfile
     container_name: bomberos_api
     restart: unless-stopped
     depends_on:
@@ -33,6 +33,9 @@ services:
       APP_DEBUG: "false"
       DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/bomberos_caracas
       JWT_SECRET_KEY: ${JWT_SECRET_KEY:-cambiar-esto-en-produccion-debe-ser-largo-y-aleatorio}
+      BOOTSTRAP_ADMIN_USER: ${BOOTSTRAP_ADMIN_USER:-admin}
+      BOOTSTRAP_ADMIN_PASSWORD: ${BOOTSTRAP_ADMIN_PASSWORD:-}
+      BOOTSTRAP_ADMIN_EMAIL: ${BOOTSTRAP_ADMIN_EMAIL:-admin@bomberos.gob.ve}
       CORS_ORIGINS: http://localhost:3000,http://localhost:5173
       LOG_LEVEL: INFO
       LOG_FORMAT: json

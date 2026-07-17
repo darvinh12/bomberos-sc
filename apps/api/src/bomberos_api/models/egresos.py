@@ -12,6 +12,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column
 
 from bomberos_api.models.base import Base
+from bomberos_api.models.enums import ESTATUS_SOLICITUD
 
 
 class SolicitudJubilacion(Base):
@@ -25,7 +26,7 @@ class SolicitudJubilacion(Base):
     fecha_efectiva_propuesta: Mapped[date | None] = mapped_column(Date)
     años_servicio: Mapped[float | None] = mapped_column(Numeric(5, 2))
     motivo: Mapped[str | None] = mapped_column(Text)
-    estatus: Mapped[str] = mapped_column(String, default="PENDIENTE")
+    estatus: Mapped[str] = mapped_column(ESTATUS_SOLICITUD, default="PENDIENTE")
     resolucion: Mapped[str | None] = mapped_column(String)
     documento_url: Mapped[str | None] = mapped_column(String)
 

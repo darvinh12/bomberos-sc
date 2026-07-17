@@ -4,6 +4,7 @@ from sqlalchemy import (
     CHAR,
     BigInteger,
     Boolean,
+    Computed,
     Date,
     DateTime,
     ForeignKey,
@@ -12,11 +13,13 @@ from sqlalchemy import (
     SmallInteger,
     String,
     UniqueConstraint,
+    func,
 )
 from sqlalchemy.dialects.postgresql import CITEXT
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from bomberos_api.models.base import Base
+from bomberos_api.models.enums import ESTATUS_FUNCIONARIO, SEXO_T, TIPO_PERSONAL
 
 
 class Funcionario(Base):
@@ -34,9 +37,11 @@ class Funcionario(Base):
     rif: Mapped[str | None] = mapped_column(String)
     apellidos: Mapped[str] = mapped_column(String, nullable=False)
     nombres: Mapped[str] = mapped_column(String, nullable=False)
-    nombre_completo: Mapped[str | None] = mapped_column(String)  # GENERATED en DB
+    nombre_completo: Mapped[str | None] = mapped_column(
+        String, Computed("apellidos || ', ' || nombres", persisted=True)
+    )
     fecha_nacimiento: Mapped[date | None] = mapped_column(Date)
-    sexo: Mapped[str | None] = mapped_column(CHAR(1))
+    sexo: Mapped[str | None] = mapped_column(SEXO_T)
     estado_civil_id: Mapped[int | None] = mapped_column(
         SmallInteger, ForeignKey("core.estados_civiles.id")
     )
@@ -68,12 +73,12 @@ class Funcionario(Base):
     )
 
     # Empleo
-    tipo_personal: Mapped[str] = mapped_column(String, default="BOMBERO")
+    tipo_personal: Mapped[str] = mapped_column(TIPO_PERSONAL, default="BOMBERO")
     numero_empleado: Mapped[str | None] = mapped_column(String, unique=True)
     numero_equipo: Mapped[str | None] = mapped_column(String)
     fecha_primer_ingreso: Mapped[date | None] = mapped_column(Date)
     promocion: Mapped[str | None] = mapped_column(String)
-    estatus: Mapped[str] = mapped_column(String, default="ACTIVO")
+    estatus: Mapped[str] = mapped_column(ESTATUS_FUNCIONARIO, default="ACTIVO")
     condicion_id: Mapped[int | None] = mapped_column(
         SmallInteger, ForeignKey("core.condiciones.id")
     )
@@ -151,8 +156,8 @@ class Funcionario(Base):
     observaciones: Mapped[str | None] = mapped_column(String)
 
     # Auditoría
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     created_by: Mapped[int | None] = mapped_column(BigInteger)
     updated_by: Mapped[int | None] = mapped_column(BigInteger)
 
@@ -190,8 +195,8 @@ class PeriodoServicio(Base):
     monto_prestaciones: Mapped[float | None] = mapped_column(Numeric(15, 2))
     documento_url: Mapped[str | None] = mapped_column(String)
     observaciones: Mapped[str | None] = mapped_column(String)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     funcionario: Mapped[Funcionario] = relationship(
         "Funcionario", back_populates="periodos", lazy="raise"

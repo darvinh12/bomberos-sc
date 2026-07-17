@@ -7,6 +7,7 @@ from sqlalchemy import (
     ForeignKey,
     SmallInteger,
     String,
+    func,
 )
 from sqlalchemy.dialects.postgresql import CITEXT, INET
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -35,8 +36,8 @@ class Usuario(Base):
     ultimo_ip: Mapped[str | None] = mapped_column(INET)
     token_recuperacion: Mapped[str | None] = mapped_column(String)
     token_expira: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     created_by: Mapped[int | None] = mapped_column(BigInteger)
     updated_by: Mapped[int | None] = mapped_column(BigInteger)
 
@@ -69,7 +70,7 @@ class UsuarioRol(Base):
     rol_id: Mapped[int] = mapped_column(
         SmallInteger, ForeignKey("seguridad.roles.id"), primary_key=True
     )
-    asignado_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    asignado_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), server_default=func.now())
     asignado_por: Mapped[int | None] = mapped_column(BigInteger)
 
     usuario: Mapped[Usuario] = relationship("Usuario", back_populates="roles")
@@ -155,5 +156,5 @@ class UsuarioRolScope(Base):
     estacion_id: Mapped[int | None] = mapped_column(SmallInteger)
     division_id: Mapped[int | None] = mapped_column(SmallInteger)
     area_id: Mapped[int | None] = mapped_column(SmallInteger)
-    asignado_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    asignado_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), server_default=func.now())
     asignado_por: Mapped[int | None] = mapped_column(BigInteger)

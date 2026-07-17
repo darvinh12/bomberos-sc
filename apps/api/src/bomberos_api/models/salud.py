@@ -3,6 +3,7 @@ from datetime import date, datetime
 from sqlalchemy import (
     BigInteger,
     Boolean,
+    Computed,
     Date,
     DateTime,
     ForeignKey,
@@ -11,6 +12,7 @@ from sqlalchemy import (
     SmallInteger,
     String,
     Text,
+    func,
 )
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -44,7 +46,9 @@ class Medico(Base):
     cedula: Mapped[int | None] = mapped_column(Integer)
     apellidos: Mapped[str] = mapped_column(String)
     nombres: Mapped[str] = mapped_column(String)
-    nombre_completo: Mapped[str | None] = mapped_column(String)
+    nombre_completo: Mapped[str | None] = mapped_column(
+        String, Computed("apellidos || ', ' || nombres", persisted=True)
+    )
     mpps: Mapped[str | None] = mapped_column(String, unique=True)
     cm: Mapped[str | None] = mapped_column(String)
     especialidad: Mapped[str | None] = mapped_column(String)
@@ -82,7 +86,9 @@ class Reposo(Base):
     centro_medico_id: Mapped[int | None] = mapped_column(BigInteger)
     fecha_inicio: Mapped[date] = mapped_column(Date)
     fecha_fin: Mapped[date] = mapped_column(Date)
-    dias: Mapped[int | None] = mapped_column(SmallInteger)
+    dias: Mapped[int | None] = mapped_column(
+        SmallInteger, Computed("fecha_fin - fecha_inicio + 1", persisted=True)
+    )
     folio: Mapped[str | None] = mapped_column(String)
     documento_url: Mapped[str | None] = mapped_column(String)
     es_continuacion: Mapped[bool] = mapped_column(Boolean, default=False)
@@ -90,8 +96,8 @@ class Reposo(Base):
     anulado: Mapped[bool] = mapped_column(Boolean, default=False)
     motivo_anulacion: Mapped[str | None] = mapped_column(Text)
     observaciones: Mapped[str | None] = mapped_column(Text)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     created_by: Mapped[int | None] = mapped_column(BigInteger)
 
 
@@ -114,7 +120,7 @@ class Lesion(Base):
     dias_incapacidad: Mapped[int | None] = mapped_column(SmallInteger)
     secuelas: Mapped[str | None] = mapped_column(Text)
     documento_url: Mapped[str | None] = mapped_column(String)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
 class EvaluacionFisica(Base):
@@ -127,7 +133,9 @@ class EvaluacionFisica(Base):
     fecha: Mapped[date] = mapped_column(Date)
     peso_kg: Mapped[float | None] = mapped_column(Numeric(5, 2))
     estatura_cm: Mapped[float | None] = mapped_column(Numeric(5, 2))
-    imc: Mapped[float | None] = mapped_column(Numeric(5, 2))
+    imc: Mapped[float | None] = mapped_column(
+        Numeric(5, 2), Computed("peso_kg / ((estatura_cm/100.0)*(estatura_cm/100.0))", persisted=True)
+    )
     presion_sistolica: Mapped[int | None] = mapped_column(SmallInteger)
     presion_diastolica: Mapped[int | None] = mapped_column(SmallInteger)
     pulso: Mapped[int | None] = mapped_column(SmallInteger)
@@ -137,7 +145,7 @@ class EvaluacionFisica(Base):
     apto: Mapped[bool | None] = mapped_column(Boolean)
     observaciones: Mapped[str | None] = mapped_column(Text)
     medico_id: Mapped[int | None] = mapped_column(BigInteger)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
 class HCM(Base):

@@ -26,10 +26,12 @@ from sqlalchemy import (
     SmallInteger,
     String,
     UniqueConstraint,
+    func,
 )
 from sqlalchemy.orm import Mapped, mapped_column
 
 from bomberos_api.models.base import Base
+from bomberos_api.models.enums import SEXO_T, TIPO_ACTIVIDAD
 from bomberos_api.models.mixins import SoftDeleteMixin
 
 # =============================================================================
@@ -55,7 +57,7 @@ class CargaFamiliar(SoftDeleteMixin, Base):
     apellidos: Mapped[str] = mapped_column(String, nullable=False)
     nombres: Mapped[str] = mapped_column(String, nullable=False)
     fecha_nacimiento: Mapped[date | None] = mapped_column(Date)
-    sexo: Mapped[str | None] = mapped_column(CHAR(1))
+    sexo: Mapped[str | None] = mapped_column(SEXO_T)
     estado_civil_id: Mapped[int | None] = mapped_column(
         SmallInteger, ForeignKey("core.estados_civiles.id")
     )
@@ -84,8 +86,8 @@ class CargaFamiliar(SoftDeleteMixin, Base):
     fecha_baja: Mapped[date | None] = mapped_column(Date)
     motivo_baja: Mapped[str | None] = mapped_column(String)
     observaciones: Mapped[str | None] = mapped_column(String)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
 # =============================================================================
@@ -113,7 +115,7 @@ class HistoricoJerarquia(SoftDeleteMixin, Base):
     motivo: Mapped[str | None] = mapped_column(String)
     resolucion: Mapped[str | None] = mapped_column(String)
     documento_url: Mapped[str | None] = mapped_column(String)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
 class HistoricoUbicacion(SoftDeleteMixin, Base):
@@ -145,7 +147,7 @@ class HistoricoUbicacion(SoftDeleteMixin, Base):
     motivo: Mapped[str | None] = mapped_column(String)
     resolucion: Mapped[str | None] = mapped_column(String)
     documento_url: Mapped[str | None] = mapped_column(String)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
 class TiempoAdmPublica(SoftDeleteMixin, Base):
@@ -207,7 +209,7 @@ class Actividad(SoftDeleteMixin, Base):
         nullable=False,
     )
     # core.tipo_actividad ENUM — la BD valida el dominio.
-    tipo: Mapped[str] = mapped_column(String, nullable=False)
+    tipo: Mapped[str] = mapped_column(TIPO_ACTIVIDAD, nullable=False)
     nombre: Mapped[str] = mapped_column(String, nullable=False)
     descripcion: Mapped[str | None] = mapped_column(String)
     institucion: Mapped[str | None] = mapped_column(String)
@@ -256,8 +258,8 @@ class Carnet(SoftDeleteMixin, Base):
     activo: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=True, server_default="true"
     )
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
 class HistoricoCarnet(Base):
