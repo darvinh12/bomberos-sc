@@ -19,7 +19,11 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from bomberos_api.models._enums import (
     ESTATUS_FUNCIONARIO as _ESTATUS_ENUM,
+)
+from bomberos_api.models._enums import (
     SEXO as _SEXO_ENUM,
+)
+from bomberos_api.models._enums import (
     TIPO_PERSONAL as _TIPO_PERSONAL_ENUM,
 )
 from bomberos_api.models.base import Base
