@@ -1,7 +1,16 @@
+"""Hash de contraseñas (bcrypt) y emisión/verificación de JWT (PyJWT).
+
+Se usa PyJWT en lugar de python-jose, afectado por CVE-2024-33663 (confusión de
+algoritmo) y CVE-2024-33664 (DoS por JWE comprimido). El algoritmo se fija en la
+verificación (`algorithms=[...]`), de modo que un token con `alg: none` o con un
+algoritmo distinto al configurado se rechaza.
+"""
+
 from datetime import UTC, datetime, timedelta
 from typing import Any, Literal
+from uuid import uuid4
 
-from jose import JWTError, jwt
+import jwt
 from passlib.context import CryptContext
 
 from bomberos_api.config import get_settings
@@ -9,6 +18,9 @@ from bomberos_api.config import get_settings
 _pwd_ctx = CryptContext(schemes=["bcrypt"], deprecated="auto", bcrypt__rounds=12)
 
 TokenType = Literal["access", "refresh"]
+
+# Claims obligatorios: si falta alguno, PyJWT lanza MissingRequiredClaimError.
+_REQUIRED_CLAIMS = ["exp", "iat", "sub", "type"]
 
 
 def hash_password(plain: str) -> str:
@@ -39,6 +51,9 @@ def create_token(
         "iat": int(now.timestamp()),
         "exp": int(expires.timestamp()),
         "type": token_type,
+        # Identificador único: dos tokens emitidos en el mismo segundo son
+        # distintos (la rotación de /auth/refresh siempre entrega uno nuevo).
+        "jti": uuid4().hex,
     }
     if extra_claims:
         payload.update(extra_claims)
@@ -48,8 +63,13 @@ def create_token(
 def decode_token(token: str, expected_type: TokenType | None = None) -> dict[str, Any]:
     s = get_settings()
     try:
-        payload = jwt.decode(token, s.jwt_secret_key, algorithms=[s.jwt_algorithm])
-    except JWTError as e:
+        payload = jwt.decode(
+            token,
+            s.jwt_secret_key,
+            algorithms=[s.jwt_algorithm],
+            options={"require": _REQUIRED_CLAIMS},
+        )
+    except jwt.PyJWTError as e:
         raise ValueError(f"token inválido: {e}") from e
     if expected_type and payload.get("type") != expected_type:
         raise ValueError(f"se esperaba token tipo '{expected_type}'")

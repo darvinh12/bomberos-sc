@@ -10,7 +10,7 @@ sobre las tablas más usadas; el resto se consulta con SQL directo o reflexión.
 - **SQLAlchemy 2.0** (async) + asyncpg — ORM/driver
 - **Alembic** — migraciones incrementales (cuando aplique)
 - **Pydantic v2** + `pydantic-settings`
-- **passlib[bcrypt]** + **python-jose** — auth (bcrypt 12 rounds, JWT HS256)
+- **passlib[bcrypt]** + **PyJWT** — auth (bcrypt 12 rounds, JWT HS256)
 - **structlog** — logs estructurados JSON
 
 ## Seguridad implementada
