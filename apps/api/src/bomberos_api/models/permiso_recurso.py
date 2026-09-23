@@ -18,6 +18,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column
 
 from bomberos_api.models.base import Base
+from bomberos_api.models.enums import NIVEL_ACCESO_RECURSO, TIPO_RECURSO_PERMISO
 
 
 class PermisoRecurso(Base):
@@ -41,9 +42,9 @@ class PermisoRecurso(Base):
     # Los enums viven en PostgreSQL; aquí los mapeamos como string para que
     # SQLAlchemy no intente recrearlos y para mantener la portabilidad de los
     # schemas Pydantic (Literal[...]).
-    recurso_tipo: Mapped[str] = mapped_column(String, nullable=False)
+    recurso_tipo: Mapped[str] = mapped_column(TIPO_RECURSO_PERMISO, nullable=False)
     recurso_codigo: Mapped[str] = mapped_column(String, nullable=False)
-    nivel: Mapped[str] = mapped_column(String, nullable=False, default="none")
+    nivel: Mapped[str] = mapped_column(NIVEL_ACCESO_RECURSO, nullable=False, default="none")
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default="now()"
     )

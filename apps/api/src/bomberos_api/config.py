@@ -1,7 +1,8 @@
 from functools import lru_cache
+from typing import Annotated
 
 from pydantic import Field, field_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -32,7 +33,12 @@ class Settings(BaseSettings):
     jwt_access_token_expire_minutes: int = 30
     jwt_refresh_token_expire_days: int = 7
 
-    cors_origins: list[str] = ["http://localhost:3000", "http://localhost:5173"]
+    # NoDecode: pydantic-settings intentaba json.loads() sobre el env ANTES del
+    # validador split_cors, y el formato "a,b" de docker-compose crasheaba el boot.
+    cors_origins: Annotated[list[str], NoDecode] = [
+        "http://localhost:3000",
+        "http://localhost:5173",
+    ]
     rate_limit_per_minute: int = 120
 
     log_level: str = "INFO"

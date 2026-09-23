@@ -1,0 +1,20 @@
+# Puerta única del SIGP en el puerto 80.
+#
+# - /sigp-api/* → API FastAPI (se quita el prefijo). El navegador llama a la
+#   API por el mismo origen, así que no hay CORS y el nombre/IP del servidor
+#   puede cambiar sin recompilar nada.
+# - Todo lo demás → web Next.js (incluidos sus propios route handlers /api/*).
+#
+# :80 responde a cualquier Host (sigp.bomberos, la IP, localhost). Para TLS
+# interno a futuro: cambiar :80 por el nombre y montar certificados propios.
+:80 {
+	encode gzip
+
+	handle_path /sigp-api/* {
+		reverse_proxy api:8000
+	}
+
+	handle {
+		reverse_proxy web:3000
+	}
+}
