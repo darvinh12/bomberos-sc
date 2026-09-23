@@ -200,3 +200,19 @@ async def test_cambio_de_clave_no_guarda_password_hash_en_bitacora(client, pg, c
     # La clave nueva funciona y la anterior no.
     assert (await login(client, u["usuario"], "Otra#Clave2027")).status_code == 200
     assert (await login(client, u["usuario"], CLAVE_PRUEBA)).status_code == 401
+
+
+async def test_cuenta_inactiva_no_entra_y_queda_registrada(client, pg, crear_usuario):
+    u = await crear_usuario("CONSULTA")
+    await pg.execute("UPDATE seguridad.usuarios SET activo = FALSE WHERE id=$1", u["id"])
+    r = await login(client, u["usuario"], u["clave"])
+    assert r.status_code == 403
+    assert ("LOGIN_FALLIDO", "inactivo") in await _accesos(pg, u["id"])
+
+
+async def test_logout_registra_evento(client, pg, crear_usuario):
+    u = await crear_usuario("CONSULTA")
+    tokens = (await login(client, u["usuario"], u["clave"])).json()
+    r = await client.post("/auth/logout", headers=bearer(tokens["access_token"]))
+    assert r.status_code == 204
+    assert ("LOGOUT", None) in await _accesos(pg, u["id"])

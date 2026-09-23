@@ -59,3 +59,9 @@ testpaths = ["tests"]
 markers = [
     "integration: requiere PostgreSQL real con el esquema de sql/99_run_all.sql (DATABASE_URL)",
 ]
+
+[tool.coverage.run]
+# SQLAlchemy async ejecuta el código de los endpoints dentro de greenlets: sin
+# esta opción coverage no traza esas líneas y subestima la cobertura.
+source = ["bomberos_api"]
+concurrency = ["greenlet", "thread"]
