@@ -36,5 +36,8 @@
 \echo '=== 13_movimientos_estatus.sql ==='
 \i 13_movimientos_estatus.sql
 
+\echo '=== 14_auditoria_excluir_sensibles.sql ==='
+\i 14_auditoria_excluir_sensibles.sql
+
 \echo ''
 \echo 'Instalación completa.'
