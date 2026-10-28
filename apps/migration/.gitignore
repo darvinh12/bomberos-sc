@@ -1,0 +1,5 @@
+# Reportes de carga y validación: contienen cédulas y nombres (no versionar)
+reporte_carga_*.json
+reporte_migracion_*.json
+.pytest_cache/
+.ruff_cache/

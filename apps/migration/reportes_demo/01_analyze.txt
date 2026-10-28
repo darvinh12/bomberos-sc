@@ -1,0 +1,4 @@
+Usage: bomberos-migrate analyze [OPTIONS]
+Try 'bomberos-migrate analyze --help' for help.
+
+Error: No such option '--origen-sql'.

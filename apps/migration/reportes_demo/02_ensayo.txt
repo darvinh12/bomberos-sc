@@ -1,0 +1,156 @@
+ENSAYO: no quedará nada escrito (pase --apply para escribir).
+Origen: script T-SQL demo_legacy\datos_legacy.sql
+
+== Reporte de migración — ENSAYO (todo se revirtió: no quedó nada escrito) ==
+Zona Z1 (COD_ZONA=1 «ZONA 1 CENTRO» → Z1): 115 expedientes en alcance; 75 de 
+otras zonas; 0 sin ubicación determinable.
+                                Filas por tabla                                
+┌─────────┬────────┬─────────┬─────────┬─────────┬──────────┬───────┬─────────┐
+│ Origen  │        │         │         │         │          │       │         │
+│ →       │        │         │         │         │      Sin │       │         │
+│ destino │ Leídas │ Alcance │ Insert. │ Actual. │    camb. │ Vinc. │ Descar… │
+├─────────┼────────┼─────────┼─────────┼─────────┼──────────┼───────┼─────────┤
+│ ZONAS → │     10 │      10 │       4 │       0 │        0 │     6 │       0 │
+│ org.zo… │        │         │         │         │          │       │         │
+│ DIVISI… │     40 │      40 │      40 │       0 │        0 │     0 │       0 │
+│ →       │        │         │         │         │          │       │         │
+│ org.di… │        │         │         │         │          │       │         │
+│ AREAS → │     17 │      17 │      16 │       0 │        0 │     1 │       0 │
+│ org.ar… │        │         │         │         │          │       │         │
+│ DEPEND… │     30 │      30 │      30 │       0 │        0 │     0 │       0 │
+│ →       │        │         │         │         │          │       │         │
+│ org.de… │        │         │         │         │          │       │         │
+│ ESTACI… │     29 │      29 │      29 │       0 │        0 │     0 │       0 │
+│ →       │        │         │         │         │          │       │         │
+│ org.es… │        │         │         │         │          │       │         │
+│ JERARQ… │     27 │      27 │       9 │       0 │        0 │    18 │       0 │
+│ →       │        │         │         │         │          │       │         │
+│ core.j… │        │         │         │         │          │       │         │
+│ CARGOS  │     40 │      40 │      27 │       0 │        0 │    13 │       0 │
+│ →       │        │         │         │         │          │       │         │
+│ core.c… │        │         │         │         │          │       │         │
+│ CONDIC… │     11 │      11 │       4 │       0 │        0 │     7 │       0 │
+│ →       │        │         │         │         │          │       │         │
+│ core.c… │        │         │         │         │          │       │         │
+│ TIPO_N… │      6 │       6 │       0 │       0 │        0 │     6 │       0 │
+│ →       │        │         │         │         │          │       │         │
+│ core.n… │        │         │         │         │          │       │         │
+│ CURSOS  │     20 │      20 │      20 │       0 │        0 │     0 │       0 │
+│ →       │        │         │         │         │          │       │         │
+│ carrer… │        │         │         │         │          │       │         │
+│ REPOSO… │      8 │       8 │       0 │       0 │        0 │     8 │       0 │
+│ →       │        │         │         │         │          │       │         │
+│ core.t… │        │         │         │         │          │       │         │
+│ GRUPOS… │     10 │      10 │       9 │       0 │        0 │     1 │       0 │
+│ →       │        │         │         │         │          │       │         │
+│ salud.… │        │         │         │         │          │       │         │
+│ DIAGNO… │     26 │      26 │      26 │       0 │        0 │     0 │       0 │
+│ →       │        │         │         │         │          │       │         │
+│ salud.… │        │         │         │         │          │       │         │
+│ MEDICO… │     12 │      12 │      12 │       0 │        0 │     0 │       0 │
+│ →       │        │         │         │         │          │       │         │
+│ salud.… │        │         │         │         │          │       │         │
+│ CENTRO… │     10 │      10 │      10 │       0 │        0 │     0 │       0 │
+│ →       │        │         │         │         │          │       │         │
+│ salud.… │        │         │         │         │          │       │         │
+│ EXPEDI… │    190 │     115 │     115 │       0 │        0 │     0 │       0 │
+│ →       │        │         │         │         │          │       │         │
+│ person… │        │         │         │         │          │       │         │
+│ FUNCIO… │    150 │      90 │       0 │       0 │        0 │    90 │       0 │
+│ →       │        │         │         │         │          │       │         │
+│ person… │        │         │         │         │          │       │         │
+│ FUNCIO… │     40 │      25 │       0 │       0 │        0 │    25 │       0 │
+│ →       │        │         │         │         │          │       │         │
+│ person… │        │         │         │         │          │       │         │
+│ UBICAC… │    190 │     115 │       0 │       0 │        0 │   115 │       0 │
+│ →       │        │         │         │         │          │       │         │
+│ person… │        │         │         │         │          │       │         │
+│ (metad… │        │         │         │         │          │       │         │
+│ PERIOD… │    124 │     124 │     124 │       0 │        0 │     0 │       0 │
+│ (recon… │        │         │         │         │          │       │         │
+│ →       │        │         │         │         │          │       │         │
+│ person… │        │         │         │         │          │       │         │
+│ DETALL… │     53 │      32 │       0 │       0 │        0 │    32 │       0 │
+│ →       │        │         │         │         │          │       │         │
+│ person… │        │         │         │         │          │       │         │
+│ HISTOR… │    869 │     530 │     530 │       0 │        0 │     0 │       0 │
+│ →       │        │         │         │         │          │       │         │
+│ person… │        │         │         │         │          │       │         │
+│ HISTOR… │    657 │     402 │     402 │       0 │        0 │     0 │       0 │
+│ →       │        │         │         │         │          │       │         │
+│ person… │        │         │         │         │          │       │         │
+│ CARGA_… │    338 │     195 │     195 │       0 │        0 │     0 │       0 │
+│ →       │        │         │         │         │          │       │         │
+│ person… │        │         │         │         │          │       │         │
+│ NIVEL_… │    329 │     198 │     198 │       0 │        0 │     0 │       0 │
+│ →       │        │         │         │         │          │       │         │
+│ person… │        │         │         │         │          │       │         │
+│ REPOSOS │    315 │     181 │     175 │       0 │        0 │     0 │       6 │
+│ →       │        │         │         │         │          │       │         │
+│ salud.… │        │         │         │         │          │       │         │
+│ VACACI… │  1,593 │     974 │     974 │       0 │        0 │     0 │       0 │
+│ →       │        │         │         │         │          │       │         │
+│ ops.va… │        │         │         │         │          │       │         │
+│ RECURR… │     87 │      59 │      59 │       0 │        0 │     0 │       0 │
+│ →       │        │         │         │         │          │       │         │
+│ ops.fa… │        │         │         │         │          │       │         │
+│ ENC_GU… │     10 │       6 │       6 │       0 │        0 │     0 │       0 │
+│ →       │        │         │         │         │          │       │         │
+│ ops.gu… │        │         │         │         │          │       │         │
+│ DET_GU… │     88 │      84 │      84 │       0 │        0 │     0 │       0 │
+│ →       │        │         │         │         │          │       │         │
+│ ops.gu… │        │         │         │         │          │       │         │
+│ EVALUA… │    336 │     225 │     225 │       0 │        0 │     0 │       0 │
+│ →       │        │         │         │         │          │       │         │
+│ carrer… │        │         │         │         │          │       │         │
+│ ASCENS… │    467 │     328 │     328 │       0 │        0 │     0 │       0 │
+│ →       │        │         │         │         │          │       │         │
+│ carrer… │        │         │         │         │          │       │         │
+│ EVALUA… │    190 │     126 │     126 │       0 │        0 │     0 │       0 │
+│ →       │        │         │         │         │          │       │         │
+│ carrer… │        │         │         │         │          │       │         │
+│ JUBILA… │     10 │       8 │       8 │       0 │        0 │     0 │       0 │
+│ →       │        │         │         │         │          │       │         │
+│ egreso… │        │         │         │         │          │       │         │
+└─────────┴────────┴─────────┴─────────┴─────────┴──────────┴───────┴─────────┘
+
+Descartes por motivo:
+  · REPOSOS: 4 — rechazado por el motor: solapamiento 
+(reposos_funcionario_id_daterange_excl) (p. ej. 303, 307, 305)
+  · REPOSOS: 2 — FECHA_FIN anterior a FECHA_INICIO (p. ej. 312, 311)
+
+Entradas de catálogo creadas (no casaron con la semilla):
+  · org.zonas: 4 (Z7, Z8, Z9, Z10)
+  · org.divisiones: 40 (LEG_DIV_1, LEG_DIV_2, LEG_DIV_3, LEG_DIV_4, LEG_DIV_5, 
+LEG_DIV_6…)
+  · org.areas: 16 (LEG_AREA_1, LEG_AREA_2, LEG_AREA_3, LEG_AREA_4, LEG_AREA_5, 
+LEG_AREA_6…)
+  · org.dependencias: 30 (LEG_DEP_1, LEG_DEP_2, LEG_DEP_3, LEG_DEP_4, 
+LEG_DEP_5, LEG_DEP_6…)
+  · core.jerarquias: 9 (LEG_JER_19, LEG_JER_20, LEG_JER_21, LEG_JER_22, 
+LEG_JER_23, LEG_JER_24…)
+  · core.cargos: 27 (LEG_CARGO_10, LEG_CARGO_11, LEG_CARGO_13, LEG_CARGO_17, 
+LEG_CARGO_18, LEG_CARGO_19…)
+  · core.condiciones: 4 (LEG_COND_4, LEG_COND_5, LEG_COND_6, LEG_COND_7)
+  · carrera.cursos: 20 (LEG_CURSO_1, LEG_CURSO_2, LEG_CURSO_3, LEG_CURSO_4, 
+LEG_CURSO_5, LEG_CURSO_6…)
+  · salud.grupos_diagnosticos: 9 (LEG_GRP_1, LEG_GRP_2, LEG_GRP_3, LEG_GRP_4, 
+LEG_GRP_6, LEG_GRP_7…)
+
+Tablas descartadas por regla: 10 (428 filas)
+  · ACCESO (10 filas) — usuarios legacy con claves en texto plano
+  · AUDIT_FUNCIONARIOS (40 filas) — auditoría legacy (el destino tiene 
+aud.log_cambios)
+  · AUDIT_HISTORICO_JERARQUIA (20 filas) — auditoría legacy (el destino tiene 
+aud.log_cambios)
+  · BENEFICIO_ENE22 (100 filas) — instantánea mensual de BENEFICIO
+  · FUNCIONARIOS_VIEJA (60 filas) — copia antigua (_VIEJA)
+  · HISTORICO_JERARQUIA_OLD (100 filas) — copia antigua (_OLD / …OLD)
+  · Hoja1$ (20 filas) — hoja importada de Excel ($)
+  · REPOSOS(ORIGINAL) (15 filas) — copia (ORIGINAL)
+  · REPOSOS_BD_VIEJA (60 filas) — copia antigua (_VIEJA)
+  · dtproperties (3 filas) — tabla de sistema de SQL Server
+
+Tablas canónicas aún sin mapeo: 18 (18 con datos, 1,846 filas) — ver JSON
+
+Reporte JSON: reportes_demo\reporte_carga_20261027_225630.json

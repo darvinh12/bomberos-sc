@@ -1,49 +1,79 @@
-"""Análisis del esquema legacy: conteos por tabla, columnas, ejemplos."""
+"""Análisis del origen: inventario de tablas clasificado y columnas reales vs el mapa.
+
+Solo lee metadatos y cuenta filas (``sys.tables``/``sys.partitions`` y
+``SELECT TOP 0``); no extrae datos personales.
+"""
 from __future__ import annotations
 
 from rich.console import Console
 from rich.table import Table
 
 from .config import Config
-from .io import legacy_conn
+from .mapping import MAPEOS, TABLAS_APOYO, motivo_exclusion
+from .texto import norm_col
 
 console = Console()
 
 
+def clasificar(tablas: list[tuple[str, int]]) -> dict[str, list[dict]]:
+    """Separa las tablas del origen en mapeadas, excluidas (con regla) y pendientes."""
+    mapeadas = {norm_col(t) for t in MAPEOS} | {norm_col(t) for t in TABLAS_APOYO}
+    out: dict[str, list[dict]] = {"mapeadas": [], "excluidas": [], "pendientes": []}
+    for nombre, filas in tablas:
+        regla = motivo_exclusion(nombre)
+        if norm_col(nombre) in mapeadas:
+            out["mapeadas"].append({"tabla": nombre, "filas": filas})
+        elif regla:
+            out["excluidas"].append({"tabla": nombre, "filas": filas, "regla": regla})
+        else:
+            out["pendientes"].append({"tabla": nombre, "filas": filas})
+    return out
+
+
 def run_analyze(config: Config) -> None:
-    """Lista tablas legacy con conteo y reporta columnas de las tablas clave."""
-    with legacy_conn(config.legacy_dsn) as cn:
-        cur = cn.cursor()
-        cur.execute(
-            """
-            SELECT t.name AS tabla,
-                   SUM(p.rows) AS filas
-            FROM sys.tables t
-            INNER JOIN sys.partitions p ON p.object_id = t.object_id
-            WHERE p.index_id IN (0, 1)
-            GROUP BY t.name
-            ORDER BY filas DESC, t.name
-            """
-        )
-        tables = [(r.tabla, int(r.filas or 0)) for r in cur.fetchall()]
+    import pyodbc
 
-        t = Table(title=f"Tablas legacy ({len(tables)})", show_lines=False)
-        t.add_column("Tabla", style="cyan")
-        t.add_column("Filas", justify="right")
-        for name, rows in tables[:80]:
-            t.add_row(name, f"{rows:,}")
-        console.print(t)
+    from .origen import OrigenSqlServer
 
-        for tname in ("FUNCIONARIOS", "REPOSOS", "VACACIONES", "DETALLE_EGRESO"):
+    origen = OrigenSqlServer(config.legacy_dsn)
+    try:
+        tablas = origen.listar_tablas()
+        cls = clasificar(tablas)
+        for clave, titulo in (("mapeadas", "Tablas mapeadas"),
+                              ("excluidas", "Tablas excluidas por regla"),
+                              ("pendientes", "Tablas canónicas aún sin mapeo")):
+            t = Table(title=f"{titulo} ({len(cls[clave])}, "
+                            f"{sum(x['filas'] for x in cls[clave]):,} filas)")
+            t.add_column("Tabla", style="cyan")
+            t.add_column("Filas", justify="right")
+            if clave == "excluidas":
+                t.add_column("Regla")
+            for x in sorted(cls[clave], key=lambda x: -x["filas"]):
+                fila = [x["tabla"], f"{x['filas']:,}"]
+                if clave == "excluidas":
+                    fila.append(x["regla"])
+                t.add_row(*fila)
+            console.print(t)
+
+        # Columnas reales vs mapa (detecta columnas nuevas o renombradas)
+        cur = origen._cn.cursor()
+        for tabla, m in MAPEOS.items():
+            if not origen.existe(tabla):
+                console.print(f"[red]Falta en el origen:[/] {tabla}")
+                continue
             try:
-                cur.execute(
-                    """
-                    SELECT TOP 0 * FROM dbo.[%s]
-                    """
-                    % tname
-                )
-                cols = [c[0] for c in cur.description]
-                console.print(f"[bold]Columnas de {tname}:[/] {', '.join(cols)}")
-            except Exception as e:
-                console.print(f"[red]No se pudo leer {tname}: {e}[/]")
+                cur.execute(f"SELECT TOP 0 * FROM dbo.[{origen._nombre_real(tabla)}]")
+            except pyodbc.Error as e:  # pragma: no cover - depende del servidor
+                console.print(f"[red]No se pudo leer {tabla}: {e}[/]")
+                continue
+            reales = {norm_col(c[0]) for c in cur.description}
+            nuevas = sorted(reales - set(m.columnas))
+            faltan = sorted(set(m.columnas) - reales)
+            estado = "[green]OK[/]" if not (nuevas or faltan) else "[yellow]REVISAR[/]"
+            console.print(f"{estado} {tabla}: {len(reales)} columnas"
+                          + (f"; no previstas (irán a legacy_extra): {', '.join(nuevas)}"
+                             if nuevas else "")
+                          + (f"; del mapa ausentes: {', '.join(faltan)}" if faltan else ""))
         cur.close()
+    finally:
+        origen.cerrar()

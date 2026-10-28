@@ -1,0 +1,142 @@
+{
+  "semilla": 20260504,
+  "fecha_corte": "2026-05-04",
+  "filas": {
+    "ZONAS": 10,
+    "ESTACIONES": 29,
+    "AREAS": 17,
+    "DIVISIONES": 40,
+    "DEPENDENCIAS": 30,
+    "AREA_DEPENDENCIA_OPERATIVA": 10,
+    "JERARQUIAS": 27,
+    "CARGOS": 40,
+    "CONDICIONES": 11,
+    "ESTATUS": 8,
+    "BANCOS": 10,
+    "TIPO_NIVEL_EDUCATIVO": 6,
+    "GRUPOSDIAGNOSTICOS": 10,
+    "DIAGNOSTICOS": 26,
+    "ESPECIALIDADES": 8,
+    "MEDICO_TRATANTE": 12,
+    "CENTROS_MEDICOS": 10,
+    "FALTAS": 1,
+    "CURSOS": 20,
+    "MARCA_TALLER_RADIO": 4,
+    "MODELO_TALLER_RADIO": 9,
+    "EQUIPOS_TALLER_RADIO": 12,
+    "EQUIPOS_PROTECCION": 21,
+    "UNIFORMES": 25,
+    "FUNCIONARIOS": 150,
+    "FUNCIONARIOS_EGRESADOS": 40,
+    "DETALLE_EGRESO": 53,
+    "UBICACION_ADMINISTRATIVA": 190,
+    "HISTORICO_UBICACION_ADMINISTRATIVA": 657,
+    "HISTORICO_JERARQUIA": 869,
+    "ASCENSOS": 467,
+    "CARGA_FAMILIAR": 338,
+    "NIVEL_EDUCATIVO": 329,
+    "REPOSOS": 315,
+    "Diagnostico_Consulta": 70,
+    "VACACIONES": 1593,
+    "RECURRENCIA": 87,
+    "ENC_GUARDIAS": 10,
+    "DET_GUARDIAS": 88,
+    "EVALUACIONES": 190,
+    "EVALUACIONES_CURSOS": 336,
+    "CONDECORACIONES": 90,
+    "JUBILADOS": 10,
+    "EQUIPOS_PROTECCION_FUNCIONARIOS": 122,
+    "UNIFORMES_FUNCIONARIOS": 149,
+    "INVENTARIORADIOS": 15,
+    "ASIGNACION_RADIO_INDIVIDUAL": 8,
+    "BENEFICIO": 150,
+    "REGISTRO_BENEFICIO": 666,
+    "ACERVO_HISTORICO_GENERAL": 476,
+    "ACCESO": 10,
+    "AUDIT_FUNCIONARIOS": 40,
+    "AUDIT_HISTORICO_JERARQUIA": 20,
+    "FUNCIONARIOS_VIEJA": 60,
+    "HISTORICO_JERARQUIA_OLD": 100,
+    "REPOSOS_BD_VIEJA": 60,
+    "REPOSOS(ORIGINAL)": 15,
+    "BENEFICIO_ENE22": 100,
+    "Hoja1$": 20,
+    "dtproperties": 3
+  },
+  "por_zona_vigente": {
+    "activos": {
+      "1": 90,
+      "2": 10,
+      "3": 9,
+      "4": 8,
+      "5": 8,
+      "6": 5,
+      "7": 7,
+      "8": 8,
+      "9": 3,
+      "10": 2
+    },
+    "egresados": {
+      "1": 25,
+      "2": 1,
+      "3": 5,
+      "4": 2,
+      "5": 1,
+      "6": 1,
+      "7": 2,
+      "8": 2,
+      "9": 1
+    }
+  },
+  "reingresos": {
+    "activos": 12,
+    "egresados": 3
+  },
+  "anomalias": [
+    {
+      "tabla": "FUNCIONARIOS",
+      "cantidad": 2,
+      "descripcion": "Dos expedientes comparten CORREO_ELECTRONICO (destino: correo UNIQUE)"
+    },
+    {
+      "tabla": "FUNCIONARIOS",
+      "cantidad": 3,
+      "descripcion": "CORREO_ELECTRONICO = 'NO POSEE' (no es correo)"
+    },
+    {
+      "tabla": "HISTORICO_UBICACION_ADMINISTRATIVA",
+      "cantidad": 2,
+      "descripcion": "Fila histórica (no vigente) con COD_ZONA distinta a la zona de su estación"
+    },
+    {
+      "tabla": "DETALLE_EGRESO",
+      "cantidad": 2,
+      "descripcion": "Reingresos (FECHA_EGRESO+FECHA_REINTEGRO en FUNCIONARIOS) sin fila en DETALLE_EGRESO"
+    },
+    {
+      "tabla": "REPOSOS",
+      "cantidad": 6,
+      "descripcion": "Reposo que se solapa parcialmente con otro del mismo funcionario"
+    },
+    {
+      "tabla": "REPOSOS",
+      "cantidad": 2,
+      "descripcion": "Reposo duplicado exacto (mismas fechas y NROORDEN, otro ID)"
+    },
+    {
+      "tabla": "REPOSOS",
+      "cantidad": 2,
+      "descripcion": "FECHA_FIN anterior a FECHA_INICIO"
+    },
+    {
+      "tabla": "REPOSOS",
+      "cantidad": 3,
+      "descripcion": "Reposo de una cédula que no existe en FUNCIONARIOS ni en egresados"
+    },
+    {
+      "tabla": "VACACIONES",
+      "cantidad": 2,
+      "descripcion": "Vacación registrada dos veces (mismo período y fechas)"
+    }
+  ]
+}
