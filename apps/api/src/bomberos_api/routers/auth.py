@@ -147,12 +147,14 @@ async def login(
         await _persistir_antes_de_rechazar(db)
         raise invalid_exc
 
-    # Login exitoso
+    # Login exitoso. El contexto de auditoría va ANTES de modificar el objeto:
+    # desde SQLAlchemy 2.1, session.execute(text(...)) hace autoflush y el UPDATE
+    # quedaría en aud.log_cambios sin usuario_id.
+    await _set_audit_context(db, user.id, ip)
     user.intentos_fallidos = 0
     user.ultimo_acceso = datetime.now(UTC)
     user.ultimo_ip = ip
 
-    await _set_audit_context(db, user.id, ip)
     await _log_acceso(
         db, usuario_id=user.id, usuario=user.usuario, ip=ip, user_agent=ua,
         tipo_evento="LOGIN"
@@ -251,10 +253,11 @@ async def change_password(
         )
 
     ip = _client_ip(request)
+    # Contexto de auditoría antes de modificar el objeto (ver login).
+    await _set_audit_context(db, user.id, ip)
     user.password_hash = hash_password(payload.password_nuevo)
     user.debe_cambiar_password = False
 
-    await _set_audit_context(db, user.id, ip)
     await _log_acceso(
         db, usuario_id=user.id, usuario=user.usuario, ip=ip,
         user_agent=request.headers.get("user-agent"),
