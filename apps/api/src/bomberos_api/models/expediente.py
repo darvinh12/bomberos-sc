@@ -7,8 +7,10 @@ El histórico de carnets cuelga de `personal.carnets` (no de funcionarios) y reg
 los cambios de número/serial a lo largo del tiempo.
 
 Convenciones:
-- Tipos ENUM de Postgres (`core.sexo_t`, `core.tipo_actividad`) se mapean a `String`
-  y la BD valida el dominio.
+- Tipos ENUM de Postgres (`core.sexo_t`, `core.tipo_actividad`) se mapean con el
+  objeto ENUM compartido (bomberos_api.models._enums) para que el ORM emita el
+  cast nativo en INSERT/UPDATE y filtros; mapearlos a String rompía los INSERT
+  (`column "x" is of type core.<enum> but expression is of type varchar`).
 - `CHAR(1)` para nacionalidad ('V','E') replicando el patrón de Funcionario.
 - Las columnas se declaran en el mismo orden que el DDL para que sea fácil auditar.
 """
@@ -26,12 +28,11 @@ from sqlalchemy import (
     SmallInteger,
     String,
     UniqueConstraint,
-    func,
 )
 from sqlalchemy.orm import Mapped, mapped_column
 
+from bomberos_api.models._enums import SEXO, TIPO_ACTIVIDAD
 from bomberos_api.models.base import Base
-from bomberos_api.models.enums import SEXO_T, TIPO_ACTIVIDAD
 from bomberos_api.models.mixins import SoftDeleteMixin
 
 # =============================================================================
@@ -57,7 +58,7 @@ class CargaFamiliar(SoftDeleteMixin, Base):
     apellidos: Mapped[str] = mapped_column(String, nullable=False)
     nombres: Mapped[str] = mapped_column(String, nullable=False)
     fecha_nacimiento: Mapped[date | None] = mapped_column(Date)
-    sexo: Mapped[str | None] = mapped_column(SEXO_T)
+    sexo: Mapped[str | None] = mapped_column(SEXO)
     estado_civil_id: Mapped[int | None] = mapped_column(
         SmallInteger, ForeignKey("core.estados_civiles.id")
     )
@@ -86,8 +87,8 @@ class CargaFamiliar(SoftDeleteMixin, Base):
     fecha_baja: Mapped[date | None] = mapped_column(Date)
     motivo_baja: Mapped[str | None] = mapped_column(String)
     observaciones: Mapped[str | None] = mapped_column(String)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default="now()")
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default="now()")
 
 
 # =============================================================================
@@ -115,7 +116,7 @@ class HistoricoJerarquia(SoftDeleteMixin, Base):
     motivo: Mapped[str | None] = mapped_column(String)
     resolucion: Mapped[str | None] = mapped_column(String)
     documento_url: Mapped[str | None] = mapped_column(String)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default="now()")
 
 
 class HistoricoUbicacion(SoftDeleteMixin, Base):
@@ -147,7 +148,7 @@ class HistoricoUbicacion(SoftDeleteMixin, Base):
     motivo: Mapped[str | None] = mapped_column(String)
     resolucion: Mapped[str | None] = mapped_column(String)
     documento_url: Mapped[str | None] = mapped_column(String)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default="now()")
 
 
 class TiempoAdmPublica(SoftDeleteMixin, Base):
@@ -208,7 +209,7 @@ class Actividad(SoftDeleteMixin, Base):
         ForeignKey("personal.funcionarios.id", ondelete="CASCADE"),
         nullable=False,
     )
-    # core.tipo_actividad ENUM — la BD valida el dominio.
+    # core.tipo_actividad ENUM nativo (cast emitido por el ORM).
     tipo: Mapped[str] = mapped_column(TIPO_ACTIVIDAD, nullable=False)
     nombre: Mapped[str] = mapped_column(String, nullable=False)
     descripcion: Mapped[str | None] = mapped_column(String)
@@ -258,8 +259,8 @@ class Carnet(SoftDeleteMixin, Base):
     activo: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=True, server_default="true"
     )
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default="now()")
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default="now()")
 
 
 class HistoricoCarnet(Base):

@@ -11,8 +11,8 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Mapped, mapped_column
 
+from bomberos_api.models._enums import ESTATUS_SOLICITUD
 from bomberos_api.models.base import Base
-from bomberos_api.models.enums import ESTATUS_SOLICITUD
 
 
 class SolicitudJubilacion(Base):

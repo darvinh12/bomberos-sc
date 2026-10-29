@@ -309,6 +309,9 @@ async def actualizar(
             detail=f"Conflicto al actualizar: {e.orig}",
         ) from e
 
+    # Recargar tras el flush: evita MissingGreenlet al serializar atributos
+    # expirados (mismo patrón que en `crear`).
+    await db.refresh(funcionario)
     return FuncionarioDetail.model_validate(funcionario)
 
 

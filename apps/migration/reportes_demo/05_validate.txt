@@ -1,0 +1,207 @@
+Origen: script T-SQL demo_legacy\datos_legacy.sql
+
+== Validación post-carga ==  zona: Z1
+Expedientes en alcance: 115
+                            Cuadre origen ↔ destino                            
+┌─────────────────────────┬─────────┬──────────┬──────────┬────────┬──────────┐
+│ Tabla origen            │ Alcance │ Migradas │ Descart. │ Faltan │ ¿Cuadra? │
+├─────────────────────────┼─────────┼──────────┼──────────┼────────┼──────────┤
+│ ZONAS                   │      10 │       10 │        0 │      0 │       sí │
+│ DIVISIONES              │      40 │       40 │        0 │      0 │       sí │
+│ AREAS                   │      17 │       17 │        0 │      0 │       sí │
+│ DEPENDENCIAS            │      30 │       30 │        0 │      0 │       sí │
+│ ESTACIONES              │      29 │       29 │        0 │      0 │       sí │
+│ JERARQUIAS              │      27 │       27 │        0 │      0 │       sí │
+│ CARGOS                  │      40 │       40 │        0 │      0 │       sí │
+│ CONDICIONES             │      11 │       11 │        0 │      0 │       sí │
+│ TIPO_NIVEL_EDUCATIVO    │       6 │        6 │        0 │      0 │       sí │
+│ CURSOS                  │      20 │       20 │        0 │      0 │       sí │
+│ GRUPOSDIAGNOSTICOS      │      10 │       10 │        0 │      0 │       sí │
+│ DIAGNOSTICOS            │      26 │       26 │        0 │      0 │       sí │
+│ MEDICO_TRATANTE         │      12 │       12 │        0 │      0 │       sí │
+│ CENTROS_MEDICOS         │      10 │       10 │        0 │      0 │       sí │
+│ FUNCIONARIOS            │      90 │       90 │        0 │      0 │       sí │
+│ FUNCIONARIOS_EGRESADOS  │      25 │       25 │        0 │      0 │       sí │
+│ UBICACION_ADMINISTRATI… │     115 │      115 │        0 │      0 │       sí │
+│ DETALLE_EGRESO          │      32 │       32 │        0 │      0 │       sí │
+│ HISTORICO_JERARQUIA     │     530 │      530 │        0 │      0 │       sí │
+│ HISTORICO_UBICACION_AD… │     402 │      402 │        0 │      0 │       sí │
+│ CARGA_FAMILIAR          │     195 │      195 │        0 │      0 │       sí │
+│ NIVEL_EDUCATIVO         │     198 │      198 │        0 │      0 │       sí │
+│ REPOSOS                 │     181 │      175 │        6 │      0 │       sí │
+│ VACACIONES              │     974 │      974 │        0 │      0 │       sí │
+│ RECURRENCIA             │      59 │       59 │        0 │      0 │       sí │
+│ DET_GUARDIAS            │      84 │       84 │        0 │      0 │       sí │
+│ EVALUACIONES_CURSOS     │     225 │      225 │        0 │      0 │       sí │
+│ ASCENSOS                │     328 │      328 │        0 │      0 │       sí │
+│ EVALUACIONES            │     126 │      126 │        0 │      0 │       sí │
+│ JUBILADOS               │       8 │        8 │        0 │      0 │       sí │
+└─────────────────────────┴─────────┴──────────┴──────────┴────────┴──────────┘
+
+Integridad
+  trazas sin fila destino: 0
+  hijos sin funcionario: 0
+  funcionarios sin períodos: 0
+  con varios períodos abiertos: 0
+
+Solapamientos (deben ser 0 en destino)
+  periodos_solapados_en_destino: 0
+  reposos_solapados_en_destino: 0
+  vacaciones_solapadas_en_destino: 0
+  rechazadas por el motor — REPOSOS: 4 (rechazado por el motor: solapamiento 
+(reposos_funcionario_id_daterange_excl))
+
+Antigüedad (115 funcionarios): {'igual': 106, 'menor en destino: descuenta 
+interrupciones entre períodos': 9}; primer ingreso coincide en 115
+      Expediente 90000016 (antigüedad destino: 7 años, 4 meses, 23 días)       
+┌────────────────────────┬────────────────────────┬───────────────────────┬───┐
+│ Campo                  │ Origen                 │ Destino               │   │
+├────────────────────────┼────────────────────────┼───────────────────────┼───┤
+│ cédula                 │ V-90000016             │ V-90000016            │ ✓ │
+│ apellidos              │ CARDENAS GODOY         │ CARDENAS GODOY        │ ✓ │
+│ nombres                │ GERARDO OSCAR          │ GERARDO OSCAR         │ ✓ │
+│ fecha de nacimiento    │ 1998-04-11             │ 1998-04-11            │ ✓ │
+│ sexo                   │ M                      │ M                     │ ✓ │
+│ estatus                │ ACTIVO                 │ ACTIVO                │ ✓ │
+│ jerarquía              │ TENIENTE               │ Teniente              │ ✓ │
+│ zona vigente           │ ZONA 1 CENTRO          │ Zona 1 - Centro       │ ✓ │
+│ primer ingreso         │ 2019-06-09             │ 2019-06-09            │ ✓ │
+│ períodos de servicio   │ 1                      │ 1                     │ ✓ │
+│ correo                 │ gerardo.cardenas0016@… │ gerardo.cardenas0016… │ ✓ │
+│ teléfono móvil         │ 0412-5550598           │ 0412-5550598          │ ✓ │
+│ n.º de empleado        │ 000100016              │ 000100016             │ ✓ │
+│ filas                  │ 3                      │ 3                     │ ✓ │
+│ HISTORICO_JERARQUIA    │                        │                       │   │
+│ filas                  │ 2                      │ 2                     │ ✓ │
+│ HISTORICO_UBICACION_A… │                        │                       │   │
+│ filas CARGA_FAMILIAR   │ 4                      │ 4                     │ ✓ │
+│ filas REPOSOS          │ 0                      │ 0                     │ ✓ │
+│ filas VACACIONES       │ 6                      │ 6                     │ ✓ │
+│ filas RECURRENCIA      │ 2                      │ 2                     │ ✓ │
+│ filas ASCENSOS         │ 1                      │ 1                     │ ✓ │
+│ filas EVALUACIONES     │ 3                      │ 3                     │ ✓ │
+│ filas                  │ 3                      │ 3                     │ ✓ │
+│ EVALUACIONES_CURSOS    │                        │                       │   │
+└────────────────────────┴────────────────────────┴───────────────────────┴───┘
+      Expediente 90000041 (antigüedad destino: 12 años, 2 meses, 2 días)       
+┌─────────────────────────────────┬───────────────────┬───────────────────┬───┐
+│ Campo                           │ Origen            │ Destino           │   │
+├─────────────────────────────────┼───────────────────┼───────────────────┼───┤
+│ cédula                          │ V-90000041        │ V-90000041        │ ✓ │
+│ apellidos                       │ ARAUJO GUTIERREZ  │ ARAUJO GUTIERREZ  │ ✓ │
+│ nombres                         │ ALEJANDRO GUSTAVO │ ALEJANDRO GUSTAVO │ ✓ │
+│ fecha de nacimiento             │ 1987-08-13        │ 1987-08-13        │ ✓ │
+│ sexo                            │ M                 │ M                 │ ✓ │
+│ estatus                         │ ACTIVO            │ ACTIVO            │ ✓ │
+│ jerarquía                       │ SARGENTO SEGUNDO  │ Sargento Segundo  │ ✓ │
+│ zona vigente                    │ ZONA 1 CENTRO     │ Zona 1 - Centro   │ ✓ │
+│ primer ingreso                  │ 2014-08-30        │ 2014-08-30        │ ✓ │
+│ períodos de servicio            │ 1                 │ 1                 │ ✓ │
+│ correo                          │ None              │ None              │ ✓ │
+│ teléfono móvil                  │ 0414-5551471      │ 0414-5551471      │ ✓ │
+│ n.º de empleado                 │ 000100041         │ 000100041         │ ✓ │
+│ filas HISTORICO_JERARQUIA       │ 4                 │ 4                 │ ✓ │
+│ filas                           │ 3                 │ 3                 │ ✓ │
+│ HISTORICO_UBICACION_ADMINISTRA… │                   │                   │   │
+│ filas CARGA_FAMILIAR            │ 2                 │ 2                 │ ✓ │
+│ filas REPOSOS                   │ 1                 │ 1                 │ ✓ │
+│ filas VACACIONES                │ 9                 │ 9                 │ ✓ │
+│ filas RECURRENCIA               │ 2                 │ 2                 │ ✓ │
+│ filas ASCENSOS                  │ 3                 │ 3                 │ ✓ │
+│ filas EVALUACIONES              │ 3                 │ 3                 │ ✓ │
+│ filas EVALUACIONES_CURSOS       │ 3                 │ 3                 │ ✓ │
+└─────────────────────────────────┴───────────────────┴───────────────────┴───┘
+      Expediente 90000065 (antigüedad destino: 11 años, 7 meses, 24 días)      
+┌────────────────────────┬────────────────────────┬───────────────────────┬───┐
+│ Campo                  │ Origen                 │ Destino               │   │
+├────────────────────────┼────────────────────────┼───────────────────────┼───┤
+│ cédula                 │ V-90000065             │ V-90000065            │ ✓ │
+│ apellidos              │ GOMEZ CONTRERAS        │ GOMEZ CONTRERAS       │ ✓ │
+│ nombres                │ RAFAEL ANDRES          │ RAFAEL ANDRES         │ ✓ │
+│ fecha de nacimiento    │ 1990-05-12             │ 1990-05-12            │ ✓ │
+│ sexo                   │ M                      │ M                     │ ✓ │
+│ estatus                │ ACTIVO                 │ ACTIVO                │ ✓ │
+│ jerarquía              │ CABO PRIMERO           │ Cabo Primero          │ ✓ │
+│ zona vigente           │ ZONA 1 CENTRO          │ Zona 1 - Centro       │ ✓ │
+│ primer ingreso         │ 2015-03-11             │ 2015-03-11            │ ✓ │
+│ períodos de servicio   │ 1                      │ 1                     │ ✓ │
+│ correo                 │ rafael.gomez0065@exam… │ rafael.gomez0065@exa… │ ✓ │
+│ teléfono móvil         │ 0416-5552841           │ 0416-5552841          │ ✓ │
+│ n.º de empleado        │ 000100065              │ 000100065             │ ✓ │
+│ filas                  │ 5                      │ 5                     │ ✓ │
+│ HISTORICO_JERARQUIA    │                        │                       │   │
+│ filas                  │ 5                      │ 5                     │ ✓ │
+│ HISTORICO_UBICACION_A… │                        │                       │   │
+│ filas CARGA_FAMILIAR   │ 4                      │ 4                     │ ✓ │
+│ filas REPOSOS          │ 5 (−1 descartadas)     │ 4                     │ ✓ │
+│ filas VACACIONES       │ 10                     │ 10                    │ ✓ │
+│ filas RECURRENCIA      │ 3                      │ 3                     │ ✓ │
+│ filas ASCENSOS         │ 3                      │ 3                     │ ✓ │
+│ filas EVALUACIONES     │ 0                      │ 0                     │ ✓ │
+│ filas                  │ 3                      │ 3                     │ ✓ │
+│ EVALUACIONES_CURSOS    │                        │                       │   │
+└────────────────────────┴────────────────────────┴───────────────────────┴───┘
+      Expediente 90000066 (antigüedad destino: 31 años, 0 meses, 23 días)      
+┌────────────────────────┬────────────────────────┬───────────────────────┬───┐
+│ Campo                  │ Origen                 │ Destino               │   │
+├────────────────────────┼────────────────────────┼───────────────────────┼───┤
+│ cédula                 │ V-90000066             │ V-90000066            │ ✓ │
+│ apellidos              │ MORALES CASTILLO       │ MORALES CASTILLO      │ ✓ │
+│ nombres                │ LUIS SERGIO            │ LUIS SERGIO           │ ✓ │
+│ fecha de nacimiento    │ 1969-09-08             │ 1969-09-08            │ ✓ │
+│ sexo                   │ M                      │ M                     │ ✓ │
+│ estatus                │ ACTIVO                 │ ACTIVO                │ ✓ │
+│ jerarquía              │ SARGENTO AYUDANTE      │ Sargento Ayudante     │ ✓ │
+│ zona vigente           │ ZONA 1 CENTRO          │ Zona 1 - Centro       │ ✓ │
+│ primer ingreso         │ 1995-10-13             │ 1995-10-13            │ ✓ │
+│ períodos de servicio   │ 1                      │ 1                     │ ✓ │
+│ correo                 │ luis.morales0066@exam… │ luis.morales0066@exa… │ ✓ │
+│ teléfono móvil         │ 0416-5555039           │ 0416-5555039          │ ✓ │
+│ n.º de empleado        │ 000100066              │ 000100066             │ ✓ │
+│ filas                  │ 5                      │ 5                     │ ✓ │
+│ HISTORICO_JERARQUIA    │                        │                       │   │
+│ filas                  │ 5                      │ 5                     │ ✓ │
+│ HISTORICO_UBICACION_A… │                        │                       │   │
+│ filas CARGA_FAMILIAR   │ 3                      │ 3                     │ ✓ │
+│ filas REPOSOS          │ 0                      │ 0                     │ ✓ │
+│ filas VACACIONES       │ 9                      │ 9                     │ ✓ │
+│ filas RECURRENCIA      │ 0                      │ 0                     │ ✓ │
+│ filas ASCENSOS         │ 4                      │ 4                     │ ✓ │
+│ filas EVALUACIONES     │ 0                      │ 0                     │ ✓ │
+│ filas                  │ 3                      │ 3                     │ ✓ │
+│ EVALUACIONES_CURSOS    │                        │                       │   │
+└────────────────────────┴────────────────────────┴───────────────────────┴───┘
+      Expediente 90000083 (antigüedad destino: 17 años, 10 meses, 3 días)      
+┌────────────────────────┬───────────────────────┬────────────────────────┬───┐
+│ Campo                  │ Origen                │ Destino                │   │
+├────────────────────────┼───────────────────────┼────────────────────────┼───┤
+│ cédula                 │ V-90000083            │ V-90000083             │ ✓ │
+│ apellidos              │ ROMERO GODOY          │ ROMERO GODOY           │ ✓ │
+│ nombres                │ VICTOR MARIO          │ VICTOR MARIO           │ ✓ │
+│ fecha de nacimiento    │ 1986-03-08            │ 1986-03-08             │ ✓ │
+│ sexo                   │ M                     │ M                      │ ✓ │
+│ estatus                │ COMISION              │ COMISION               │ ✓ │
+│ jerarquía              │ SARGENTO SEGUNDO      │ Sargento Segundo       │ ✓ │
+│ zona vigente           │ ZONA 1 CENTRO         │ Zona 1 - Centro        │ ✓ │
+│ primer ingreso         │ 2009-01-02            │ 2009-01-02             │ ✓ │
+│ períodos de servicio   │ 1                     │ 1                      │ ✓ │
+│ correo                 │ victor.romero0083@ex… │ victor.romero0083@exa… │ ✓ │
+│ teléfono móvil         │ 0426-5556020          │ 0426-5556020           │ ✓ │
+│ n.º de empleado        │ 000100083             │ 000100083              │ ✓ │
+│ filas                  │ 6                     │ 6                      │ ✓ │
+│ HISTORICO_JERARQUIA    │                       │                        │   │
+│ filas                  │ 4                     │ 4                      │ ✓ │
+│ HISTORICO_UBICACION_A… │                       │                        │   │
+│ filas CARGA_FAMILIAR   │ 1                     │ 1                      │ ✓ │
+│ filas REPOSOS          │ 3                     │ 3                      │ ✓ │
+│ filas VACACIONES       │ 9                     │ 9                      │ ✓ │
+│ filas RECURRENCIA      │ 0                     │ 0                      │ ✓ │
+│ filas ASCENSOS         │ 4                     │ 4                      │ ✓ │
+│ filas EVALUACIONES     │ 0                     │ 0                      │ ✓ │
+│ filas                  │ 1                     │ 1                      │ ✓ │
+│ EVALUACIONES_CURSOS    │                       │                        │   │
+└────────────────────────┴───────────────────────┴────────────────────────┴───┘
+
+Veredicto: APROBADO
+
+Reporte JSON: reportes_demo\reporte_migracion_20261027_225714.json

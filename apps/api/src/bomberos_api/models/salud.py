@@ -12,7 +12,6 @@ from sqlalchemy import (
     SmallInteger,
     String,
     Text,
-    func,
 )
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -87,7 +86,7 @@ class Reposo(Base):
     fecha_inicio: Mapped[date] = mapped_column(Date)
     fecha_fin: Mapped[date] = mapped_column(Date)
     dias: Mapped[int | None] = mapped_column(
-        SmallInteger, Computed("fecha_fin - fecha_inicio + 1", persisted=True)
+        SmallInteger, Computed("(fecha_fin - fecha_inicio) + 1", persisted=True)
     )
     folio: Mapped[str | None] = mapped_column(String)
     documento_url: Mapped[str | None] = mapped_column(String)
@@ -96,8 +95,8 @@ class Reposo(Base):
     anulado: Mapped[bool] = mapped_column(Boolean, default=False)
     motivo_anulacion: Mapped[str | None] = mapped_column(Text)
     observaciones: Mapped[str | None] = mapped_column(Text)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default="now()")
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default="now()")
     created_by: Mapped[int | None] = mapped_column(BigInteger)
 
 
@@ -120,7 +119,7 @@ class Lesion(Base):
     dias_incapacidad: Mapped[int | None] = mapped_column(SmallInteger)
     secuelas: Mapped[str | None] = mapped_column(Text)
     documento_url: Mapped[str | None] = mapped_column(String)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default="now()")
 
 
 class EvaluacionFisica(Base):
@@ -134,7 +133,11 @@ class EvaluacionFisica(Base):
     peso_kg: Mapped[float | None] = mapped_column(Numeric(5, 2))
     estatura_cm: Mapped[float | None] = mapped_column(Numeric(5, 2))
     imc: Mapped[float | None] = mapped_column(
-        Numeric(5, 2), Computed("peso_kg / ((estatura_cm/100.0)*(estatura_cm/100.0))", persisted=True)
+        Numeric(5, 2),
+        Computed(
+            "CASE WHEN estatura_cm > 0 THEN peso_kg / ((estatura_cm/100.0)*(estatura_cm/100.0)) ELSE NULL END",
+            persisted=True,
+        ),
     )
     presion_sistolica: Mapped[int | None] = mapped_column(SmallInteger)
     presion_diastolica: Mapped[int | None] = mapped_column(SmallInteger)
@@ -145,7 +148,7 @@ class EvaluacionFisica(Base):
     apto: Mapped[bool | None] = mapped_column(Boolean)
     observaciones: Mapped[str | None] = mapped_column(Text)
     medico_id: Mapped[int | None] = mapped_column(BigInteger)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default="now()")
 
 
 class HCM(Base):

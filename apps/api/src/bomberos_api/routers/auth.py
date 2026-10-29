@@ -44,18 +44,32 @@ async def _set_audit_context(db, usuario_id: int | None, ip: str | None) -> None
 
 async def _log_acceso(db, *, usuario_id: int | None, usuario: str, ip: str | None,
                        user_agent: str | None, tipo_evento: str, detalle: str | None = None):
+    # SAVEPOINT: si el INSERT falla (p. ej. IP con formato inválido), solo se
+    # deshace el savepoint y la transacción principal sigue utilizable.
     try:
-        await db.execute(
-            text(
-                """INSERT INTO aud.log_accesos
-                   (usuario_id, usuario, ip, user_agent, tipo_evento, detalle)
-                   VALUES (:uid, :u, CAST(:ip AS inet), :ua, CAST(:te AS core.tipo_evento_acceso), :d)"""
-            ).bindparams(
-                uid=usuario_id, u=usuario, ip=ip, ua=user_agent, te=tipo_evento, d=detalle
+        async with db.begin_nested():
+            await db.execute(
+                text(
+                    """INSERT INTO aud.log_accesos
+                       (usuario_id, usuario, ip, user_agent, tipo_evento, detalle)
+                       VALUES (:uid, :u, CAST(:ip AS inet), :ua,
+                               CAST(:te AS core.tipo_evento_acceso), :d)"""
+                ).bindparams(
+                    uid=usuario_id, u=usuario, ip=ip, ua=user_agent, te=tipo_evento, d=detalle
+                )
             )
-        )
     except Exception as e:
         log.warning("audit_log_failed", error=str(e), tipo_evento=tipo_evento, usuario=usuario)
+
+
+async def _persistir_antes_de_rechazar(db) -> None:
+    """Confirma la transacción antes de responder con error.
+
+    La dependencia `get_session` hace rollback cuando el endpoint lanza una
+    excepción; en /login los rechazos DEBEN dejar rastro (intentos fallidos,
+    bloqueo de cuenta y aud.log_accesos), así que se confirman explícitamente.
+    """
+    await db.commit()
 
 
 def _client_ip(request: Request) -> str | None:
@@ -88,6 +102,7 @@ async def login(
             db, usuario_id=None, usuario=form.username, ip=ip, user_agent=ua,
             tipo_evento="LOGIN_FALLIDO", detalle="usuario_inexistente"
         )
+        await _persistir_antes_de_rechazar(db)
         raise invalid_exc
 
     if not user.activo:
@@ -95,6 +110,7 @@ async def login(
             db, usuario_id=user.id, usuario=user.usuario, ip=ip, user_agent=ua,
             tipo_evento="LOGIN_FALLIDO", detalle="inactivo"
         )
+        await _persistir_antes_de_rechazar(db)
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Cuenta inactiva"
         )
@@ -104,12 +120,16 @@ async def login(
             db, usuario_id=user.id, usuario=user.usuario, ip=ip, user_agent=ua,
             tipo_evento="LOGIN_FALLIDO", detalle="bloqueada"
         )
+        await _persistir_antes_de_rechazar(db)
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Cuenta bloqueada. Contacta al administrador.",
         )
 
     if not verify_password(form.password, user.password_hash):
+        # Contexto de auditoría: el UPDATE de seguridad.usuarios queda en
+        # aud.log_cambios con la IP de origen del intento.
+        await _set_audit_context(db, None, ip)
         user.intentos_fallidos = (user.intentos_fallidos or 0) + 1
         if user.intentos_fallidos >= MAX_INTENTOS_FALLIDOS:
             user.bloqueado = True
@@ -122,14 +142,19 @@ async def login(
             db, usuario_id=user.id, usuario=user.usuario, ip=ip, user_agent=ua,
             tipo_evento="LOGIN_FALLIDO", detalle=f"intento_{user.intentos_fallidos}"
         )
+        # Sin este commit, el `raise` hace que get_session() ejecute rollback y
+        # el contador, el bloqueo y la bitácora de accesos se pierden.
+        await _persistir_antes_de_rechazar(db)
         raise invalid_exc
 
-    # Login exitoso
+    # Login exitoso. El contexto de auditoría va ANTES de modificar el objeto:
+    # desde SQLAlchemy 2.1, session.execute(text(...)) hace autoflush y el UPDATE
+    # quedaría en aud.log_cambios sin usuario_id.
+    await _set_audit_context(db, user.id, ip)
     user.intentos_fallidos = 0
     user.ultimo_acceso = datetime.now(UTC)
     user.ultimo_ip = ip
 
-    await _set_audit_context(db, user.id, ip)
     await _log_acceso(
         db, usuario_id=user.id, usuario=user.usuario, ip=ip, user_agent=ua,
         tipo_evento="LOGIN"
@@ -228,10 +253,11 @@ async def change_password(
         )
 
     ip = _client_ip(request)
+    # Contexto de auditoría antes de modificar el objeto (ver login).
+    await _set_audit_context(db, user.id, ip)
     user.password_hash = hash_password(payload.password_nuevo)
     user.debe_cambiar_password = False
 
-    await _set_audit_context(db, user.id, ip)
     await _log_acceso(
         db, usuario_id=user.id, usuario=user.usuario, ip=ip,
         user_agent=request.headers.get("user-agent"),

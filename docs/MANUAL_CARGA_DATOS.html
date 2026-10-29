@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Manual de carga de datos — Sistema Bomberos Caracas</title>
+<style>
+  :root{
+    --azul:#00365F; --azul2:#008DD4; --tinta:#1a2230; --gris:#5b6675;
+    --linea:#d9dee6; --suave:#f4f6f9; --ok:#0f9d58; --amber:#c77700;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:"Segoe UI",-apple-system,Roboto,Helvetica,Arial,sans-serif;
+    color:var(--tinta); font-size:11pt; line-height:1.5;
+  }
+  @page{ size:A4; margin:18mm 16mm 16mm 16mm; }
+  h1,h2,h3{ color:var(--azul); margin:0; }
+  a{ color:var(--azul2); text-decoration:none; }
+  .wrap{ max-width:180mm; margin:0 auto; }
+
+  /* Portada */
+  .cover{
+    min-height:245mm; display:flex; flex-direction:column; justify-content:center;
+    text-align:center; page-break-after:always;
+  }
+  .badge{
+    width:70px;height:70px;border-radius:14px;margin:0 auto 22px;
+    background:linear-gradient(135deg,var(--azul),var(--azul2));
+    color:#fff;display:flex;align-items:center;justify-content:center;
+    font-weight:800;font-size:24px;letter-spacing:1px;
+  }
+  .cover h1{ font-size:30pt; line-height:1.15; }
+  .cover .sub{ color:var(--gris); font-size:13pt; margin-top:10px; }
+  .cover .meta{ margin-top:34px; color:var(--gris); font-size:10pt; }
+  .rule{ height:3px;width:80px;background:var(--azul2);margin:20px auto;border-radius:2px; }
+
+  /* Secciones */
+  section{ page-break-inside:avoid; }
+  .lead{ color:var(--gris); font-size:11pt; }
+  .callout{
+    border-left:4px solid var(--azul2); background:var(--suave);
+    padding:12px 16px; border-radius:0 6px 6px 0; margin:16px 0;
+  }
+  .callout.warn{ border-left-color:var(--amber); }
+  .callout strong{ color:var(--azul); }
+
+  /* Timeline de fases */
+  .fase{
+    border:1px solid var(--linea); border-radius:10px; padding:16px 18px;
+    margin:14px 0; page-break-inside:avoid;
+  }
+  .fase .head{ display:flex; align-items:baseline; gap:10px; }
+  .fase .num{
+    background:var(--azul); color:#fff; font-weight:700; font-size:11pt;
+    min-width:26px;height:26px;border-radius:7px;display:inline-flex;
+    align-items:center;justify-content:center;
+  }
+  .fase h3{ font-size:13pt; }
+  .fase .obj{ margin:8px 0 6px; }
+  .fase .why{ color:var(--gris); font-size:10pt; }
+  .fase .why b{ color:var(--tinta); }
+  .steps{ margin:10px 0 0; padding:0; list-style:none; }
+  .steps li{ padding:5px 0 5px 22px; position:relative; border-top:1px dashed var(--linea); font-size:10.5pt; }
+  .steps li:first-child{ border-top:0; }
+  .steps li::before{ content:"▸"; color:var(--azul2); position:absolute; left:4px; }
+  .steps .ruta{ color:var(--gris); font-family:"Consolas",monospace; font-size:9pt; }
+
+  /* Tabla de valores */
+  table{ width:100%; border-collapse:collapse; margin:10px 0; font-size:10pt; }
+  th,td{ text-align:left; padding:7px 10px; border-bottom:1px solid var(--linea); vertical-align:top; }
+  th{ background:var(--suave); color:var(--azul); font-weight:600; }
+  code{ font-family:"Consolas",monospace; background:var(--suave); padding:1px 5px; border-radius:4px; font-size:9.5pt; }
+
+  .foot{ margin-top:28px; padding-top:10px; border-top:1px solid var(--linea); color:var(--gris); font-size:8.5pt; text-align:center; }
+  h2.sec{ font-size:15pt; margin:26px 0 4px; padding-bottom:6px; border-bottom:2px solid var(--suave); }
+  .page-break{ page-break-before:always; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- PORTADA -->
+  <div class="cover">
+    <div class="badge">CB</div>
+    <h1>Manual de carga de datos</h1>
+    <div class="rule"></div>
+    <div class="sub">Sistema Integral del Cuerpo de Bomberos del Distrito Capital</div>
+    <div class="sub" style="font-size:11pt;margin-top:4px;">Asistente de puesta en marcha — cómo cargar tu información en orden y sin errores</div>
+    <div class="meta">
+      bomberos.gigrouplatam.com &nbsp;·&nbsp; Ruta en el sistema: <b>Puesta en marcha → Cargar datos</b><br>
+      Para roles Administrador y RRHH
+    </div>
+  </div>
+
+  <!-- INTRO -->
+  <section>
+    <h2 class="sec">Antes de empezar</h2>
+    <p class="lead">
+      El sistema guarda la información en tablas conectadas entre sí: un
+      funcionario pertenece a una estación, un reposo pertenece a un funcionario,
+      un ascenso pertenece a una jerarquía, y así sucesivamente. Por eso
+      <b>el orden en que cargas los datos importa</b>: si intentas registrar un
+      funcionario antes de que exista su estación, el sistema no te dejará.
+    </p>
+    <div class="callout">
+      <strong>La regla de oro:</strong> carga de arriba hacia abajo, fase por fase.
+      Dentro del sistema, cada fase se <b>desbloquea</b> cuando marcas la anterior
+      como completada. Este manual sigue exactamente ese mismo orden.
+    </div>
+    <div class="callout warn">
+      <strong>No tienes que memorizar códigos.</strong> En casi todos los campos el
+      sistema te muestra una <b>lista desplegable</b> con las opciones válidas. Solo
+      cuida el formato de las <b>fechas</b> (año-mes-día) y usa <code>V</code> o
+      <code>E</code> para la nacionalidad.
+    </div>
+    <p class="lead">
+      Tu avance se guarda automáticamente en el navegador que estés usando, así que
+      puedes cerrar sesión y continuar después desde donde quedaste.
+    </p>
+  </section>
+
+  <!-- FASES -->
+  <section class="page-break">
+    <h2 class="sec">Las 7 fases, en orden</h2>
+
+    <div class="fase">
+      <div class="head"><span class="num">1</span><h3>Revisar catálogos base</h3></div>
+      <div class="obj"><b>Qué haces:</b> revisas y ajustas las listas maestras (jerarquías, cargos, condiciones, especialidades, bancos, tipos de licencia, tipos de carnet, etc.).</div>
+      <div class="why"><b>¿Por qué primero?</b> Los formularios de personal <b>eligen</b> de estas listas. Si una jerarquía o un cargo no existe aquí, no podrás seleccionarlo al cargar un funcionario. Vienen precargados; ajústalos a la realidad del cuerpo antes de seguir.</div>
+      <ul class="steps">
+        <li>Revisar y ajustar los catálogos del sistema <span class="ruta">Admin → Catálogos</span></li>
+      </ul>
+    </div>
+
+    <div class="fase">
+      <div class="head"><span class="num">2</span><h3>Estructura organizativa</h3></div>
+      <div class="obj"><b>Qué haces:</b> cargas la estructura en este orden: Zonas → Estaciones → Áreas → Divisiones → Dependencias.</div>
+      <div class="why"><b>¿Por qué antes del personal?</b> Cada funcionario se ubica en una zona y una estación. Esas unidades deben existir antes de cargar al personal, o el formulario no te dejará ubicarlo.</div>
+      <ul class="steps">
+        <li>Cargar zonas, estaciones, áreas, divisiones y dependencias <span class="ruta">Admin → Departamentos</span></li>
+      </ul>
+    </div>
+
+    <div class="fase">
+      <div class="head"><span class="num">3</span><h3>Usuarios que cargarán <span style="font-weight:400;color:var(--gris);font-size:10pt">(opcional)</span></h3></div>
+      <div class="obj"><b>Qué haces:</b> creas cuentas para el personal de RRHH que va a cargar la data, con su rol.</div>
+      <div class="why"><b>¿Cuándo?</b> Recomendado si más de una persona va a cargar. Si solo carga el administrador, puedes saltar esta fase.</div>
+      <ul class="steps">
+        <li>Revisar roles disponibles <span class="ruta">Admin → Roles</span></li>
+        <li>Crear usuarios de RRHH/carga <span class="ruta">Admin → Usuarios</span></li>
+      </ul>
+    </div>
+
+    <div class="fase">
+      <div class="head"><span class="num">4</span><h3>Personal (funcionarios)</h3></div>
+      <div class="obj"><b>Qué haces:</b> cargas la ficha básica de cada funcionario: identidad, empleo, ubicación y contacto.</div>
+      <div class="why"><b>¿Por qué es el corazón?</b> Todo el expediente (historial, familia, guardias, reposos, ascensos…) cuelga de un funcionario ya creado.</div>
+      <ul class="steps">
+        <li>Cargar funcionarios uno por uno <span class="ruta">Personal → Nuevo</span></li>
+        <li>Verificar el listado cargado <span class="ruta">Personal</span></li>
+      </ul>
+    </div>
+
+    <div class="fase">
+      <div class="head"><span class="num">5</span><h3>Expediente por funcionario</h3></div>
+      <div class="obj"><b>Qué haces:</b> desde la ficha de cada funcionario, completas su histórico de jerarquías, histórico de ubicaciones, tiempo en administración pública, carga familiar, habilidades, actividades y carnets.</div>
+      <div class="why"><b>¿Por qué después?</b> Estos datos cuelgan del funcionario: necesita existir primero (Fase 4). Entra a cada persona desde el listado y usa sus pestañas.</div>
+      <ul class="steps">
+        <li>Abrir cada funcionario y completar sus pestañas <span class="ruta">Personal → (abrir persona)</span></li>
+      </ul>
+    </div>
+
+    <div class="fase">
+      <div class="head"><span class="num">6</span><h3>Operaciones del día a día</h3></div>
+      <div class="obj"><b>Qué haces:</b> registras guardias, vacaciones, permisos, comisiones, faltas y reposos.</div>
+      <div class="why"><b>¿Por qué necesita las fases 2 y 4?</b> Todo esto asocia a un funcionario (y las guardias a una estación).</div>
+      <ul class="steps">
+        <li>Guardias <span class="ruta">Guardias → Nueva</span></li>
+        <li>Vacaciones <span class="ruta">Vacaciones → Nueva</span></li>
+        <li>Permisos <span class="ruta">Permisos → Nuevo</span></li>
+        <li>Comisiones <span class="ruta">Comisiones → Nueva</span></li>
+        <li>Faltas <span class="ruta">Faltas → Nueva</span></li>
+        <li>Reposos <span class="ruta">Reposos → Nuevo</span></li>
+      </ul>
+    </div>
+
+    <div class="fase">
+      <div class="head"><span class="num">7</span><h3>Carrera, beneficios y equipo</h3></div>
+      <div class="obj"><b>Qué haces:</b> cargas ascensos y cursos, beneficios/ayudas, egresos y asignación de equipo (protección y radios).</div>
+      <div class="why"><b>¿Por qué al final?</b> Es la capa de gestión: todo depende de que el personal ya exista.</div>
+      <ul class="steps">
+        <li>Ascensos y cursos <span class="ruta">Carrera</span></li>
+        <li>Beneficios / Ayudas <span class="ruta">Beneficios → Nuevo</span></li>
+        <li>Egresos (jubilación / fallecimiento) <span class="ruta">Egresos</span></li>
+        <li>Equipo de protección y radios <span class="ruta">Equipo</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- VALORES VALIDOS -->
+  <section class="page-break">
+    <h2 class="sec">Valores válidos (para no equivocar la carga)</h2>
+    <p class="lead">En la mayoría de campos verás una lista desplegable con estas opciones. Aquí las tienes de referencia:</p>
+    <table>
+      <thead><tr><th style="width:34%">Campo</th><th>Valores permitidos</th></tr></thead>
+      <tbody>
+        <tr><td>Nacionalidad</td><td><code>V</code> (venezolano) · <code>E</code> (extranjero)</td></tr>
+        <tr><td>Sexo</td><td><code>M</code> · <code>F</code></td></tr>
+        <tr><td>Tipo de personal</td><td><code>BOMBERO</code> · <code>BOMBERO_VOLUNTARIO</code> · <code>OBRERO</code> · <code>EMPLEADO</code> · <code>CONTRATADO</code> · <code>PASANTE</code></td></tr>
+        <tr><td>Estatus del funcionario</td><td><code>ACTIVO</code> · <code>REPOSO</code> · <code>COMISION</code> · <code>PRE_JUBILADO</code> · <code>JUBILADO</code> · <code>EGRESADO</code> · <code>FALLECIDO</code> · <code>SUSPENDIDO</code> · <code>BAJA_DESHONROSA</code> · <code>PERMISO_LARGO</code></td></tr>
+        <tr><td>Tipo de actividad</td><td><code>CULTURAL</code> · <code>DEPORTIVA</code> · <code>MUSICAL</code> · <code>CIENTIFICA</code> · <code>LABORAL</code> · <code>ACADEMICA</code></td></tr>
+        <tr><td>Fechas</td><td>Formato <code>AAAA-MM-DD</code> — ejemplo: <code>1990-05-21</code></td></tr>
+      </tbody>
+    </table>
+
+    <h2 class="sec">Consejos para una carga sin tropiezos</h2>
+    <table>
+      <tbody>
+        <tr><td style="width:34%"><b>Ten la data a la mano</b></td><td>Reúne primero las cédulas, fechas de ingreso, jerarquías y estaciones. Cargar “de corrido” es mucho más rápido.</td></tr>
+        <tr><td><b>Empieza por una estación piloto</b></td><td>Carga por completo una estación (personal + expediente) antes de pasar a la siguiente. Detectas dudas temprano.</td></tr>
+        <tr><td><b>Si un campo no aplica, déjalo vacío</b></td><td>Solo los campos marcados como obligatorios impiden guardar. El resto puedes completarlo después.</td></tr>
+        <tr><td><b>Revisa antes de marcar “fase completa”</b></td><td>Usa la vista de listado de cada módulo para confirmar que quedó bien cargado.</td></tr>
+        <tr><td><b>¿Un mensaje en rojo?</b></td><td>El sistema te dice exactamente qué falta o qué valor no es válido. Corrige ese campo y vuelve a guardar; no se pierde lo demás.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout" style="margin-top:20px">
+      <strong>¿Dónde está el asistente?</strong> Inicia sesión en
+      <a>bomberos.gigrouplatam.com</a>, y en el menú lateral entra a
+      <b>Puesta en marcha → Cargar datos</b>. Verás las 7 fases con su barra de
+      progreso y un botón “Ir” que te lleva directo a cada formulario.
+    </div>
+
+    <div class="foot">
+      Sistema Integral del Cuerpo de Bomberos del Distrito Capital · Desarrollado por GI Group LATAM<br>
+      Manual de puesta en marcha — carga de datos
+    </div>
+  </section>
+
+</div>
+</body>
+</html>

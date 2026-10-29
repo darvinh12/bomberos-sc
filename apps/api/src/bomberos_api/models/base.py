@@ -14,6 +14,12 @@ NAMING_CONVENTION = {
 
 class Base(DeclarativeBase):
     metadata = MetaData(naming_convention=NAMING_CONVENTION)
+    # eager_defaults: tras INSERT/UPDATE, SQLAlchemy trae las columnas con
+    # server_default / server_onupdate / GENERATED (Computed) vía RETURNING en la
+    # MISMA sentencia. Así los atributos quedan poblados y model_validate no
+    # dispara un lazy-load síncrono en contexto async (causa de MissingGreenlet).
+    # Se hereda a todos los modelos declarativos.
+    __mapper_args__ = {"eager_defaults": True}
 
 
 class TimestampMixin:

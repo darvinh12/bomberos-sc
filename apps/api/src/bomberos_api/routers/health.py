@@ -1,11 +1,16 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from sqlalchemy import text
 
 from bomberos_api.config import get_settings
-from bomberos_api.core.deps import DbSession
+from bomberos_api.core.deps import DbSession, require_role
 from bomberos_api.database import get_session_factory
 
 router = APIRouter(tags=["health"])
+
+# /health y /health/db quedan públicos: los usan el healthcheck del contenedor y
+# el cron que evita la auto-pausa de la BD. Los endpoints de diagnóstico revelan
+# host, usuario y versión de la BD y el estado de la cuenta admin: solo ADMIN.
+_solo_admin = [Depends(require_role("ADMIN"))]
 
 
 @router.get("/health")
@@ -20,7 +25,7 @@ async def health_db(db: DbSession) -> dict[str, str]:
     return {"status": "ok", "db": "ok"}
 
 
-@router.get("/health/db-diag")
+@router.get("/health/db-diag", dependencies=_solo_admin)
 async def health_db_diag() -> dict:
     """Diagnóstico de conexión: no usa DbSession para que reporte el error en lugar de 500."""
     s = get_settings()
@@ -49,7 +54,7 @@ async def health_db_diag() -> dict:
     return out
 
 
-@router.get("/health/schema")
+@router.get("/health/schema", dependencies=_solo_admin)
 async def health_schema(db: DbSession) -> dict:
     """Diagnóstico temporal: inspecciona schemas y tablas críticas."""
     out: dict = {}

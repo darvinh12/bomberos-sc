@@ -55,15 +55,20 @@ jobs:
       - name: Cargar esquema BD
         env:
           PGPASSWORD: postgres
+        # ON_ERROR_STOP: un error en cualquier script SQL corta el pipeline.
+        # Se ejecuta desde sql/ porque 99_run_all.sql usa rutas relativas (\i).
+        working-directory: sql
         run: |
-          psql -h localhost -U postgres -d bomberos_caracas -f sql/99_run_all.sql
+          psql -h localhost -U postgres -d bomberos_caracas -v ON_ERROR_STOP=1 -f 99_run_all.sql
 
-      - name: Tests
+      - name: Tests unitarios + integración (PostgreSQL real)
         working-directory: apps/api
         env:
           DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/bomberos_caracas
           JWT_SECRET_KEY: ci-test-secret-key-not-for-production-use-only
-        run: pytest -q
+          # Sin BD, las pruebas marcadas `integration` FALLAN en vez de omitirse.
+          BOMBEROS_REQUIRE_DB: "1"
+        run: pytest -v --cov=bomberos_api --cov-report=term-missing
 
   web-build:
     name: Web — Build

@@ -10,7 +10,6 @@ from sqlalchemy import (
     SmallInteger,
     String,
     Text,
-    func,
 )
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -48,8 +47,8 @@ class ProteccionInventario(Base):
     estatus: Mapped[str] = mapped_column(String, default="DISPONIBLE")
     estacion_id: Mapped[int | None] = mapped_column(SmallInteger)
     observaciones: Mapped[str | None] = mapped_column(Text)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default="now()")
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default="now()")
 
 
 class ProteccionAsignacion(Base):
@@ -67,7 +66,7 @@ class ProteccionAsignacion(Base):
     devuelto: Mapped[bool] = mapped_column(Boolean, default=False)
     documento_url: Mapped[str | None] = mapped_column(String)
     observaciones: Mapped[str | None] = mapped_column(Text)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default="now()")
 
 
 class Radio(Base):
@@ -84,7 +83,7 @@ class Radio(Base):
     estacion_id: Mapped[int | None] = mapped_column(SmallInteger)
     estatus: Mapped[str] = mapped_column(String, default="DISPONIBLE")
     observaciones: Mapped[str | None] = mapped_column(Text)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default="now()")
 
 
 class RadioAsignacion(Base):

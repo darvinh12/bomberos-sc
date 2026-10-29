@@ -134,3 +134,11 @@ class Pais(_CatalogoMixin, Base):
 class SeccionFuncionario(_CatalogoMixin, Base):
     __tablename__ = "secciones_funcionario"
     __table_args__ = {"schema": "core"}
+
+
+class TipoCarnet(_CatalogoMixin, Base):
+    # Necesario para que `personal.carnets.tipo_carnet_id` pueda resolver su FK
+    # (core.tipos_carnet.id). Sin este Table en el metadata, SQLAlchemy lanza
+    # NoReferencedTableError al configurar el mapper de Carnet.
+    __tablename__ = "tipos_carnet"
+    __table_args__ = {"schema": "core"}

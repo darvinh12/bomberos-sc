@@ -13,13 +13,20 @@ from sqlalchemy import (
     SmallInteger,
     String,
     UniqueConstraint,
-    func,
 )
 from sqlalchemy.dialects.postgresql import CITEXT
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from bomberos_api.models._enums import (
+    ESTATUS_FUNCIONARIO as _ESTATUS_ENUM,
+)
+from bomberos_api.models._enums import (
+    SEXO as _SEXO_ENUM,
+)
+from bomberos_api.models._enums import (
+    TIPO_PERSONAL as _TIPO_PERSONAL_ENUM,
+)
 from bomberos_api.models.base import Base
-from bomberos_api.models.enums import ESTATUS_FUNCIONARIO, SEXO_T, TIPO_PERSONAL
 
 
 class Funcionario(Base):
@@ -37,11 +44,14 @@ class Funcionario(Base):
     rif: Mapped[str | None] = mapped_column(String)
     apellidos: Mapped[str] = mapped_column(String, nullable=False)
     nombres: Mapped[str] = mapped_column(String, nullable=False)
+    # Columna GENERATED STORED en la BD (apellidos || ', ' || nombres). Se marca
+    # como Computed para que SQLAlchemy la excluya de INSERT/UPDATE (si no, PG
+    # rechaza: "cannot insert a non-DEFAULT value into column nombre_completo").
     nombre_completo: Mapped[str | None] = mapped_column(
         String, Computed("apellidos || ', ' || nombres", persisted=True)
     )
     fecha_nacimiento: Mapped[date | None] = mapped_column(Date)
-    sexo: Mapped[str | None] = mapped_column(SEXO_T)
+    sexo: Mapped[str | None] = mapped_column(_SEXO_ENUM)
     estado_civil_id: Mapped[int | None] = mapped_column(
         SmallInteger, ForeignKey("core.estados_civiles.id")
     )
@@ -73,12 +83,12 @@ class Funcionario(Base):
     )
 
     # Empleo
-    tipo_personal: Mapped[str] = mapped_column(TIPO_PERSONAL, default="BOMBERO")
+    tipo_personal: Mapped[str] = mapped_column(_TIPO_PERSONAL_ENUM, default="BOMBERO")
     numero_empleado: Mapped[str | None] = mapped_column(String, unique=True)
     numero_equipo: Mapped[str | None] = mapped_column(String)
     fecha_primer_ingreso: Mapped[date | None] = mapped_column(Date)
     promocion: Mapped[str | None] = mapped_column(String)
-    estatus: Mapped[str] = mapped_column(ESTATUS_FUNCIONARIO, default="ACTIVO")
+    estatus: Mapped[str] = mapped_column(_ESTATUS_ENUM, default="ACTIVO")
     condicion_id: Mapped[int | None] = mapped_column(
         SmallInteger, ForeignKey("core.condiciones.id")
     )
@@ -156,8 +166,8 @@ class Funcionario(Base):
     observaciones: Mapped[str | None] = mapped_column(String)
 
     # Auditoría
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default="now()")
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default="now()")
     created_by: Mapped[int | None] = mapped_column(BigInteger)
     updated_by: Mapped[int | None] = mapped_column(BigInteger)
 
@@ -195,8 +205,8 @@ class PeriodoServicio(Base):
     monto_prestaciones: Mapped[float | None] = mapped_column(Numeric(15, 2))
     documento_url: Mapped[str | None] = mapped_column(String)
     observaciones: Mapped[str | None] = mapped_column(String)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default="now()")
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default="now()")
 
     funcionario: Mapped[Funcionario] = relationship(
         "Funcionario", back_populates="periodos", lazy="raise"

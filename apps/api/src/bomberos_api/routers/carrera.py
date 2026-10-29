@@ -223,8 +223,13 @@ async def recalcular_meritos(
 ):
     """Llama al SP carrera.fn_recalcular_meritos_periodo para recomputar todos los puntajes."""
     await set_audit_ctx(db, user.id, client_ip(request))
+    # El SP está declarado con parámetro SMALLINT; el bind de Python llega como
+    # int4 y Postgres no resuelve int4→int2 implícitamente en funciones
+    # ("function ...(integer) does not exist"). Cast explícito a SMALLINT.
     res = await db.execute(
-        text("SELECT carrera.fn_recalcular_meritos_periodo(:p)").bindparams(p=periodo_id)
+        text("SELECT carrera.fn_recalcular_meritos_periodo(CAST(:p AS SMALLINT))").bindparams(
+            p=periodo_id
+        )
     )
     cantidad = res.scalar_one()
     return {"funcionarios_procesados": cantidad}

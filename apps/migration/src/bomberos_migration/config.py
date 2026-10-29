@@ -1,5 +1,6 @@
 """Configuración de cadenas de conexión y parámetros."""
 import os
+import re
 from dataclasses import dataclass
 
 from dotenv import load_dotenv
@@ -13,6 +14,11 @@ class Config:
     target_dsn: str  # cadena asyncpg para PostgreSQL
     batch_size: int = 500
     log_level: str = "INFO"
+
+    @property
+    def target_dsn_seguro(self) -> str:
+        """DSN destino sin la contraseña (para mostrar en pantalla)."""
+        return re.sub(r"(://[^:/@]+:)[^@]*@", r"\1***@", self.target_dsn)
 
     @classmethod
     def from_env(cls) -> "Config":

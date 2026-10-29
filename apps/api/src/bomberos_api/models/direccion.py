@@ -28,7 +28,6 @@ from sqlalchemy import (
     Numeric,
     SmallInteger,
     String,
-    func,
 )
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -99,5 +98,5 @@ class Direccion(SoftDeleteMixin, Base):
     fecha_registro: Mapped[date] = mapped_column(Date, nullable=False)
     observaciones: Mapped[str | None] = mapped_column(String)
 
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default="now()")
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default="now()")
